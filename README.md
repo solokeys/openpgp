@@ -8,7 +8,7 @@ This should run fine on Linux, OS X, or Ubuntu on Windows.
 # Set up
 
 Clone Gnuk to get their testing suite.  Note, there are symlinks in the repo, so
-make sure you clone using a \*nix environment! 
+make sure you clone using a \*nix environment!
 
 ```
 git clone https://salsa.debian.org/gnuk-team/gnuk/gnuk
@@ -21,7 +21,7 @@ sudo apt install python3-pytest python3-usb python3-cffi
 ```
 
 Replace the normal card reader class, with our testing class to connect
-the CCID/OpenPGP application over UDP to our local application.
+the `CCID/OpenPGP` application locally to the tests via UDP.
 
 ```
 cp card_reader.py gnuk/tests/card_reader.py
