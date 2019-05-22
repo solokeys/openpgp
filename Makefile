@@ -1,16 +1,18 @@
 CC = g++
+RM = rm -rf
 
-SRC := src/main.cpp src/util.c pc/device.c
-INC := -I. -Ipc/ -Isrc/
+SRC = src/main.cpp src/util.c pc/device.c
+INC = -I. -Ipc/ -Isrc/
 
-OBJ=$(SRC:.c=.o)
+OBJTMP = $(SRC:.c=.o)
+OBJ = $(OBJTMP:.cpp=.o)
 
-CFLAGS=-O2 $(INC)
+CPPFLAGS = -O2 -Wall $(INC)
 
 TARGET=main
 
 all: $(OBJ)
-	$(CC) $(CFLAGS) -o main $(OBJ)
+	$(CC) -o main $(OBJ)
 
 clean:
-	rm -rf $(OBJ) $(TARGET)
+	$(RM) $(OBJ) $(TARGET)

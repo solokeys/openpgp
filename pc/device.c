@@ -1,3 +1,8 @@
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <sys/time.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -104,3 +109,8 @@ void ccid_send(uint8_t * msg, uint32_t sz)
 {
     udp_send(fd, msg, sz);
 }
+
+#ifdef __cplusplus
+}
+#endif
+

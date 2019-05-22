@@ -7,11 +7,11 @@
 #ifndef _UTIL_H
 #define _UTIL_H
 
-#include <stdint.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#include <stdint.h>
 
 void dump_hex(uint8_t * buf, int size);
 
