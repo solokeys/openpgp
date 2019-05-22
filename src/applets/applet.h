@@ -13,6 +13,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include <util.h>
 
 #include "errors.h"
 
@@ -21,6 +22,9 @@ namespace Applet {
 	class Applet {
 	private:
 		bool selected;
+		const bstr aid = {0x00};
+
+		// TODO: applet config load/save
 
 	public:
 		Util::Error Init();
@@ -28,7 +32,9 @@ namespace Applet {
 		Util::Error Select();
 		Util::Error DeSelect();
 
-		Util::Error APDUExchange(uint8_t *apdu, size_t length, uint8_t *result, size_t *resultLength);
+		const bstr *GetAID();// TODO: check if it good to use virtual methods on microcontrollers. maybe use templates.
+
+		Util::Error APDUExchange(bstr* apdu, bstr* result);
 	};
 
 

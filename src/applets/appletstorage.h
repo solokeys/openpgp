@@ -14,6 +14,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include <array>
 
 #include "errors.h"
 #include "applet.h"
@@ -27,7 +28,9 @@ namespace Applet {
 		OpenPGPApplet openPGPApplet;
 		TestApplet testApplet;
 
-		Applet selectedApplet;
+		//std::array<Applet, 2> = {openPGPApplet, testApplet}
+
+		Applet *selectedApplet;
 
 	public:
 		Util::Error SelectApplet(uint8_t aid, size_t size);

@@ -7,11 +7,10 @@
 #ifndef _UTIL_H
 #define _UTIL_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <stdint.h>
+#include <vector>
+
+typedef std::vector<uint8_t> bstr;
 
 void dump_hex(uint8_t * buf, int size);
 
@@ -23,8 +22,5 @@ void dump_hex(uint8_t * buf, int size);
 #define MAX(a,b) (((a) > (b)) ? (a) : (b))
 #endif
 
-#ifdef __cplusplus
-}
-#endif
 
 #endif

@@ -15,6 +15,11 @@
 namespace Applet {
 
 	class OpenPGPApplet: Applet {
+		// TODO: applet state. INIT/WORK. save/load to file
+	private:
+		// OpenPGP AID
+		const bstr aid = {0xd2, 0x76, 0x00, 0x01, 0x24, 0x01};
+	public:
 
 	};
 

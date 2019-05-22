@@ -1,7 +1,11 @@
 CC = g++
 RM = rm -rf
 
-SRC = src/main.cpp src/util.c pc/device.c
+SRC = 	src/main.cpp \
+		src/applet/applet.cpp\
+		src/util.c \
+		pc/device.c
+		
 INC = -I. -Ipc/ -Isrc/
 
 OBJTMP = $(SRC:.c=.o)

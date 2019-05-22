@@ -5,10 +5,6 @@
 // http://opensource.org/licenses/MIT>, at your option. This file may not be
 // copied, modified, or distributed except according to those terms.
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <stdint.h>
 #include <stdio.h>
 
@@ -20,7 +16,3 @@ void dump_hex(uint8_t * buf, int size)
     }
     printf("\n");
 }
-
-#ifdef __cplusplus
-}
-#endif

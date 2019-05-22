@@ -13,6 +13,7 @@
 namespace Util {
 	enum Error {
 		NoError,
+		AppletNotSelected,
 
 
 		// this error links to the end of array
