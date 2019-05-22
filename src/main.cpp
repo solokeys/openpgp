@@ -2,6 +2,7 @@
 
 #include "device.h"
 #include "util.h"
+#include "applets/applet.h"
 
 int main(int argc, char * argv[])
 {

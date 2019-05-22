@@ -9,6 +9,10 @@
 
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void dump_hex(uint8_t * buf, int size);
 
 #ifndef MIN
@@ -17,6 +21,10 @@ void dump_hex(uint8_t * buf, int size);
 
 #ifndef MAX
 #define MAX(a,b) (((a) > (b)) ? (a) : (b))
+#endif
+
+#ifdef __cplusplus
+}
 #endif
 
 #endif
