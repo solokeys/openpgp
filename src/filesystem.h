@@ -8,29 +8,22 @@
  */
 
 
-#ifndef SRC_SOLOFACTORY_H_
-#define SRC_SOLOFACTORY_H_
+#ifndef SRC_FILESYSTEM_H_
+#define SRC_FILESYSTEM_H_
 
-#include "cryptolib.h"
-#include "applets/appletstorage.h"
+#include <util.h>
+#include <errors.h>
 
-namespace Factory {
+namespace File {
 
-	using namespace Crypto;
-	using namespace Applet;
-
-	class SoloFactory {
+	class FileSystem {
 	private:
 	public:
-		Util::Error Init();
-
-		AppletStorage *GetAppletStorage();
-
-		CryptoEngine *GetCryptoEngine();
-		CryptoLib *GetCryptoLib();
+		Util::Error ReadFile(AppID_t AppId, KeyID_t FileID, uint8_t FileType, bstr data);
+		Util::Error WriteFile(AppID_t AppId, KeyID_t FileID, uint8_t FileType, bstr data);
 	};
-
 
 }
 
-#endif /* SRC_SOLOFACTORY_H_ */
+
+#endif /* SRC_FILESYSTEM_H_ */
