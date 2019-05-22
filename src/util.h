@@ -11,6 +11,8 @@
 #include <vector>
 
 typedef std::vector<uint8_t> bstr;
+typedef uint16_t KeyID_t;
+typedef uint16_t AppID_t;
 
 void dump_hex(uint8_t * buf, int size);
 
