@@ -4,6 +4,8 @@
 #include "util.h"
 #include "applets/applet.h"
 
+//Applet::Applet app;
+
 int main(int argc, char * argv[])
 {
     uint8_t ccidbuf[1024];
