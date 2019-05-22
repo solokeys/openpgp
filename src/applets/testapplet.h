@@ -18,7 +18,9 @@ namespace Applet {
 	private:
 		const bstr aid = {0xfa, 0xfa, 0xfa, 0xfa};
 	public:
+		virtual const bstr *GetAID();
 
+		virtual Util::Error APDUExchange(bstr* apdu, bstr* result);
 	};
 
 }

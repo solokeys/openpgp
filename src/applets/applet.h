@@ -27,14 +27,16 @@ namespace Applet {
 		// TODO: applet config load/save
 
 	public:
-		Util::Error Init();
+		virtual ~Applet();
 
-		Util::Error Select();
-		Util::Error DeSelect();
+		virtual Util::Error Init();
 
-		const bstr *GetAID();// TODO: check if it good to use virtual methods on microcontrollers. maybe use templates.
+		virtual Util::Error Select();
+		virtual Util::Error DeSelect();
 
-		Util::Error APDUExchange(bstr* apdu, bstr* result);
+		virtual const bstr *GetAID();
+
+		virtual Util::Error APDUExchange(bstr* apdu, bstr* result);
 	};
 
 
