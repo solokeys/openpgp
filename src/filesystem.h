@@ -21,6 +21,9 @@ namespace File {
 	public:
 		Util::Error ReadFile(AppID_t AppId, KeyID_t FileID, uint8_t FileType, bstr data);
 		Util::Error WriteFile(AppID_t AppId, KeyID_t FileID, uint8_t FileType, bstr data);
+
+		Util::Error DeleteFile(AppID_t AppId, KeyID_t FileID, uint8_t FileType);
+		Util::Error DeleteFiles(AppID_t AppId);
 	};
 
 }
