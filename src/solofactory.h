@@ -13,14 +13,20 @@
 
 #include "cryptolib.h"
 #include "applets/appletstorage.h"
+#include "applets/openpgp/resetprovider.h"
 
 namespace Factory {
 
 	using namespace Crypto;
 	using namespace Applet;
+	using namespace OpenPGP;
 
 	class SoloFactory {
 	private:
+		AppletStorage *appletStorage;
+		CryptoEngine *cryptoEngine;
+		CryptoLib *cryptoLib;
+		ResetProvider *resetProvider;
 	public:
 		Util::Error Init();
 
@@ -28,6 +34,8 @@ namespace Factory {
 
 		CryptoEngine *GetCryptoEngine();
 		CryptoLib *GetCryptoLib();
+
+		ResetProvider *GetResetProvider();
 	};
 
 
