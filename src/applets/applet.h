@@ -18,7 +18,7 @@
 namespace Applet {
 
 	class Applet {
-	private:
+	protected:
 		bool selected;
 		const bstr aid = {0x00};
 

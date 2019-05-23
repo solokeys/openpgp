@@ -23,10 +23,10 @@ namespace Factory {
 
 	class SoloFactory {
 	private:
-		AppletStorage *appletStorage;
-		CryptoEngine *cryptoEngine;
-		CryptoLib *cryptoLib;
-		ResetProvider *resetProvider;
+		AppletStorage appletStorage;
+		CryptoEngine cryptoEngine;
+		CryptoLib cryptoLib;
+		ResetProvider resetProvider;
 	public:
 		Util::Error Init();
 

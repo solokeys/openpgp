@@ -2,9 +2,10 @@
 
 #include "device.h"
 #include "util.h"
+#include "solofactory.h"
 #include "applets/applet.h"
 
-//Applet::Applet app;
+Factory::SoloFactory factory;
 
 int main(int argc, char * argv[])
 {

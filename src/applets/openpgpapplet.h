@@ -14,16 +14,38 @@
 
 namespace Applet {
 
-	class OpenPGPApplet: Applet {
-		// TODO: applet state. INIT/WORK. save/load to file
-	private:
-		// OpenPGP AID
-		const bstr aid = {0xd2, 0x76, 0x00, 0x01, 0x24, 0x01};
-	public:
-		virtual const bstr *GetAID();
+struct OpenPGPAppletState {
+	bool pw1Authenticated;
+	bool pw3Authenticated;
+};
 
-		virtual Util::Error APDUExchange(bstr* apdu, bstr* result);
-	};
+// OpenPGP v3.3.1 page 78
+enum LifeCycleState {
+	Created     = 0x01,
+	Init        = 0x03,
+	Operational = 0x04,
+	Terminated  = 0x05,
+};
+
+struct OpenPGPAppletConfig {
+	LifeCycleState state;
+};
+
+class OpenPGPApplet: Applet {
+	// TODO: applet state. INIT/WORK. save/load to file
+	OpenPGPAppletState state;
+	OpenPGPAppletConfig config;
+
+private:
+	// OpenPGP AID
+	const bstr aid = {0xd2, 0x76, 0x00, 0x01, 0x24, 0x01};
+public:
+	OpenPGPApplet();
+
+	virtual const bstr *GetAID();
+
+	virtual Util::Error APDUExchange(bstr* apdu, bstr* result);
+};
 
 }
 

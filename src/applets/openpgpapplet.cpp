@@ -7,40 +7,28 @@
   copied, modified, or distributed except according to those terms.
  */
 
-#include "applet.h"
+#include "openpgpapplet.h"
 
 namespace Applet {
 
-Applet::~Applet() {
+OpenPGPApplet::OpenPGPApplet() : Applet() {
+	config.state = LifeCycleState::Created;
+	state.pw1Authenticated = false;
+	state.pw3Authenticated = false;
 }
 
-Util::Error Applet::Init() {
-	selected = false;
-
-	return Util::Error::NoError;
-}
-
-Util::Error Applet::Select() {
-	selected = true;
-
-	return Util::Error::NoError;
-}
-
-Util::Error Applet::DeSelect() {
-	selected = false;
-
-	return Util::Error::NoError;
-}
-
-const bstr* Applet::GetAID() {
+const bstr* OpenPGPApplet::GetAID() {
 	return &aid;
 }
 
-Util::Error Applet::APDUExchange(bstr* apdu, bstr* result) {
+Util::Error OpenPGPApplet::APDUExchange(bstr* apdu, bstr* result) {
 	result->clear();
 
 	if (!selected)
 		return Util::Error::AppletNotSelected;
+
+
+
 
 	return Util::Error::NoError;
 }
