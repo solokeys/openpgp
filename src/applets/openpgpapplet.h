@@ -31,7 +31,7 @@ struct OpenPGPAppletConfig {
 	LifeCycleState state;
 };
 
-class OpenPGPApplet: Applet {
+class OpenPGPApplet: public Applet {
 	// TODO: applet state. INIT/WORK. save/load to file
 	OpenPGPAppletState state;
 	OpenPGPAppletConfig config;

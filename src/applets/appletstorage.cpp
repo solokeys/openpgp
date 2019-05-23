@@ -17,6 +17,10 @@ Util::Error AppletStorage::SelectApplet(uint8_t aid, size_t size) {
 }
 
 Applet* AppletStorage::GetSelectedApplet() {
+    for(const auto& app: applets) {
+    	if (app->Selected())
+    		return app;
+    }
 
 	return nullptr;
 }

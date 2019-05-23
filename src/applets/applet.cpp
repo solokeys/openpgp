@@ -32,6 +32,10 @@ Util::Error Applet::DeSelect() {
 	return Util::Error::NoError;
 }
 
+bool Applet::Selected() {
+	return selected;
+}
+
 const bstr* Applet::GetAID() {
 	return &aid;
 }

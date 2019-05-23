@@ -31,6 +31,7 @@ namespace Applet {
 
 		virtual Util::Error Select();
 		virtual Util::Error DeSelect();
+		virtual bool Selected();
 
 		virtual const bstr *GetAID();
 

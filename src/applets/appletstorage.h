@@ -27,7 +27,7 @@ private:
 	OpenPGPApplet openPGPApplet;
 	TestApplet testApplet;
 
-	//std::array<Applet, 2> = {openPGPApplet, testApplet}
+	std::array<Applet*, 2> applets = {&openPGPApplet, &testApplet};
 
 	Applet *selectedApplet;
 

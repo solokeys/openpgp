@@ -14,7 +14,7 @@
 
 namespace Applet {
 
-	class TestApplet: Applet {
+	class TestApplet: public Applet {
 	private:
 		const bstr aid = {0xfa, 0xfa, 0xfa, 0xfa};
 	public:
