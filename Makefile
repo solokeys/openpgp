@@ -11,7 +11,7 @@ INC = -I. -Ipc/ -Isrc/
 OBJTMP = $(SRC:.c=.o)
 OBJ = $(OBJTMP:.cpp=.o)
 
-CPPFLAGS = -O2 -Wall $(INC)
+CPPFLAGS = -std=c++17 -O2 -Wall $(INC)
 
 TARGET=main
 
