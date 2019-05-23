@@ -107,4 +107,7 @@ venv.bak/
 
 main
 *.o
+.cproject
+.project
+.settings
 /Debug/
