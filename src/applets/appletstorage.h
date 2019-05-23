@@ -10,11 +10,10 @@
 #ifndef SRC_APPLETSTORAGE_H_
 #define SRC_APPLETSTORAGE_H_
 
-#include "applet.h"
-
 #include <cstdint>
 #include <array>
 
+#include "applet.h"
 #include "errors.h"
 #include "applet.h"
 #include "openpgpapplet.h"

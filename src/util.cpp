@@ -5,8 +5,7 @@
 // http://opensource.org/licenses/MIT>, at your option. This file may not be
 // copied, modified, or distributed except according to those terms.
 
-#include <stdint.h>
-#include <stdio.h>
+#include "util.h"
 
 void dump_hex(uint8_t * buf, int size)
 {
@@ -16,3 +15,8 @@ void dump_hex(uint8_t * buf, int size)
     }
     printf("\n");
 }
+
+void dump_hex(bstr data) {
+	dump_hex(const_cast<uint8_t*>(&data.front()), data.length());
+}
+

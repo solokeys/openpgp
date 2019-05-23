@@ -7,14 +7,16 @@
 #ifndef _UTIL_H
 #define _UTIL_H
 
+#include <stdio.h>
 #include <cstdint>
-#include <vector>
+#include <string_view>
 
-typedef std::vector<uint8_t> bstr;
+typedef std::basic_string_view<uint8_t> bstr;
 typedef uint16_t KeyID_t;
 typedef uint16_t AppID_t;
 
 void dump_hex(uint8_t * buf, int size);
+void dump_hex(bstr data);
 
 #ifndef MIN
 #define MIN(a,b) (((a) < (b)) ? (a) : (b))

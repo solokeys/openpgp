@@ -13,7 +13,7 @@ const bstr* Applet::TestApplet::GetAID() {
 	return &aid;
 }
 
-Util::Error Applet::TestApplet::APDUExchange(bstr* apdu, bstr* result) {
+Util::Error Applet::TestApplet::APDUExchange(bstr apdu, bstr result) {
 
 	return Util::Error::NoError;
 }

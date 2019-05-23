@@ -11,8 +11,9 @@
 #define SRC_APPLET_H_
 
 #include <cstdint>
-#include <util.h>
+#include <string_view>
 
+#include "util.h"
 #include "errors.h"
 
 namespace Applet {
@@ -20,7 +21,7 @@ namespace Applet {
 	class Applet {
 	protected:
 		bool selected;
-		const bstr aid = {0x00};
+		const bstr aid = bstr(reinterpret_cast<const uint8_t *>("\x00"));
 
 		// TODO: applet config load/save
 
@@ -35,7 +36,7 @@ namespace Applet {
 
 		virtual const bstr *GetAID();
 
-		virtual Util::Error APDUExchange(bstr* apdu, bstr* result);
+		virtual Util::Error APDUExchange(bstr apdu, bstr result);
 	};
 
 

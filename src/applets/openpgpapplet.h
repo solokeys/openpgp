@@ -38,13 +38,13 @@ class OpenPGPApplet: public Applet {
 
 private:
 	// OpenPGP AID
-	const bstr aid = {0xd2, 0x76, 0x00, 0x01, 0x24, 0x01};
+	const bstr aid = bstr(reinterpret_cast<const uint8_t *>("\xd2\x76\x00\x01\x24\x01"));
 public:
 	OpenPGPApplet();
 
 	virtual const bstr *GetAID();
 
-	virtual Util::Error APDUExchange(bstr* apdu, bstr* result);
+	virtual Util::Error APDUExchange(bstr apdu, bstr result);
 };
 
 }

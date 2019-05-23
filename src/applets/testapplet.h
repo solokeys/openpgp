@@ -16,11 +16,11 @@ namespace Applet {
 
 	class TestApplet: public Applet {
 	private:
-		const bstr aid = {0xfa, 0xfa, 0xfa, 0xfa};
+		const bstr aid = bstr(reinterpret_cast<const uint8_t *>("\xfa\xfa\xfa\xfa"));
 	public:
 		virtual const bstr *GetAID();
 
-		virtual Util::Error APDUExchange(bstr* apdu, bstr* result);
+		virtual Util::Error APDUExchange(bstr apdu, bstr result);
 	};
 
 }
