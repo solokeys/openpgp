@@ -26,6 +26,12 @@ namespace File {
 		Util::Error DeleteFiles(AppID_t AppId);
 	};
 
+	// Read only file system for system files. files lays in program flash.
+	class ConfigFileSystem {
+	private:
+	public:
+		Util::Error ReadFile(AppID_t AppId, KeyID_t FileID, uint8_t FileType, bstr data);
+	};
 }
 
 
