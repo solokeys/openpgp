@@ -11,8 +11,36 @@
 #ifndef SRC_APPLETS_OPENPGP_CRYPTOAPDU_H_
 #define SRC_APPLETS_OPENPGP_CRYPTOAPDU_H_
 
+#include "errors.h"
+#include "applets/apducommand.h"
 
+namespace OpenPGP {
 
+	class APDUGetChallenge : Applet::APDUCommand {
+	public:
+		virtual Util::Error Check(uint8_t cla, uint8_t ins);
+		virtual Util::Error Process(uint8_t cla, uint8_t ins, uint8_t p1, uint8_t p2, bstr data, bstr dataOut);
+	};
 
+	class APDUInternalAuthenticate : Applet::APDUCommand {
+	public:
+		virtual Util::Error Check(uint8_t cla, uint8_t ins);
+		virtual Util::Error Process(uint8_t cla, uint8_t ins, uint8_t p1, uint8_t p2, bstr data, bstr dataOut);
+	};
+
+	class APDUGenerateAsymmetricKeyPair : Applet::APDUCommand {
+	public:
+		virtual Util::Error Check(uint8_t cla, uint8_t ins);
+		virtual Util::Error Process(uint8_t cla, uint8_t ins, uint8_t p1, uint8_t p2, bstr data, bstr dataOut);
+	};
+
+	// decipher, encipher, compute digital signature
+	class APDUPSO : Applet::APDUCommand {
+	public:
+		virtual Util::Error Check(uint8_t cla, uint8_t ins);
+		virtual Util::Error Process(uint8_t cla, uint8_t ins, uint8_t p1, uint8_t p2, bstr data, bstr dataOut);
+	};
+
+}
 
 #endif /* SRC_APPLETS_OPENPGP_CRYPTOAPDU_H_ */
