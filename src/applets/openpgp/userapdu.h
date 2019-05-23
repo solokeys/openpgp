@@ -34,7 +34,18 @@ namespace OpenPGP {
 		virtual Util::Error Process(uint8_t cla, uint8_t ins, uint8_t p1, uint8_t p2, bstr data, bstr dataOut);
 	};
 
-}
+	class APDUGetData : Applet::APDUCommand {
+	public:
+		virtual Util::Error Check(uint8_t cla, uint8_t ins);
+		virtual Util::Error Process(uint8_t cla, uint8_t ins, uint8_t p1, uint8_t p2, bstr data, bstr dataOut);
+	};
 
+	class APDUPutData : Applet::APDUCommand {
+	public:
+		virtual Util::Error Check(uint8_t cla, uint8_t ins);
+		virtual Util::Error Process(uint8_t cla, uint8_t ins, uint8_t p1, uint8_t p2, bstr data, bstr dataOut);
+	};
+
+}
 
 #endif /* SRC_APPLETS_OPENPGP_USERAPDU_H_ */
