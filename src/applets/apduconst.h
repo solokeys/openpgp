@@ -8,8 +8,8 @@
  */
 
 
-#ifndef SRC_APPLETS_APDURESPONSES_H_
-#define SRC_APPLETS_APDURESPONSES_H_
+#ifndef SRC_APPLETS_APDUCONST_H_
+#define SRC_APPLETS_APDUCONST_H_
 
 namespace Applet {
 
@@ -37,6 +37,24 @@ namespace Applet {
 		OK 							= 0x9000,
 	};
 
+	enum APDUcommands {
+		SelectData				= 0xa5,
+		GetData					= 0xca,
+		GetNextData				= 0xcc,
+		Verify					= 0x20,
+		ChangeReferenceData		= 0x24,
+		ResetRetryCounter		= 0x2c,
+		PutData					= 0xda,
+		PutData2				= 0xdb,
+		GenerateAsymmKeyPair	= 0x47,
+		PSO						= 0x2a,
+		Internalauthenticate	= 0x88,
+		GetChallenge			= 0x84,
+		ManageSecurityEnv		= 0x22,
+		TerminateDF				= 0xe6,
+		ActivateFile			= 0x44,
+	};
+
 }
 
-#endif /* SRC_APPLETS_APDURESPONSES_H_ */
+#endif /* SRC_APPLETS_APDUCONST_H_ */
