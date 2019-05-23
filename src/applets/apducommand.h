@@ -11,9 +11,7 @@
 #ifndef SRC_APPLETS_APDUCOMMAND_H_
 #define SRC_APPLETS_APDUCOMMAND_H_
 
-#include <stdint.h>
-#include <stdbool.h>
-#include <stddef.h>
+#include <cstdint>
 #include <util.h>
 
 #include "errors.h"

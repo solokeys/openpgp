@@ -7,7 +7,7 @@
 #ifndef _UTIL_H
 #define _UTIL_H
 
-#include <stdint.h>
+#include <cstdint>
 #include <vector>
 
 typedef std::vector<uint8_t> bstr;

@@ -10,8 +10,7 @@
 #ifndef SRC_APPLETS_OPENPGP_APDUSECURITYCHECK_H_
 #define SRC_APPLETS_OPENPGP_APDUSECURITYCHECK_H_
 
-#include <stdint.h>
-#include <stddef.h>
+#include <cstdint>
 
 #include "errors.h"
 #include "applets/openpgpapplet.h"

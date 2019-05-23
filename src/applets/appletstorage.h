@@ -12,8 +12,7 @@
 
 #include "applet.h"
 
-#include <stdint.h>
-#include <stddef.h>
+#include <cstdint>
 #include <array>
 
 #include "errors.h"
