@@ -14,14 +14,27 @@
 namespace Applet {
 
 	enum APDUResponse {
-		VerifyFailNoTryLeft 	= 0x63C0,
-		MemoryWriteError		= 0x6501,
-		MemoryFailure			= 0x6581,
-		WrongLength				= 0x6700,
-		ConditionsNotSatisfied 	= 0x6985,
-		PermissionDenied		= 0x69f0,
-		FileNotFound			= 0x6a82,
-		OK 						= 0x9000,
+		SelectInTerminationState 	= 0x6285,
+		VerifyFailNoTryLeft 		= 0x63C0,
+		MemoryWriteError			= 0x6501,
+		MemoryFailure				= 0x6581,
+		WrongLength					= 0x6700,
+		LogicalChannelNotSupported	= 0x6881,
+		SecureMessagingNotSupport	= 0x6882,
+		LastCmdOfChainExpected		= 0x6883,
+		CommandChainingNotSupported	= 0x6884,
+		SecurityStatusNotSatisfied	= 0x6982,
+		AuthenticationMethodBlocked	= 0x6983,
+		ConditionsUseNotSatisfied	= 0x6985,
+		ExpectedSMObjectsMissing	= 0x6987,
+		SMdataObjectsIncorrect	 	= 0x6988,
+		PermissionDenied			= 0x69f0,
+		IncorrectParamInDataField	= 0x6a80,
+		FileNotFound				= 0x6a82,
+		WrongParametersP1orP2		= 0x6b00,
+		INSnotSupported				= 0x6d00,
+		CLAnotSupported				= 0x6e00,
+		OK 							= 0x9000,
 	};
 
 }
