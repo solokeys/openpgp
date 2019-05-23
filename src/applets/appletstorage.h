@@ -22,19 +22,19 @@
 
 namespace Applet {
 
-	class AppletStorage {
-	private:
-		OpenPGPApplet openPGPApplet;
-		TestApplet testApplet;
+class AppletStorage {
+private:
+	OpenPGPApplet openPGPApplet;
+	TestApplet testApplet;
 
-		//std::array<Applet, 2> = {openPGPApplet, testApplet}
+	//std::array<Applet, 2> = {openPGPApplet, testApplet}
 
-		Applet *selectedApplet;
+	Applet *selectedApplet;
 
-	public:
-		Util::Error SelectApplet(uint8_t aid, size_t size);
-		Applet GetSelectedApplet();
-	};
+public:
+	Util::Error SelectApplet(uint8_t aid, size_t size);
+	Applet *GetSelectedApplet();
+};
 
 }
 
