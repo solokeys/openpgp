@@ -39,7 +39,8 @@ int main(int argc, char * argv[])
 
             	//printf("typesize %d\n", bstr(result).typesize());
 
-            	Util::Error err = applet->APDUExchange(bstr(ccidbuf, sz), resstr);
+            	auto apdu = bstr(ccidbuf, sz);
+            	Util::Error err = applet->APDUExchange(apdu, resstr);
             	if (err == Util::Error::NoError) {
 
 
@@ -54,12 +55,11 @@ int main(int argc, char * argv[])
 
             } else {
             	printf("applet not selected.\n");
-            	resstr.clear();
-            	resstr.appendAPDUres(Applet::APDUResponse::ConditionsUseNotSatisfied);
+            	resstr.setAPDURes(Applet::APDUResponse::ConditionsUseNotSatisfied);
             }
 
             printf("<< "); dump_hex(resstr);
-            //ccid_send(buf, size);
+            ccid_send(resstr.uint8Data(), resstr.length());
 
         }
     }

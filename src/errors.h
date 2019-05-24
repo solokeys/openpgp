@@ -28,7 +28,7 @@ namespace Util {
 
 	inline const char *GetStrError(Error err) {
 		return strError[err];
-	}
+	};
 }
 
 

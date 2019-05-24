@@ -22,6 +22,10 @@ namespace std {
 //			return sizeof(this->value_type);
 //		};
 
+		constexpr uint8_t *uint8Data() {
+			return const_cast<uint8_t *>(this->data());
+		}
+
 		constexpr void clear() {
 			this->remove_suffix(this->length());
 		}
@@ -50,6 +54,16 @@ namespace std {
 
 		constexpr void append(std::basic_string_view<_CharT, _Traits> sv) {
 			append(sv.data(), sv.length());
+		}
+
+		constexpr void set(std::basic_string_view<_CharT, _Traits> sv) {
+			clear();
+			append(sv.data(), sv.length());
+		}
+
+		constexpr void setAPDURes(uint16_t w) {
+			clear();
+			appendAPDUres(w);
 		}
    };
 }

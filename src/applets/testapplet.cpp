@@ -14,6 +14,6 @@ const bstr* Applet::TestApplet::GetAID() {
 }
 
 Util::Error Applet::TestApplet::APDUExchange(bstr apdu, bstr &result) {
-
+	result.set(apdu);
 	return Util::Error::NoError;
 }
