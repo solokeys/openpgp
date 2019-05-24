@@ -32,7 +32,7 @@ namespace std {
 
 		constexpr void append(const uint8_t *data, size_t len) {
 			uint8_t *dst = const_cast<uint8_t*>(this->data());
-			w_basic_string_view<_CharT, _Traits> newsv(const_cast<uint8_t*>(this->data()), this->length() + len);
+			w_basic_string_view<_CharT, _Traits> newsv(dst, this->length() + len);
 
 			dst += this->length();
 			for (size_t i = 0; i < len; i++)
