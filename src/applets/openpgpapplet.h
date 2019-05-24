@@ -38,7 +38,7 @@ class OpenPGPApplet: public Applet {
 
 private:
 	// OpenPGP AID
-	const bstr aid = bstr(reinterpret_cast<const uint8_t *>("\xd2\x76\x00\x01\x24\x01"));
+	const bstr aid = "\xd2\x76\x00\x01\x24\x01"_bstr;
 public:
 	OpenPGPApplet();
 
