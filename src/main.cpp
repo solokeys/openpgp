@@ -5,6 +5,7 @@
 #include "solofactory.h"
 #include "util.h"
 #include "applets/applet.h"
+#include "applets/apduconst.h"
 
 int main(int argc, char * argv[])
 {
@@ -26,18 +27,19 @@ int main(int argc, char * argv[])
     printf("OpenPGP factory OK.\n");
 
 
+	uint8_t result[1024] = {0};
     while (1)
     {
+    	auto resstr = bstr(result);
         if ((sz = ccid_recv(ccidbuf)) > 0)
         {
             printf(">> "); dump_hex(ccidbuf, sz);
             Applet::Applet *applet = applet_storage->GetSelectedApplet();
             if (applet != nullptr) {
-            	uint8_t result[1024] = {0};
 
-            	printf("maxsize %d\n", bstr(result).max_size());
+            	//printf("typesize %d\n", bstr(result).typesize());
 
-            	Util::Error err = applet->APDUExchange(bstr(ccidbuf, sz), bstr(result));
+            	Util::Error err = applet->APDUExchange(bstr(ccidbuf, sz), resstr);
             	if (err == Util::Error::NoError) {
 
             	} else {
@@ -51,9 +53,11 @@ int main(int argc, char * argv[])
 
             } else {
             	printf("applet not selected.\n");
-            	// result=6985
+            	resstr.clear();
+            	resstr.appendAPDUres(Applet::APDUResponse::ConditionsUseNotSatisfied);
             }
 
+            printf("<< "); dump_hex(resstr);
             //ccid_send(buf, size);
 
         }
