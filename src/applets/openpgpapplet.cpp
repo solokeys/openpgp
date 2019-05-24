@@ -22,10 +22,15 @@ const bstr* OpenPGPApplet::GetAID() {
 }
 
 Util::Error OpenPGPApplet::APDUExchange(bstr apdu, bstr result) {
-	//result->clear();
+	result.clear();
 
-	printf("openpgp applet here...");
+	printf("openpgp applet here...\n");
 	dump_hex(apdu);
+	result.append(0xaa);
+	uint8_t d[3] = {0x01, 0x02, 0x03};
+	result.append(d, 3);
+	result.append("\xa0\x00\xa1"_bstr);
+	dump_hex(result);
 
 	if (!selected)
 		return Util::Error::AppletNotSelected;

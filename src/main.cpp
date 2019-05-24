@@ -35,6 +35,8 @@ int main(int argc, char * argv[])
             if (applet != nullptr) {
             	uint8_t result[1024] = {0};
 
+            	printf("maxsize %d\n", bstr(result).max_size());
+
             	Util::Error err = applet->APDUExchange(bstr(ccidbuf, sz), bstr(result));
             	if (err == Util::Error::NoError) {
 

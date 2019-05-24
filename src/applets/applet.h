@@ -21,7 +21,7 @@ namespace Applet {
 	class Applet {
 	protected:
 		bool selected;
-		const bstr aid = bstr(reinterpret_cast<const uint8_t *>("\x00"));
+		const bstr aid = "\x00"_bstr;
 
 		// TODO: applet config load/save
 
