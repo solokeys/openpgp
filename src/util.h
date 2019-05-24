@@ -27,8 +27,7 @@ namespace std {
 		}
 
 		constexpr void append(uint8_t b) {
-			this->remove_suffix(-1);
-			*const_cast<uint8_t*>(this->data() + this->length() - 1) = b;
+			append(&b, 1);
 		}
 
 		constexpr void append(const uint8_t *data, size_t len) {

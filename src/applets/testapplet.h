@@ -16,7 +16,7 @@ namespace Applet {
 
 	class TestApplet: public Applet {
 	private:
-		const bstr aid = bstr(reinterpret_cast<const uint8_t *>("\xfa\xfa\xfa\xfa"));
+		const bstr aid = "\xfa\xfa\xfa\xfa"_bstr;
 	public:
 		virtual const bstr *GetAID();
 
