@@ -44,7 +44,7 @@ int main(int argc, char * argv[])
 
 
             	} else {
-                	printf("appdu exchange error.\n");
+                	printf("appdu exchange error: %s\n", Util::GetStrError(err));
 
                 	//switch (err) {
 

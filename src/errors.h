@@ -19,6 +19,16 @@ namespace Util {
 		// this error links to the end of array
 		lastError
 	};
+
+	static const char* const strError[Error::lastError + 1] = {
+		"OK",
+		"Applet not selected",
+
+		"n/a"};
+
+	inline const char *GetStrError(Error err) {
+		return strError[err];
+	}
 }
 
 
