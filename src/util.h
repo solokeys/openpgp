@@ -31,10 +31,14 @@ namespace std {
 		}
 
 		constexpr void append(const uint8_t *data, size_t len) {
-			this->remove_suffix(-1 * len);
-			uint8_t *dst = const_cast<uint8_t*>(this->data() + this->length() - len);
+			uint8_t *dst = const_cast<uint8_t*>(this->data());
+			w_basic_string_view<_CharT, _Traits> newsv(const_cast<uint8_t*>(this->data()), this->length() + len);
+
+			dst += this->length();
 			for (size_t i = 0; i < len; i++)
 			  *dst++ = *data++;
+
+			*this = newsv;
 		}
 
 		constexpr void append(std::basic_string_view<_CharT, _Traits> sv) {
