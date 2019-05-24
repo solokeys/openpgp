@@ -18,16 +18,12 @@ namespace std {
     public:
 		using basic_string_view<_CharT, _Traits>::basic_string_view;
 
-		constexpr size_t vsize() const {
-			return sizeof(this->value_type);
-		};
+//		constexpr size_t typesize() const {
+//			return sizeof(this->value_type);
+//		};
 
 		constexpr void clear() {
 			this->remove_suffix(this->length());
-		}
-
-		constexpr void append(uint8_t b) {
-			append(&b, 1);
 		}
 
 		constexpr void append(const uint8_t *data, size_t len) {
@@ -39,6 +35,17 @@ namespace std {
 			  *dst++ = *data++;
 
 			*this = newsv;
+		}
+
+		constexpr void append(uint8_t b) {
+			append(&b, 1);
+		}
+
+		constexpr void appendAPDUres(uint16_t w) {
+			uint8_t b[2];
+			b[0] = (w >> 8) & 0xff;
+			b[1] = w & 0xff;
+			append(b, 2);
 		}
 
 		constexpr void append(std::basic_string_view<_CharT, _Traits> sv) {

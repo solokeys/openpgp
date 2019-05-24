@@ -21,7 +21,7 @@ const bstr* OpenPGPApplet::GetAID() {
 	return &aid;
 }
 
-Util::Error OpenPGPApplet::APDUExchange(bstr apdu, bstr result) {
+Util::Error OpenPGPApplet::APDUExchange(bstr apdu, bstr &result) {
 	result.clear();
 
 	printf("openpgp applet here...\n");

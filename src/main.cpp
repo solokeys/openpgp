@@ -42,6 +42,7 @@ int main(int argc, char * argv[])
             	Util::Error err = applet->APDUExchange(bstr(ccidbuf, sz), resstr);
             	if (err == Util::Error::NoError) {
 
+
             	} else {
                 	printf("appdu exchange error.\n");
 
