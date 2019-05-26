@@ -16,6 +16,10 @@ Util::Error SoloFactory::Init() {
 	return Util::NoError;
 }
 
+APDUExecutor* Factory::SoloFactory::GetAPDUExecutor() {
+	return &apduExecutor;
+}
+
 AppletStorage* SoloFactory::GetAppletStorage() {
 	return &appletStorage;
 }
@@ -33,6 +37,3 @@ ResetProvider* SoloFactory::GetResetProvider() {
 }
 
 }
-
-
-

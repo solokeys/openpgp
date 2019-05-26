@@ -24,6 +24,12 @@ int main(int argc, char * argv[])
     	return 1;
     }
 
+    Applet::APDUExecutor *executor = factory.GetAPDUExecutor();
+    if (executor == nullptr) {
+    	printf("factory initialization error");
+    	return 1;
+    }
+
     printf("OpenPGP factory OK.\n");
 
 
@@ -34,12 +40,22 @@ int main(int argc, char * argv[])
         if ((sz = ccid_recv(ccidbuf)) > 0)
         {
             printf(">> "); dump_hex(ccidbuf, sz);
+
+        	//auto apdu = bstr(&ccidbuf[10], sz - 10);
+            //executor->Execute(apdu, resstr);
+
             Applet::Applet *applet = applet_storage->GetSelectedApplet();
             if (applet != nullptr) {
 
             	//printf("typesize %d\n", bstr(result).typesize());
 
-            	auto apdu = bstr(ccidbuf, sz);
+            	// pack("<BiBBBH", msg_type, len(data), slot, seq, rsv, param) + data
+            	if (ccidbuf[0] != 0x6f)
+            		printf("warning: msg_type not 6f. 0x%02x\n", ccidbuf[0]);
+            	if (ccidbuf[1] + 10 != sz)
+            		printf("warning: length error. data len %d pck len %d", sz, ccidbuf[1]);
+
+            	auto apdu = bstr(&ccidbuf[10], sz - 10);
             	Util::Error err = applet->APDUExchange(apdu, resstr);
             	if (err == Util::Error::NoError) {
 

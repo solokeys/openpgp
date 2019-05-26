@@ -12,6 +12,7 @@
 #define SRC_SOLOFACTORY_H_
 
 #include "cryptolib.h"
+#include "apduexecutor.h"
 #include "applets/appletstorage.h"
 #include "applets/openpgp/resetprovider.h"
 
@@ -23,12 +24,15 @@ namespace Factory {
 
 	class SoloFactory {
 	private:
+		APDUExecutor apduExecutor;
 		AppletStorage appletStorage;
 		CryptoEngine cryptoEngine;
 		CryptoLib cryptoLib;
 		ResetProvider resetProvider;
 	public:
 		Util::Error Init();
+
+		APDUExecutor *GetAPDUExecutor();
 
 		AppletStorage *GetAppletStorage();
 
