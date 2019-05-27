@@ -18,7 +18,7 @@ int main(int argc, char * argv[])
     printf("Init CCID\n");
 
     Factory::SoloFactory factory;
-    Applet::APDUExecutor &executor = factory.GetAPDUExecutor();
+    Applet::APDUExecutor executor = factory.GetAPDUExecutor();
 
     printf("OpenPGP factory OK.\n");
 

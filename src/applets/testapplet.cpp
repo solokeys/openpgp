@@ -14,6 +14,9 @@ const bstr* Applet::TestApplet::GetAID() {
 }
 
 Util::Error Applet::TestApplet::APDUExchange(bstr apdu, bstr &result) {
-	result.set(apdu);
+	auto len = apdu[4];
+	printf("lllll %d\n", len);
+	result.clear();
+	result.append(apdu.substr(5, len));
 	return Util::Error::NoError;
 }

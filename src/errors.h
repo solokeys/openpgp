@@ -14,6 +14,11 @@ namespace Util {
 	enum Error {
 		NoError,
 		AppletNotSelected,
+		WrongAPDUStructure,
+		WrongAPDULength,
+		WrongAPDUCLA,
+		WrongAPDUINS,
+		WrongAPDUP1P2,
 
 
 		// this error links to the end of array
@@ -23,6 +28,11 @@ namespace Util {
 	static const char* const strError[Error::lastError + 1] = {
 		"OK",
 		"Applet not selected",
+		"Wrong APDU structure",
+		"Wrong APDU length",
+		"Wrong APDU CLA",
+		"Wrong APDU INS",
+		"Wrong APDU P1 or P2",
 
 		"n/a"};
 

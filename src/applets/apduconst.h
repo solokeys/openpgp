@@ -34,6 +34,7 @@ namespace Applet {
 		WrongParametersP1orP2		= 0x6b00,
 		INSnotSupported				= 0x6d00,
 		CLAnotSupported				= 0x6e00,
+		InternalException			= 0x6f00,
 		OK 							= 0x9000,
 	};
 
