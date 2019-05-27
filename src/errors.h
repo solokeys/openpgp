@@ -14,6 +14,7 @@ namespace Util {
 	enum Error {
 		NoError,
 		AppletNotSelected,
+		AppletNotFound,
 		WrongAPDUStructure,
 		WrongAPDULength,
 		WrongAPDUCLA,
@@ -28,6 +29,7 @@ namespace Util {
 	static const char* const strError[Error::lastError + 1] = {
 		"OK",
 		"Applet not selected",
+		"Applet not found",
 		"Wrong APDU structure",
 		"Wrong APDU length",
 		"Wrong APDU CLA",

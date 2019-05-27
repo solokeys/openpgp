@@ -11,16 +11,30 @@
 
 namespace Applet {
 
-Util::Error AppletStorage::SelectApplet(uint8_t aid, size_t size) {
+Util::Error AppletStorage::SelectApplet(bstr aid, bstr &result) {
+	Applet *sapp = nullptr;
+    for(const auto& app: applets) {
+    	if (*app->GetAID() == aid) {
+    		sapp = app;
+    		break;
+    	}
+    }
 
+    if (sapp == nullptr)
+    	return Util::Error::AppletNotFound;
+
+    for(const auto& app: applets)
+    	app->DeSelect();
+
+    auto err = sapp->Select(result);
+    if (err != Util::Error::NoError)
+    	return err;
+
+    selectedApplet = sapp;
 	return Util::Error::NoError;
 }
 
 Applet* AppletStorage::GetSelectedApplet() {
-
-	testApplet.Select();
-	return &testApplet;
-
     for(const auto& app: applets) {
     	if (app->Selected())
     		return app;

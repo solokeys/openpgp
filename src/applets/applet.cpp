@@ -20,7 +20,8 @@ Util::Error Applet::Init() {
 	return Util::Error::NoError;
 }
 
-Util::Error Applet::Select() {
+Util::Error Applet::Select(bstr &result) {
+	result.clear();
 	selected = true;
 
 	return Util::Error::NoError;

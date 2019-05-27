@@ -31,7 +31,7 @@ private:
 	Applet *selectedApplet;
 
 public:
-	Util::Error SelectApplet(uint8_t aid, size_t size);
+	Util::Error SelectApplet(bstr aid, bstr &result);
 	Applet *GetSelectedApplet();
 };
 

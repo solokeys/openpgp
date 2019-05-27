@@ -12,15 +12,31 @@
 #include <cstdint>
 #include <string_view>
 
+#ifndef MIN
+#define MIN(a,b) (((a) < (b)) ? (a) : (b))
+#endif
+
+#ifndef MAX
+#define MAX(a,b) (((a) > (b)) ? (a) : (b))
+#endif
+
 namespace std {
 	template<typename _CharT, typename _Traits = std::char_traits<_CharT>>
     class w_basic_string_view : public basic_string_view<_CharT, _Traits> {
+    private:
+		size_t _max_length;
     public:
 		using basic_string_view<_CharT, _Traits>::basic_string_view;
 
-//		constexpr size_t typesize() const {
-//			return sizeof(this->value_type);
-//		};
+		constexpr w_basic_string_view(std::basic_string_view<_CharT, _Traits> sv, size_t maxLength = 0)
+							:basic_string_view<_CharT, _Traits>(sv) {
+			_max_length = MAX(sv.length(), maxLength);
+		}
+		constexpr w_basic_string_view(const _CharT* __str, size_t __len, size_t maxLength = 0)
+							:basic_string_view<_CharT, _Traits>(__str, __len) {
+			_max_length = MAX(__len, maxLength);
+		}
+
 
 		constexpr uint8_t *uint8Data() {
 			return const_cast<uint8_t *>(this->data());
@@ -78,14 +94,5 @@ using AppID_t = uint16_t;
 
 void dump_hex(uint8_t * buf, int size);
 void dump_hex(bstr data);
-
-#ifndef MIN
-#define MIN(a,b) (((a) < (b)) ? (a) : (b))
-#endif
-
-#ifndef MAX
-#define MAX(a,b) (((a) > (b)) ? (a) : (b))
-#endif
-
 
 #endif

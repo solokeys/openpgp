@@ -30,7 +30,7 @@ namespace Applet {
 
 		virtual Util::Error Init();
 
-		virtual Util::Error Select();
+		virtual Util::Error Select(bstr &result);
 		virtual Util::Error DeSelect();
 		virtual bool Selected();
 

@@ -19,6 +19,7 @@ namespace Applet {
 class APDUExecutor {
 private:
 	AppletStorage &appletStorage;
+	void SetResultError(bstr &result, Util::Error error);
 public:
 	APDUExecutor(AppletStorage &applet_storage): appletStorage{applet_storage}{};
 	Util::Error Execute(bstr apdu, bstr &result);

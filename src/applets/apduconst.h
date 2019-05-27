@@ -39,6 +39,7 @@ namespace Applet {
 	};
 
 	enum APDUcommands {
+		Select					= 0xa4,
 		SelectData				= 0xa5,
 		GetData					= 0xca,
 		GetNextData				= 0xcc,
