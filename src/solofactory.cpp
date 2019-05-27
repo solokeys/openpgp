@@ -16,24 +16,24 @@ Util::Error SoloFactory::Init() {
 	return Util::NoError;
 }
 
-APDUExecutor* Factory::SoloFactory::GetAPDUExecutor() {
-	return &apduExecutor;
+APDUExecutor& Factory::SoloFactory::GetAPDUExecutor() {
+	return apduExecutor;
 }
 
-AppletStorage* SoloFactory::GetAppletStorage() {
-	return &appletStorage;
+AppletStorage& SoloFactory::GetAppletStorage() {
+	return appletStorage;
 }
 
-CryptoEngine* SoloFactory::GetCryptoEngine() {
-	return &cryptoEngine;
+CryptoEngine& SoloFactory::GetCryptoEngine() {
+	return cryptoEngine;
 }
 
-CryptoLib* SoloFactory::GetCryptoLib() {
-	return &cryptoLib;
+CryptoLib& SoloFactory::GetCryptoLib() {
+	return cryptoLib;
 }
 
-ResetProvider* SoloFactory::GetResetProvider() {
-	return &resetProvider;
+ResetProvider& SoloFactory::GetResetProvider() {
+	return resetProvider;
 }
 
 }

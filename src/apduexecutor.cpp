@@ -8,10 +8,38 @@
  */
 
 #include <apduexecutor.h>
+#include "applets/apduconst.h"
 
-namespace OpenPGP {
+namespace Applet {
 
-} /* namespace OpenPGP */
+Util::Error APDUExecutor::Execute(bstr apdu, bstr& result) {
 
-Util::Error Applet::APDUExecutor::Execute(bstr apdu, bstr& result) {
+
+    Applet *applet = appletStorage.GetSelectedApplet();
+    if (applet != nullptr) {
+
+    	Util::Error err = applet->APDUExchange(apdu, result);
+    	if (err == Util::Error::NoError) {
+
+
+    	} else {
+        	printf("appdu exchange error: %s\n", Util::GetStrError(err));
+
+        	//switch (err) {
+
+        	//}
+
+    	}
+
+    } else {
+    	printf("applet not selected.\n");
+    	result.setAPDURes(APDUResponse::ConditionsUseNotSatisfied);
+    }
+
+
+
+    return Util::NoError;
 }
+
+}
+

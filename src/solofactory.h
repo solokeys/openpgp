@@ -24,22 +24,22 @@ namespace Factory {
 
 	class SoloFactory {
 	private:
-		APDUExecutor apduExecutor;
 		AppletStorage appletStorage;
+		APDUExecutor apduExecutor{appletStorage};
 		CryptoEngine cryptoEngine;
 		CryptoLib cryptoLib;
 		ResetProvider resetProvider;
 	public:
 		Util::Error Init();
 
-		APDUExecutor *GetAPDUExecutor();
+		APDUExecutor &GetAPDUExecutor();
 
-		AppletStorage *GetAppletStorage();
+		AppletStorage &GetAppletStorage();
 
-		CryptoEngine *GetCryptoEngine();
-		CryptoLib *GetCryptoLib();
+		CryptoEngine &GetCryptoEngine();
+		CryptoLib &GetCryptoLib();
 
-		ResetProvider *GetResetProvider();
+		ResetProvider &GetResetProvider();
 	};
 
 

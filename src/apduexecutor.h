@@ -12,11 +12,15 @@
 
 #include "util.h"
 #include "errors.h"
+#include "applets/appletstorage.h"
 
 namespace Applet {
 
 class APDUExecutor {
+private:
+	AppletStorage &appletStorage;
 public:
+	APDUExecutor(AppletStorage &applet_storage): appletStorage{applet_storage}{};
 	Util::Error Execute(bstr apdu, bstr &result);
 };
 
