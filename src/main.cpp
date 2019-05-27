@@ -29,8 +29,6 @@ int main(int argc, char * argv[])
     	auto resstr = bstr(&result[10], 0, sizeof(result) - 10);
         if ((sz = ccid_recv(ccidbuf)) > 0)
         {
-            printf(">> "); dump_hex(ccidbuf, sz);
-
         	// pack("<BiBBBH", msg_type, len(data), slot, seq, rsv, param) + data
         	if (ccidbuf[0] != 0x6f)
         		printf("warning: msg_type not 6f. 0x%02x\n", ccidbuf[0]);
@@ -39,6 +37,8 @@ int main(int argc, char * argv[])
         		printf("warning: length error. data len %d pck len %d", sz, ccidbuf[1]);
 
         	auto apdu = bstr(&ccidbuf[10], sz - 10);
+            printf(">> "); dump_hex(apdu);
+
             executor.Execute(apdu, resstr);
 
             printf("<< "); dump_hex(resstr);
