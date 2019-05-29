@@ -44,17 +44,19 @@ Util::Error APDUExecutor::Execute(bstr apdu, bstr& result) {
 		return Util::Error::WrongAPDUStructure;
 	}
 
-	if (apdu.length() != apdu[4] + 5U && apdu.length() != apdu[4] + 6U) {
-    	result.setAPDURes(APDUResponse::WrongLength);
-		return Util::Error::WrongAPDULength;
-	}
-
 	auto cla = apdu[0];
 	auto ins = apdu[1];
 	auto p1 = apdu[2];
 	auto p2 = apdu[3];
 	auto len = apdu[4];
 	auto data = bstr(apdu.substr(5, len));
+
+	// TODO: temporary off length check for 0xca (GetData)
+	if (apdu.length() != len + 5U && apdu.length() != len + 6U && ins != APDUcommands::GetData) {
+    	result.setAPDURes(APDUResponse::WrongLength);
+		return Util::Error::WrongAPDULength;
+	}
+
 	if (ins == APDUcommands::Select) {
 		if (cla != 0) {
     		result.appendAPDUres(APDUResponse::CLAnotSupported);

@@ -16,6 +16,7 @@
 #include "applet.h"
 #include "errors.h"
 #include "applet.h"
+#include "solofactory.h"
 #include "openpgpapplet.h"
 #include "testapplet.h"
 
@@ -23,14 +24,18 @@ namespace Applet {
 
 class AppletStorage {
 private:
-	OpenPGPApplet openPGPApplet;
+	Factory::SoloFactory &soloFactory;
+
+	OpenPGPApplet openPGPApplet{soloFactory};
 	TestApplet testApplet;
 
 	std::array<Applet*, 2> applets = {&openPGPApplet, &testApplet};
 
-	Applet *selectedApplet;
+	Applet *selectedApplet = nullptr;
 
 public:
+	AppletStorage(Factory::SoloFactory &solo_factory) : soloFactory(solo_factory){};
+
 	Util::Error SelectApplet(bstr aid, bstr &result);
 	Applet *GetSelectedApplet();
 };

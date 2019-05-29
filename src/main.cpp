@@ -4,7 +4,6 @@
 #include "util.h"
 #include "solofactory.h"
 #include "util.h"
-#include "applets/applet.h"
 #include "applets/apduconst.h"
 
 int main(int argc, char * argv[])

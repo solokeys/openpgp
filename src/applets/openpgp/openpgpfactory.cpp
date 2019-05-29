@@ -7,8 +7,22 @@
  copied, modified, or distributed except according to those terms.
  */
 
-#include <applets/openpgp/apdufactory.h>
+#include <applets/openpgp/openpgpfactory.h>
 
 namespace OpenPGP {
+
+Applet::APDUCommand* OpenPGPFactory::GetAPDUCommand(uint8_t cla,
+		uint8_t ins, uint8_t p1, uint8_t p2) {
+
+	return nullptr;
+}
+
+ResetProvider& OpenPGPFactory::GetResetProvider() {
+	return resetProvider;
+}
+
+APDUSecurityCheck& OpenPGPFactory::GetAPDUSecurityCheck() {
+	return apduSecurityCheck;
+}
 
 } /* namespace OpenPGP */

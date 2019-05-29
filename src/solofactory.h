@@ -14,7 +14,11 @@
 #include "cryptolib.h"
 #include "apduexecutor.h"
 #include "applets/appletstorage.h"
-#include "applets/openpgp/resetprovider.h"
+#include "applets/openpgp/openpgpfactory.h"
+
+#include "sologlobal.h"
+
+//namespace OpenPGP {class OpenPGPFactory;}
 
 namespace Factory {
 
@@ -24,11 +28,12 @@ namespace Factory {
 
 	class SoloFactory {
 	private:
-		AppletStorage appletStorage;
-		APDUExecutor apduExecutor{appletStorage};
+		AppletStorage appletStorage{*this};
+		APDUExecutor apduExecutor{*this};
 		CryptoEngine cryptoEngine;
 		CryptoLib cryptoLib;
-		ResetProvider resetProvider;
+
+		OpenPGPFactory openPGPFactory{*this};
 	public:
 		Util::Error Init();
 
@@ -39,7 +44,7 @@ namespace Factory {
 		CryptoEngine &GetCryptoEngine();
 		CryptoLib &GetCryptoLib();
 
-		ResetProvider &GetResetProvider();
+		OpenPGPFactory &GetOpenPGPFactory();
 	};
 
 

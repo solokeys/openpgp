@@ -8,7 +8,21 @@
  */
 
 #include <applets/openpgp/apdusecuritycheck.h>
+#include "errors.h"
 
 namespace OpenPGP {
 
+Util::Error APDUSecurityCheck::CommandAccessCheck(
+		uint8_t ins, uint8_t p1, uint8_t p2) {
+
+	return Util::Error::NoError;
+}
+
+Util::Error APDUSecurityCheck::DataObjectAccessCheck(
+		uint16_t dataObjectID, bool writeAccess) {
+
+	return Util::Error::NoError;
+}
+
 } /* namespace OpenPGP */
+

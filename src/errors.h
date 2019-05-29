@@ -20,6 +20,7 @@ namespace Util {
 		WrongAPDUCLA,
 		WrongAPDUINS,
 		WrongAPDUP1P2,
+		WrongCommand,
 
 
 		// this error links to the end of array
@@ -35,6 +36,7 @@ namespace Util {
 		"Wrong APDU CLA",
 		"Wrong APDU INS",
 		"Wrong APDU P1 or P2",
+		"Wrong command",
 
 		"n/a"};
 

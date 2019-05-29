@@ -10,7 +10,11 @@
 #ifndef SRC_APPLETS_OPENPGPAPPLET_H_
 #define SRC_APPLETS_OPENPGPAPPLET_H_
 
+#include "solofactory.h"
 #include "applet.h"
+#include "openpgp/openpgpfactory.h"
+
+namespace Factory {class SoloFactory;}
 
 namespace Applet {
 
@@ -39,8 +43,9 @@ class OpenPGPApplet: public Applet {
 private:
 	// OpenPGP AID
 	const bstr aid = "\xd2\x76\x00\x01\x24\x01"_bstr;
+	Factory::SoloFactory &soloFactory;
 public:
-	OpenPGPApplet();
+	OpenPGPApplet(Factory::SoloFactory &solo_factory): soloFactory(solo_factory){};
 
 	virtual const bstr *GetAID();
 

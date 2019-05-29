@@ -13,20 +13,19 @@
 #include <cstdint>
 
 #include "errors.h"
-#include "applets/openpgpapplet.h"
+//#include "applets/openpgpapplet.h"
 
 namespace OpenPGP {
 
 	// OpenPGP application v3.3.1 page 35
 	class APDUSecurityCheck {
 	private:
-		Applet::OpenPGPApplet *openPGPApplet;
+		//Applet::OpenPGPApplet &openPGPApplet;
 	public:
-		APDUSecurityCheck(Applet::OpenPGPApplet *applet):openPGPApplet(applet){};
 
 		Util::Error CommandAccessCheck(uint8_t ins, uint8_t p1, uint8_t p2);
 		Util::Error DataObjectAccessCheck(uint16_t dataObjectID, bool writeAccess);
-};
+	};
 
 } /* namespace OpenPGP */
 

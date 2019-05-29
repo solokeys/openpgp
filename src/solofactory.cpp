@@ -32,8 +32,8 @@ CryptoLib& SoloFactory::GetCryptoLib() {
 	return cryptoLib;
 }
 
-ResetProvider& SoloFactory::GetResetProvider() {
-	return resetProvider;
+OpenPGPFactory& SoloFactory::GetOpenPGPFactory() {
+	return openPGPFactory;
 }
 
 }
