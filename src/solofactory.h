@@ -15,12 +15,14 @@
 #include "apduexecutor.h"
 #include "applets/appletstorage.h"
 #include "applets/openpgp/openpgpfactory.h"
+#include "filesystem.h"
 
 namespace Factory {
 
 	using namespace Crypto;
 	using namespace Applet;
 	using namespace OpenPGP;
+	using namespace File;
 
 	class SoloFactory {
 	public:
@@ -30,6 +32,8 @@ namespace Factory {
 		APDUExecutor apduExecutor;
 		CryptoEngine cryptoEngine;
 		CryptoLib cryptoLib;
+
+		FileSystem fileSystem;
 	public:
 		Util::Error Init();
 
@@ -41,6 +45,7 @@ namespace Factory {
 		CryptoLib &GetCryptoLib();
 
 		OpenPGPFactory &GetOpenPGPFactory();
+		FileSystem &GetFileSystem();
 
 		static SoloFactory &GetSoloFactory();
 	};

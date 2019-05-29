@@ -42,4 +42,8 @@ OpenPGPFactory& SoloFactory::GetOpenPGPFactory() {
 	return openPGPFactory;
 }
 
+FileSystem& Factory::SoloFactory::GetFileSystem() {
+	return fileSystem;
+}
+
 }

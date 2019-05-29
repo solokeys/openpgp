@@ -16,23 +16,29 @@
 
 namespace File {
 
-	class FileSystem {
-	private:
-	public:
-		Util::Error ReadFile(AppID_t AppId, KeyID_t FileID, uint8_t FileType, bstr data);
-		Util::Error WriteFile(AppID_t AppId, KeyID_t FileID, uint8_t FileType, bstr data);
+enum FileType {
+	File,
+	Key
+};
 
-		Util::Error DeleteFile(AppID_t AppId, KeyID_t FileID, uint8_t FileType);
-		Util::Error DeleteFiles(AppID_t AppId);
-	};
+// Read only file system for system files. files lays in program flash.
+class ConfigFileSystem {
+private:
+public:
+	Util::Error ReadFile(AppID_t AppId, KeyID_t FileID, FileType FileType, bstr &data);
+};
 
-	// Read only file system for system files. files lays in program flash.
-	class ConfigFileSystem {
-	private:
-	public:
-		Util::Error ReadFile(AppID_t AppId, KeyID_t FileID, uint8_t FileType, bstr data);
-	};
+class FileSystem {
+private:
+	ConfigFileSystem cfgFiles;
+public:
+	Util::Error ReadFile(AppID_t AppId, KeyID_t FileID, FileType FileType, bstr &data);
+	Util::Error WriteFile(AppID_t AppId, KeyID_t FileID, FileType FileType, bstr &data);
+
+	Util::Error DeleteFile(AppID_t AppId, KeyID_t FileID, FileType FileType);
+	Util::Error DeleteFiles(AppID_t AppId);
+};
+
 }
-
 
 #endif /* SRC_FILESYSTEM_H_ */

@@ -22,6 +22,8 @@ namespace Util {
 		WrongAPDUP1P2,
 		WrongCommand,
 
+		FileNotFound,
+		FileWriteError,
 
 		// this error links to the end of array
 		lastError

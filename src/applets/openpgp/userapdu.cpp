@@ -12,6 +12,7 @@
 #include "solofactory.h"
 #include "applets/openpgp/openpgpfactory.h"
 #include "applets/openpgp/apdusecuritycheck.h"
+#include "filesystem.h"
 
 namespace OpenPGP {
 
