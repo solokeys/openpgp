@@ -95,11 +95,13 @@ Util::Error APDUResetRetryCounter::Process(uint8_t cla, uint8_t ins,
 
 // Open PGP application v 3.3.1 page 49
 Util::Error APDUGetData::Check(uint8_t cla, uint8_t ins, uint8_t p1, uint8_t p2) {
-	if ((cla == 0x00 || cla == 0x0c) &&
-		(ins == Applet::APDUcommands::GetData || ins == Applet::APDUcommands::GetData2))
-		return Util::Error::NoError;
+	if (ins != Applet::APDUcommands::GetData && ins != Applet::APDUcommands::GetData2)
+		return Util::Error::WrongCommand;
 
-	return Util::Error::WrongCommand;
+	if (cla != 0x00 && cla != 0x0c)
+		return Util::Error::WrongAPDUCLA;
+
+	return Util::Error::NoError;
 }
 
 Util::Error APDUGetData::Process(uint8_t cla, uint8_t ins, uint8_t p1,
