@@ -10,14 +10,33 @@
 #ifndef SRC_OPENPGP_OPENPGPFACTORY_H_
 #define SRC_OPENPGP_OPENPGPFACTORY_H_
 
+#include <array>
+
 #include "applets/apducommand.h"
 #include "apdusecuritycheck.h"
 #include "resetprovider.h"
+#include "userapdu.h"
 
 namespace OpenPGP {
 
 	class OpenPGPFactory {
 	public:
+		// userapdu
+		APDUVerify apduVerify;
+		APDUChangeReferenceData apduChangeReferenceData;
+		APDUResetRetryCounter apduResetRetryCounter;
+		APDUGetData apduGetData;
+		APDUPutData apduPutData;
+
+
+		std::array<Applet::APDUCommand*, 5> commands = {
+			&apduVerify,
+			&apduChangeReferenceData,
+			&apduResetRetryCounter,
+			&apduGetData,
+			&apduPutData
+		};
+
 		ResetProvider resetProvider;
 		APDUSecurityCheck apduSecurityCheck;
 	public:

@@ -16,31 +16,31 @@
 
 namespace OpenPGP {
 
-	class APDUVerify : Applet::APDUCommand {
+	class APDUVerify : public Applet::APDUCommand {
 	public:
 		virtual Util::Error Check(uint8_t cla, uint8_t ins);
 		virtual Util::Error Process(uint8_t cla, uint8_t ins, uint8_t p1, uint8_t p2, bstr data, bstr dataOut);
 	};
 
-	class APDUChangeReferenceData : Applet::APDUCommand {
+	class APDUChangeReferenceData : public Applet::APDUCommand {
 	public:
 		virtual Util::Error Check(uint8_t cla, uint8_t ins);
 		virtual Util::Error Process(uint8_t cla, uint8_t ins, uint8_t p1, uint8_t p2, bstr data, bstr dataOut);
 	};
 
-	class APDUResetRetryCounter : Applet::APDUCommand {
+	class APDUResetRetryCounter : public Applet::APDUCommand {
 	public:
 		virtual Util::Error Check(uint8_t cla, uint8_t ins);
 		virtual Util::Error Process(uint8_t cla, uint8_t ins, uint8_t p1, uint8_t p2, bstr data, bstr dataOut);
 	};
 
-	class APDUGetData : Applet::APDUCommand {
+	class APDUGetData : public Applet::APDUCommand {
 	public:
 		virtual Util::Error Check(uint8_t cla, uint8_t ins);
 		virtual Util::Error Process(uint8_t cla, uint8_t ins, uint8_t p1, uint8_t p2, bstr data, bstr dataOut);
 	};
 
-	class APDUPutData : Applet::APDUCommand {
+	class APDUPutData : public Applet::APDUCommand {
 	public:
 		virtual Util::Error Check(uint8_t cla, uint8_t ins);
 		virtual Util::Error Process(uint8_t cla, uint8_t ins, uint8_t p1, uint8_t p2, bstr data, bstr dataOut);

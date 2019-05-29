@@ -15,6 +15,12 @@ namespace OpenPGP {
 Applet::APDUCommand* OpenPGPFactory::GetAPDUCommand(uint8_t cla,
 		uint8_t ins, uint8_t p1, uint8_t p2) {
 
+	for(const auto& cmd: commands) {
+    	if (cmd->Check(cla, ins, p1, p2) == Util::Error::NoError) {
+    		return cmd;
+    	}
+    }
+
 	return nullptr;
 }
 
