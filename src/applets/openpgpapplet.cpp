@@ -32,7 +32,7 @@ Util::Error OpenPGPApplet::APDUExchange(bstr apdu, bstr &result) {
 
 	Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
 	OpenPGP::OpenPGPFactory &opgp_factory = solo.GetOpenPGPFactory();
-	OpenPGP::APDUSecurityCheck &securty = opgp_factory.apduSecurityCheck;
+	OpenPGP::APDUSecurityCheck &securty = opgp_factory.GetAPDUSecurityCheck();
 
 
 	printf("0>"); dump_hex(apdu);

@@ -42,6 +42,7 @@ namespace Applet {
 		Select					= 0xa4,
 		SelectData				= 0xa5,
 		GetData					= 0xca,
+		GetData2				= 0xcb,
 		GetNextData				= 0xcc,
 		Verify					= 0x20,
 		ChangeReferenceData		= 0x24,

@@ -18,19 +18,19 @@ namespace OpenPGP {
 
 	class APDUActivateFile : Applet::APDUCommand {
 	public:
-		virtual Util::Error Check(uint8_t cla, uint8_t ins);
+		virtual Util::Error Check(uint8_t cla, uint8_t ins, uint8_t p1, uint8_t p2);
 		virtual Util::Error Process(uint8_t cla, uint8_t ins, uint8_t p1, uint8_t p2, bstr data, bstr dataOut);
 	};
 
 	class APDUTerminateDF : Applet::APDUCommand {
 	public:
-		virtual Util::Error Check(uint8_t cla, uint8_t ins);
+		virtual Util::Error Check(uint8_t cla, uint8_t ins, uint8_t p1, uint8_t p2);
 		virtual Util::Error Process(uint8_t cla, uint8_t ins, uint8_t p1, uint8_t p2, bstr data, bstr dataOut);
 	};
 
 	class APDUManageSecurityEnvironment : Applet::APDUCommand {
 	public:
-		virtual Util::Error Check(uint8_t cla, uint8_t ins);
+		virtual Util::Error Check(uint8_t cla, uint8_t ins, uint8_t p1, uint8_t p2);
 		virtual Util::Error Process(uint8_t cla, uint8_t ins, uint8_t p1, uint8_t p2, bstr data, bstr dataOut);
 	};
 
