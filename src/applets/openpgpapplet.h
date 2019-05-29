@@ -20,16 +20,17 @@ struct OpenPGPAppletState {
 	bool pw3Authenticated;
 };
 
-// OpenPGP v3.3.1 page 78
+// OpenPGP v3.3.1 page 38 and 78
 enum LifeCycleState {
-	Created     = 0x01,
-	Init        = 0x03,
-	Operational = 0x04,
-	Terminated  = 0x05,
+	NoInfo		= 0x00,
+	Init		= 0x03,
+	Operational = 0x05,
 };
 
 struct OpenPGPAppletConfig {
 	LifeCycleState state;
+	bstr pw1;
+	bstr pw3;
 };
 
 class OpenPGPApplet: public Applet {

@@ -15,7 +15,7 @@
 namespace Applet {
 
 OpenPGPApplet::OpenPGPApplet() : Applet() {
-	config.state = LifeCycleState::Created;
+	config.state = LifeCycleState::Init;
 	state.pw1Authenticated = false;
 	state.pw3Authenticated = false;
 }
