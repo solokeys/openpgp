@@ -75,4 +75,26 @@ Util::Error OpenPGPApplet::APDUExchange(bstr apdu, bstr &result) {
 	return Util::Error::NoError;
 }
 
+void OpenPGPApplet::ClearAuth(Password passwdId) {
+	switch (passwdId){
+	case PW1:
+		state.pw1Authenticated = false;
+		break;
+	case PW3:
+		state.pw3Authenticated = false;
+		break;
+	}
+}
+
+void OpenPGPApplet::SetAuth(Password passwdId) {
+	switch (passwdId){
+	case PW1:
+		state.pw1Authenticated = true;
+		break;
+	case PW3:
+		state.pw3Authenticated = true;
+		break;
+	}
+}
+
 }

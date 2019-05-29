@@ -43,4 +43,8 @@ Applet* AppletStorage::GetSelectedApplet() {
 	return nullptr;
 }
 
+OpenPGPApplet& AppletStorage::GetOpenPGPApplet() {
+	return openPGPApplet;
+}
+
 }

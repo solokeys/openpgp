@@ -34,6 +34,8 @@ private:
 public:
 	Util::Error SelectApplet(bstr aid, bstr &result);
 	Applet *GetSelectedApplet();
+
+	OpenPGPApplet &GetOpenPGPApplet();
 };
 
 }

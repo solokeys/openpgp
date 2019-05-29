@@ -15,6 +15,11 @@
 
 namespace Applet {
 
+enum Password {
+	PW1,
+	PW3
+};
+
 struct OpenPGPAppletState {
 	bool pw1Authenticated;
 	bool pw3Authenticated;
@@ -47,6 +52,9 @@ public:
 	virtual const bstr *GetAID();
 
 	virtual Util::Error APDUExchange(bstr apdu, bstr &result);
+
+	void ClearAuth(Password passwdId);
+	void SetAuth(Password passwdId);
 };
 
 }
