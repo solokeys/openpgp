@@ -58,6 +58,16 @@ Util::Error ConfigFileSystem::ReadFile(AppID_t AppId, KeyID_t FileID,
 
 		return Util::Error::NoError;
 
+	// Historical bytes
+	case 0x5f52:
+		data.set("\x00\x31\xC5\x73\xC0\x01\x40\x05\x90\x00"_bstr); // from 0x6e
+		return Util::Error::NoError;
+
+	// PW Status Bytes (binary)
+	case 0xc0:
+		data.set("\x7C\x00\x08\x00\x08\x00\x08\x00\x08\x00"_bstr); // from 0x6e
+		return Util::Error::NoError;
+
 	// PW Status Bytes (binary)
 	case 0xc4:
 		data.set("\x00\x20\x20\x20\x03\x00\x03"_bstr); // from 0x6e
