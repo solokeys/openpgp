@@ -21,7 +21,7 @@ Util::Error APDUVerify::Check(uint8_t cla, uint8_t ins, uint8_t p1, uint8_t p2) 
 }
 
 Util::Error APDUVerify::Process(uint8_t cla, uint8_t ins, uint8_t p1,
-		uint8_t p2, bstr data, bstr dataOut) {
+		uint8_t p2, bstr data, bstr &dataOut) {
 	return Util::Error::WrongCommand;
 }
 
@@ -30,7 +30,7 @@ Util::Error APDUChangeReferenceData::Check(uint8_t cla, uint8_t ins, uint8_t p1,
 }
 
 Util::Error APDUChangeReferenceData::Process(uint8_t cla, uint8_t ins,
-		uint8_t p1, uint8_t p2, bstr data, bstr dataOut) {
+		uint8_t p1, uint8_t p2, bstr data, bstr &dataOut) {
 	return Util::Error::WrongCommand;
 }
 
@@ -39,13 +39,12 @@ Util::Error APDUResetRetryCounter::Check(uint8_t cla, uint8_t ins, uint8_t p1, u
 }
 
 Util::Error APDUResetRetryCounter::Process(uint8_t cla, uint8_t ins,
-		uint8_t p1, uint8_t p2, bstr data, bstr dataOut) {
+		uint8_t p1, uint8_t p2, bstr data, bstr &dataOut) {
 	return Util::Error::WrongCommand;
 }
 
 // Open PGP application v 3.3.1 page 49
 Util::Error APDUGetData::Check(uint8_t cla, uint8_t ins, uint8_t p1, uint8_t p2) {
-	printf("cla %x ins %x\n", cla, ins);
 	if ((cla == 0x00 || cla == 0x0c) &&
 		(ins == Applet::APDUcommands::GetData || ins == Applet::APDUcommands::GetData2))
 		return Util::Error::NoError;
@@ -54,11 +53,12 @@ Util::Error APDUGetData::Check(uint8_t cla, uint8_t ins, uint8_t p1, uint8_t p2)
 }
 
 Util::Error APDUGetData::Process(uint8_t cla, uint8_t ins, uint8_t p1,
-		uint8_t p2, bstr data, bstr dataOut) {
+		uint8_t p2, bstr data, bstr &dataOut) {
 
 	Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
 	OpenPGP::OpenPGPFactory &opgp_factory = solo.GetOpenPGPFactory();
 	OpenPGP::APDUSecurityCheck &security = opgp_factory.GetAPDUSecurityCheck();
+	File::FileSystem &filesystem = solo.GetFileSystem();
 
 	uint16_t object_id = (p1 << 8) + p2;
 	auto err = security.DataObjectAccessCheck(object_id, false);
@@ -67,6 +67,7 @@ Util::Error APDUGetData::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 
 	printf("object id = 0x%04x\n", object_id);
 
+	filesystem.ReadFile(0x00, object_id, File::File, dataOut);
 
 	return Util::Error::NoError;
 }
@@ -76,7 +77,7 @@ Util::Error APDUPutData::Check(uint8_t cla, uint8_t ins, uint8_t p1, uint8_t p2)
 }
 
 Util::Error APDUPutData::Process(uint8_t cla, uint8_t ins, uint8_t p1,
-		uint8_t p2, bstr data, bstr dataOut) {
+		uint8_t p2, bstr data, bstr &dataOut) {
 	return Util::Error::WrongCommand;
 }
 

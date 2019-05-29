@@ -58,13 +58,59 @@ Util::Error ConfigFileSystem::ReadFile(AppID_t AppId, KeyID_t FileID,
 
 		return Util::Error::NoError;
 
+	// PW Status Bytes (binary)
+	case 0xc4:
+		data.set("\x00\x20\x20\x20\x03\x00\x03"_bstr); // from 0x6e
+		return Util::Error::NoError;
+
+	// Fingerprints
+	case 0xc5:  // fingerprints
+	case 0xc6:  // ca-fingerprints
+		data.set("\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"\
+				 "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"\
+				 "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"_bstr); // from 0x6e
+		return Util::Error::NoError;
+
+	// individual Fingerprints. from 0xc5
+	case 0xc7: // Sig
+	case 0xc8: // Dec
+	case 0xc9: // Auth
+
+	// individual CA-Fingerprints. from 0xc6
+	case 0xca: // Sig
+	case 0xcb: // Dec
+	case 0xcc: // Auth
+		//data.set("\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"_bstr);
+		data.clear();
+		return Util::Error::NoError;
+
+	case 0xcd: // List of generation dates/times
+		data.set("\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"_bstr);
+		return Util::Error::NoError;
+
+	// individual list of dates/times. from 0xcd
+	case 0xce: // Sig
+	case 0xcf: // Dec
+	case 0xd0: // Auth
+		data.clear();
+		return Util::Error::NoError;
+
+
+	// Security support template
+	case 0x7a:
+		data.set("\x93\x03\x00\x00\x00"_bstr); // 93 - Digital signature counter (counts usage of Compute	Digital Signature command), binary, ISO 7816-4
+
+		return Util::Error::NoError;
+
 	// Cardholder Related Data
 	case 0x65:
-		data.set("\x5B\x00\x5F\x2D\x02\x65\x6e\x5F\x35\x01\x39"_bstr); // 5b name, 5f2d language = en, 5f35 sex = 9(n/a)
+		//data.set("\x5B\x00\x5F\x2D\x02\x65\x6e\x5F\x35\x01\x39"_bstr); // 5b name, 5f2d language = en, 5f35 sex = 9(n/a)
+		data.set("\x5B\x00\x5F\x2D\x00\x5F\x35\x01\x39"_bstr); // 5b name, 5f2d language = en, 5f35 sex = 9(n/a)
 		return Util::Error::NoError;
 
 	// empty files
 	case 0x5e: // Login data
+	case 0x5f50: //  URL with Link to a set of public keys
 		data.clear();
 		return Util::Error::NoError;
 
