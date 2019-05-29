@@ -11,6 +11,12 @@
 
 namespace Factory {
 
+static SoloFactory soloFactory;
+
+SoloFactory &SoloFactory::GetSoloFactory() {
+	return soloFactory;
+}
+
 Util::Error SoloFactory::Init() {
 
 	return Util::NoError;

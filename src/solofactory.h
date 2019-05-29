@@ -16,10 +16,6 @@
 #include "applets/appletstorage.h"
 #include "applets/openpgp/openpgpfactory.h"
 
-#include "sologlobal.h"
-
-//namespace OpenPGP {class OpenPGPFactory;}
-
 namespace Factory {
 
 	using namespace Crypto;
@@ -27,13 +23,13 @@ namespace Factory {
 	using namespace OpenPGP;
 
 	class SoloFactory {
-	private:
-		AppletStorage appletStorage{*this};
-		APDUExecutor apduExecutor{*this};
+	public:
+		OpenPGPFactory openPGPFactory;
+
+		AppletStorage appletStorage;
+		APDUExecutor apduExecutor;
 		CryptoEngine cryptoEngine;
 		CryptoLib cryptoLib;
-
-		OpenPGPFactory openPGPFactory{*this};
 	public:
 		Util::Error Init();
 
@@ -45,8 +41,9 @@ namespace Factory {
 		CryptoLib &GetCryptoLib();
 
 		OpenPGPFactory &GetOpenPGPFactory();
-	};
 
+		static SoloFactory &GetSoloFactory();
+	};
 
 }
 

@@ -13,7 +13,7 @@
 namespace OpenPGP {
 
 Util::Error APDUSecurityCheck::CommandAccessCheck(
-		uint8_t ins, uint8_t p1, uint8_t p2) {
+		uint8_t cla, uint8_t ins, uint8_t p1, uint8_t p2) {
 
 	return Util::Error::NoError;
 }

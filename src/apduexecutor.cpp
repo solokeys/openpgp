@@ -9,6 +9,7 @@
 
 #include <apduexecutor.h>
 #include "applets/apduconst.h"
+#include "solofactory.h"
 
 namespace Applet {
 
@@ -43,6 +44,9 @@ Util::Error APDUExecutor::Execute(bstr apdu, bstr& result) {
     	result.setAPDURes(APDUResponse::WrongLength);
 		return Util::Error::WrongAPDUStructure;
 	}
+
+	Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
+	AppletStorage &appletStorage = solo.appletStorage;
 
 	auto cla = apdu[0];
 	auto ins = apdu[1];

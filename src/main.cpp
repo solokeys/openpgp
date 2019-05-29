@@ -1,7 +1,6 @@
 #include <stdio.h>
 
 #include "device.h"
-#include "util.h"
 #include "solofactory.h"
 #include "util.h"
 #include "applets/apduconst.h"
@@ -16,7 +15,7 @@ int main(int argc, char * argv[])
 
     printf("Init CCID\n");
 
-    Factory::SoloFactory factory;
+    Factory::SoloFactory &factory = Factory::SoloFactory::GetSoloFactory();
     Applet::APDUExecutor executor = factory.GetAPDUExecutor();
 
     printf("OpenPGP factory OK.\n");

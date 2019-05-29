@@ -8,6 +8,7 @@
  */
 
 #include <applets/openpgp/openpgpfactory.h>
+#include "solofactory.h"
 
 namespace OpenPGP {
 

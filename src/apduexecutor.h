@@ -13,16 +13,13 @@
 #include "util.h"
 #include "errors.h"
 #include "applets/appletstorage.h"
-#include "solofactory.h"
 
 namespace Applet {
 
 class APDUExecutor {
 private:
-	Factory::SoloFactory &soloFactory;
 	void SetResultError(bstr &result, Util::Error error);
 public:
-	APDUExecutor(Factory::SoloFactory &solo_factory): soloFactory(solo_factory){};
 	Util::Error Execute(bstr apdu, bstr &result);
 };
 

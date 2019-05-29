@@ -23,7 +23,7 @@ namespace OpenPGP {
 		//Applet::OpenPGPApplet &openPGPApplet;
 	public:
 
-		Util::Error CommandAccessCheck(uint8_t ins, uint8_t p1, uint8_t p2);
+		Util::Error CommandAccessCheck(uint8_t cla, uint8_t ins, uint8_t p1, uint8_t p2);
 		Util::Error DataObjectAccessCheck(uint16_t dataObjectID, bool writeAccess);
 	};
 
