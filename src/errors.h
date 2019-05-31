@@ -24,9 +24,12 @@ namespace Util {
 		WrongCommand,
 
 		DataNotFound,
+		WrongPassword,
 
 		FileNotFound,
 		FileWriteError,
+
+		InternalError,
 
 		// this error links to the end of array
 		lastError
@@ -45,8 +48,11 @@ namespace Util {
 		"Wrong command",
 
 		"Data not found",
+		"Wrong password",
 		"File not found",
 		"File write error",
+
+		"Internal error",
 
 		"n/a"};
 

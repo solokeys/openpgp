@@ -22,6 +22,11 @@ enum FileType {
 	Key
 };
 
+enum KeyFileID {
+	PW1 = 0x80,
+	PW3 = 0x81
+};
+
 enum AppletID {
 	All     = 0,
 	Test    = 1,

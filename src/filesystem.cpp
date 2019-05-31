@@ -24,6 +24,21 @@ Util::Error FileSystem::SetFileName(AppID_t AppId, KeyID_t FileID,
 Util::Error ConfigFileSystem::ReadFile(AppID_t AppId, KeyID_t FileID,
 		FileType FileType, bstr& data) {
 
+	// secure objects
+	if (FileType == FileType::Key)
+		switch (FileID) {
+		case KeyFileID::PW1:
+			data.set("123456"_bstr);
+			return Util::Error::NoError;
+		case KeyFileID::PW3:
+			data.set("12345678"_bstr);
+			return Util::Error::NoError;
+		default:
+			break;
+		}
+
+
+	// files
 	switch (FileID) {
 	// EF.DIR. OpenPGP v 3.3.1 page 12.
 	case 0x2f00:
@@ -188,7 +203,11 @@ Util::Error FileSystem::WriteFile(AppID_t AppId, KeyID_t FileID,
 	char file_name[100] = {0};
 	SetFileName(AppId, FileID, FileType, file_name);
 
-	return Util::Error::FileWriteError;
+	int res = writefile(file_name, data.uint8Data(), data.length());
+	if (res != 0)
+		return Util::Error::FileWriteError;
+
+	return Util::Error::NoError;
 }
 
 

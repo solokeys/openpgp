@@ -13,7 +13,7 @@
 #include "applets/openpgp/openpgpfactory.h"
 #include "applets/openpgpapplet.h"
 #include "applets/openpgp/apdusecuritycheck.h"
-#include "applets/openpgp/openpgpconst.h"
+#include "openpgpconst.h"
 #include "filesystem.h"
 
 namespace OpenPGP {
@@ -77,12 +77,68 @@ Util::Error APDUVerify::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 }
 
 Util::Error APDUChangeReferenceData::Check(uint8_t cla, uint8_t ins, uint8_t p1, uint8_t p2) {
-	return Util::Error::WrongCommand;
+	if (ins != Applet::APDUcommands::ChangeReferenceData)
+		return Util::Error::WrongCommand;
+
+	if (cla != 0x00 && cla != 0x0c)
+		return Util::Error::WrongAPDUCLA;
+
+	if ((p1 != 0x00) ||
+		(p2 != 0x81 && p2 != 0x83))
+		return Util::Error::WrongAPDUP1P2;
+
+	return Util::Error::NoError;
 }
 
 Util::Error APDUChangeReferenceData::Process(uint8_t cla, uint8_t ins,
 		uint8_t p1, uint8_t p2, bstr data, bstr &dataOut) {
-	return Util::Error::WrongCommand;
+	Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
+	File::FileSystem &filesystem = solo.GetFileSystem();
+
+	auto err_check = Check(cla, ins, p1, p2);
+	if (err_check != Util::Error::NoError)
+		return err_check;
+
+	Password passwd_id = Password::PW1;
+	if (p2 == 0x83)
+		passwd_id = Password::PW3;
+
+	size_t min_length = PGPConst::PWMinLength(passwd_id);
+	size_t max_length = PGPConst::PWMaxLength(passwd_id);
+
+	uint8_t _passwd[max_length] = {0};
+	bstr passwd(_passwd, 0, max_length);
+
+	auto err = filesystem.ReadFile(File::AppletID::OpenPGP,
+			(passwd_id == Password::PW1) ? File::KeyFileID::PW1 : File::KeyFileID::PW3,
+			File::Key,
+			passwd);
+	if (err != Util::Error::NoError)
+		return err;
+
+	size_t passwd_length = passwd.length();
+
+	if (passwd_length < min_length)
+		return Util::Error::InternalError;
+
+	if ((data.length() < passwd_length + min_length) ||
+		(data.length() > passwd_length + max_length))
+		return Util::Error::WrongAPDUDataLength;
+
+	if (data.find(passwd) != 0)
+		return Util::Error::WrongPassword;
+
+	passwd.clear();
+	passwd.append(data.substr(passwd_length, data.length() - passwd_length));
+
+	err = filesystem.WriteFile(File::AppletID::OpenPGP,
+			(passwd_id == Password::PW1) ? File::KeyFileID::PW1 : File::KeyFileID::PW3,
+			File::Key,
+			passwd);
+	if (err != Util::Error::NoError)
+		return err;
+
+	return Util::Error::NoError;
 }
 
 Util::Error APDUResetRetryCounter::Check(uint8_t cla, uint8_t ins, uint8_t p1, uint8_t p2) {
