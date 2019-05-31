@@ -13,6 +13,7 @@
 #include "applets/openpgp/openpgpfactory.h"
 #include "applets/openpgpapplet.h"
 #include "applets/openpgp/apdusecuritycheck.h"
+#include "applets/openpgp/openpgpconst.h"
 #include "filesystem.h"
 
 namespace OpenPGP {
