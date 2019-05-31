@@ -131,11 +131,11 @@ int readfile(char* name, uint8_t * buf, size_t max_size, size_t *size) {
 	if (access(fname, R_OK) != 0)
 		return 1;
 
-	FILE *f  = fopen(name, "r");
+	FILE *f  = fopen(fname, "r");
 	if (f <= 0)
 		return 2;
 
-	*size = fread(buf, max_size, 1, f);
+	*size = fread(buf, 1, max_size, f);
 	fclose(f);
 
 	return 0;
@@ -154,7 +154,7 @@ int writefile(char* name, uint8_t * buf, size_t size) {
 	if (f <= 0)
 		return 2;
 
-	size_t sz = fwrite(buf, size, 1, f);
+	size_t sz = fwrite(buf, 1, size, f);
 	fclose(f);
 
 	if (sz != size)

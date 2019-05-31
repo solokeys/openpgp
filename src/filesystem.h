@@ -22,6 +22,13 @@ enum FileType {
 	Key
 };
 
+enum AppletID {
+	All     = 0,
+	Test    = 1,
+	OpenPGP = 2,
+};
+
+
 // Read only file system for system files. files lays in program flash.
 class ConfigFileSystem {
 private:

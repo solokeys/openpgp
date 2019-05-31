@@ -119,7 +119,7 @@ Util::Error APDUGetData::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 
 	printf("object id = 0x%04x\n", object_id);
 
-	filesystem.ReadFile(0x00, object_id, File::File, dataOut);
+	filesystem.ReadFile(File::AppletID::OpenPGP, object_id, File::File, dataOut);
 
 	return Util::Error::NoError;
 }

@@ -15,31 +15,31 @@
 
 #include "util.h"
 #include "errors.h"
+#include "filesystem.h"
 
 namespace Applet {
 
-	class Applet {
-	protected:
-		bool selected;
-		const bstr aid = "\x00"_bstr;
+class Applet {
+protected:
+	bool selected;
+	const bstr aid = "\x00"_bstr;
 
-		// TODO: applet config load/save
+	// TODO: applet config load/save
 
-	public:
-		virtual ~Applet();
+public:
+	virtual ~Applet();
 
-		virtual Util::Error Init();
+	virtual Util::Error Init();
 
-		virtual Util::Error Select(bstr &result);
-		virtual Util::Error DeSelect();
-		virtual bool Selected();
+	virtual Util::Error Select(bstr &result);
+	virtual Util::Error DeSelect();
+	virtual bool Selected();
 
-		virtual const bstr *GetAID();
+	virtual const bstr *GetAID();
 
-		virtual Util::Error APDUExchange(bstr apdu, bstr &result);
-	};
+	virtual Util::Error APDUExchange(bstr apdu, bstr &result);
+};
 
-
-}
+} // namespace Applet
 
 #endif /* SRC_APPLET_H_ */

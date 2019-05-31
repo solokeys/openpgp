@@ -154,10 +154,10 @@ Util::Error FileSystem::ReadFile(AppID_t AppId, KeyID_t FileID,
 
 	size_t len = 0;
 	int res = readfile(file_name, data.uint8Data(), 1024, &len); // TODO: change 1024 to `data` max length
-	if (res == 0)
+	if (res == 0) {
+		data.set_length(len);
 		return Util::Error::NoError;
-
-	data.set_length(len);
+	}
 
 	// try to read file from tlv config
 	// TODO:
