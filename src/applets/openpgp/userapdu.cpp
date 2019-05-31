@@ -131,9 +131,11 @@ Util::Error APDUChangeReferenceData::Process(uint8_t cla, uint8_t ins,
 		(data.length() > passwd_length + max_length))
 		return Util::Error::WrongAPDUDataLength;
 
+	// check old password
 	if (data.find(passwd) != 0)
 		return Util::Error::WrongPassword;
 
+	// set new password
 	passwd.clear();
 	passwd.append(data.substr(passwd_length, data.length() - passwd_length));
 
