@@ -68,6 +68,11 @@ Util::Error ConfigFileSystem::ReadFile(AppID_t AppId, KeyID_t FileID,
 
 		return Util::Error::NoError;
 
+	// AID
+	case 0x4f:
+		data.set("\xD2\x76\x00\x01\x24\x01\x02\x01\x00\x05\x00\x00\x31\x88\x00\x00"_bstr); // from 0x6e
+		return Util::Error::NoError;
+
 	// Historical bytes
 	case 0x5f52:
 		data.set("\x00\x31\xC5\x73\xC0\x01\x40\x05\x90\x00"_bstr); // from 0x6e
