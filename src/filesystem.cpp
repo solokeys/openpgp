@@ -8,8 +8,18 @@
  */
 
 #include "filesystem.h"
+#include "device.h"
 
 namespace File {
+
+Util::Error FileSystem::SetFileName(AppID_t AppId, KeyID_t FileID,
+		FileType FileType, char* name) {
+	name[0] = '\0';
+
+	sprintf(name, "%d_%d_%d", AppId, FileID, FileType);
+
+	return Util::Error::NoError;
+}
 
 Util::Error ConfigFileSystem::ReadFile(AppID_t AppId, KeyID_t FileID,
 		FileType FileType, bstr& data) {
@@ -138,8 +148,19 @@ Util::Error FileSystem::ReadFile(AppID_t AppId, KeyID_t FileID,
 
 	data.clear();
 
+	// try to read file
+	char file_name[100] = {0};
+	SetFileName(AppId, FileID, FileType, file_name);
 
+	size_t len = 0;
+	int res = readfile(file_name, data.uint8Data(), 1024, &len); // TODO: change 1024 to `data` max length
+	if (res == 0)
+		return Util::Error::NoError;
 
+	data.set_length(len);
+
+	// try to read file from tlv config
+	// TODO:
 
 	// check if we can read file from config area. here always a lowest priority
 	auto err = cfgFiles.ReadFile(AppId, FileID, FileType, data);
@@ -152,6 +173,9 @@ Util::Error FileSystem::ReadFile(AppID_t AppId, KeyID_t FileID,
 Util::Error FileSystem::WriteFile(AppID_t AppId, KeyID_t FileID,
 		FileType FileType, bstr& data) {
 
+	char file_name[100] = {0};
+	SetFileName(AppId, FileID, FileType, file_name);
+
 	return Util::Error::FileWriteError;
 }
 
@@ -159,10 +183,18 @@ Util::Error FileSystem::WriteFile(AppID_t AppId, KeyID_t FileID,
 Util::Error FileSystem::DeleteFile(AppID_t AppId, KeyID_t FileID,
 		FileType FileType) {
 
+	char file_name[100] = {0};
+	SetFileName(AppId, FileID, FileType, file_name);
+
+	deletefile(file_name);
+
 	return Util::Error::FileNotFound;
 }
 
 Util::Error FileSystem::DeleteFiles(AppID_t AppId) {
+	char file_name[100] = {0};
+	sprintf(file_name, "%d_*", AppId);
+	deletefile(file_name);
 
 	return Util::Error::NoError;
 }

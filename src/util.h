@@ -46,15 +46,18 @@ namespace std {
 			this->remove_suffix(this->length());
 		}
 
-		constexpr void append(const uint8_t *data, size_t len) {
-			uint8_t *dst = const_cast<uint8_t*>(this->data());
-			w_basic_string_view<_CharT, _Traits> newsv(dst, this->length() + len);
+		constexpr void set_length(size_t len) {
+			w_basic_string_view<_CharT, _Traits> newsv(this->data(), len);
+			*this = newsv;
+		}
 
-			dst += this->length();
+		constexpr void append(const uint8_t *data, size_t len) {
+			uint8_t *dst = const_cast<uint8_t*>(this->data()) + this->length();
+
 			for (size_t i = 0; i < len; i++)
 			  *dst++ = *data++;
 
-			*this = newsv;
+			set_length(this->length() + len);
 		}
 
 		constexpr void append(uint8_t b) {

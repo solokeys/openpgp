@@ -18,6 +18,7 @@ namespace File {
 
 enum FileType {
 	File,
+	TLVFile,
 	Key
 };
 
@@ -31,6 +32,8 @@ public:
 class FileSystem {
 private:
 	ConfigFileSystem cfgFiles;
+	Util::Error SetFileName(AppID_t AppId, KeyID_t FileID, FileType FileType, char *name);
+
 public:
 	Util::Error ReadFile(AppID_t AppId, KeyID_t FileID, FileType FileType, bstr &data);
 	Util::Error WriteFile(AppID_t AppId, KeyID_t FileID, FileType FileType, bstr &data);

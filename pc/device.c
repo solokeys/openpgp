@@ -9,6 +9,7 @@ extern "C" {
 #include <stdlib.h>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <netinet/in.h>
 #include <time.h>
 #include <string.h>
@@ -109,6 +110,72 @@ void ccid_send(uint8_t * msg, uint32_t sz)
 {
     udp_send(fd, msg, sz);
 }
+
+void make_work_directory(char* dir) {
+	if (access(dir, F_OK) != 0) {
+		mkdir(dir, 0777);
+	}
+}
+
+int readfile(char* name, uint8_t * buf, size_t max_size, size_t *size) {
+
+	char fname[100] = {0};
+	char dir[] = "./data/";
+	make_work_directory(dir);
+
+	strcpy(fname, dir);
+	strcat(fname, name);
+
+	printf("read: %s\n", fname);
+	// check if it exist and have read permission
+	if (access(fname, R_OK) != 0)
+		return 1;
+
+	FILE *f  = fopen(name, "r");
+	if (f <= 0)
+		return 2;
+
+	*size = fread(buf, max_size, 1, f);
+	fclose(f);
+
+	return 0;
+}
+
+int writefile(char* name, uint8_t * buf, size_t size) {
+	char fname[100] = {0};
+	char dir[] = "./data/";
+	make_work_directory(dir);
+
+	strcpy(fname, dir);
+	strcat(fname, name);
+
+	printf("write: %s\n", fname);
+	FILE *f  = fopen(fname, "w");
+	if (f <= 0)
+		return 2;
+
+	size_t sz = fwrite(buf, size, 1, f);
+	fclose(f);
+
+	if (sz != size)
+		return 3;
+
+	return 0;
+}
+
+int deletefile(char* name) {
+	char fname[100] = {0};
+	char dir[] = "./data/";
+	make_work_directory(dir);
+
+	strcpy(fname, dir);
+	strcat(fname, name);
+
+	printf("delete: %s\n", fname);
+	remove(fname);
+	return 0;
+}
+
 
 #ifdef __cplusplus
 }
