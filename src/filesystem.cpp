@@ -223,9 +223,10 @@ Util::Error FileSystem::DeleteFile(AppID_t AppId, KeyID_t FileID,
 }
 
 Util::Error FileSystem::DeleteFiles(AppID_t AppId) {
+
 	char file_name[100] = {0};
 	sprintf(file_name, "%d_*", AppId);
-	deletefile(file_name);
+	deletefiles(file_name);
 
 	return Util::Error::NoError;
 }

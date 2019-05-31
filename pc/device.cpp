@@ -1,8 +1,3 @@
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <sys/time.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -16,6 +11,8 @@ extern "C" {
 #include <unistd.h>
 #include <signal.h>
 #include <fcntl.h>
+#include <dirent.h>
+#include <fnmatch.h>
 
 int udp_server()
 {
@@ -176,8 +173,29 @@ int deletefile(char* name) {
 	return 0;
 }
 
+int deletefiles(char* name) {
+	char fname[100] = {0};
+	char dir[] = "./data/";
+	make_work_directory(dir);
 
-#ifdef __cplusplus
+    DIR *dirp=opendir(dir);
+    struct dirent entry;
+    struct dirent *dp=&entry;
+    while((dp = readdir(dirp)))
+    {
+	    if((fnmatch(name, dp->d_name,0)) == 0)
+	    {
+	 	    printf("delete: %s\n",dp->d_name);
+ 		    strcpy(fname, dir);
+		    strcat(fname, dp->d_name);
+		    remove(fname);
+	    }
+    }
+    closedir(dirp);
+
+    strcpy(fname, dir);
+    strcat(fname, name);
+
+    return 0;
 }
-#endif
 

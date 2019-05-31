@@ -42,7 +42,6 @@ Util::Error APDUVerify::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 		return Util::Error::WrongAPDULength;
 
 	Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
-	//OpenPGP::OpenPGPFactory &opgp_factory = solo.GetOpenPGPFactory();
 	Applet::OpenPGPApplet &applet = solo.GetAppletStorage().GetOpenPGPApplet();
 	File::FileSystem &filesystem = solo.GetFileSystem();
 

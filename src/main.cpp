@@ -20,6 +20,11 @@ int main(int argc, char * argv[])
 
     printf("OpenPGP factory OK.\n");
 
+	File::FileSystem &filesystem = factory.GetFileSystem();
+	filesystem.DeleteFiles(File::AppletID::OpenPGP);
+
+    printf("Clear applet memory OK.\n");
+
 
 	uint8_t result[1024] = {0};
     while (1)
