@@ -12,28 +12,17 @@
 
 #include "applet.h"
 #include "openpgp/openpgpfactory.h"
+#include "openpgp/openpgpconst.h"
 
 namespace Applet {
-
-enum Password {
-	PW1,
-	PW3
-};
 
 struct OpenPGPAppletState {
 	bool pw1Authenticated;
 	bool pw3Authenticated;
 };
 
-// OpenPGP v3.3.1 page 38 and 78
-enum LifeCycleState {
-	NoInfo		= 0x00,
-	Init		= 0x03,
-	Operational = 0x05,
-};
-
 struct OpenPGPAppletConfig {
-	LifeCycleState state;
+	OpenPGP::LifeCycleState state;
 	bstr pw1;
 	bstr pw3;
 };
@@ -53,11 +42,11 @@ public:
 
 	virtual Util::Error APDUExchange(bstr apdu, bstr &result);
 
-	void ClearAuth(Password passwdId);
-	void SetAuth(Password passwdId);
+	void ClearAuth(OpenPGP::Password passwdId);
+	void SetAuth(OpenPGP::Password passwdId);
 };
 
-}
+} // namespace Applet
 
 
 #endif /* SRC_APPLETS_OPENPGPAPPLET_H_ */

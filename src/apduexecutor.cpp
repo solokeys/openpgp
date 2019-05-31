@@ -30,6 +30,14 @@ void APDUExecutor::SetResultError(bstr& result, Util::Error error) {
 		break;
 	case Error::WrongAPDUP1P2:
     	result.setAPDURes(APDUResponse::WrongParametersP1orP2);
+	case Error::WrongAPDULength:
+    	result.setAPDURes(APDUResponse::WrongLength);
+		break;
+	case Error::WrongAPDUDataLength:
+    	result.setAPDURes(APDUResponse::WrongLength);
+		break;
+	case Error::DataNotFound:
+    	result.setAPDURes(APDUResponse::ReferencedDataNotFound);
 		break;
 
 	default:

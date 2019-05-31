@@ -15,7 +15,7 @@
 namespace Applet {
 
 OpenPGPApplet::OpenPGPApplet() : Applet() {
-	config.state = LifeCycleState::Init;
+	config.state = OpenPGP::LifeCycleState::Init;
 	state.pw1Authenticated = false;
 	state.pw3Authenticated = false;
 }
@@ -75,23 +75,23 @@ Util::Error OpenPGPApplet::APDUExchange(bstr apdu, bstr &result) {
 	return Util::Error::NoError;
 }
 
-void OpenPGPApplet::ClearAuth(Password passwdId) {
+void OpenPGPApplet::ClearAuth(OpenPGP::Password passwdId) {
 	switch (passwdId){
-	case PW1:
+	case OpenPGP::Password::PW1:
 		state.pw1Authenticated = false;
 		break;
-	case PW3:
+	case OpenPGP::Password::PW3:
 		state.pw3Authenticated = false;
 		break;
 	}
 }
 
-void OpenPGPApplet::SetAuth(Password passwdId) {
+void OpenPGPApplet::SetAuth(OpenPGP::Password passwdId) {
 	switch (passwdId){
-	case PW1:
+	case OpenPGP::Password::PW1:
 		state.pw1Authenticated = true;
 		break;
-	case PW3:
+	case OpenPGP::Password::PW3:
 		state.pw3Authenticated = true;
 		break;
 	}

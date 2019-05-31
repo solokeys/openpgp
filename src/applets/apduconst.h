@@ -31,6 +31,7 @@ namespace Applet {
 		PermissionDenied			= 0x69f0,
 		IncorrectParamInDataField	= 0x6a80,
 		FileNotFound				= 0x6a82,
+		ReferencedDataNotFound		= 0x6a88,
 		WrongParametersP1orP2		= 0x6b00,
 		INSnotSupported				= 0x6d00,
 		CLAnotSupported				= 0x6e00,

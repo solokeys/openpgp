@@ -46,28 +46,28 @@ Util::Error APDUVerify::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 	//File::FileSystem &filesystem = solo.GetFileSystem();
 
 	if (p1 == 0xff && (p2 == 0x81 || p2 == 0x82)){
-		applet.ClearAuth(Applet::Password::PW1);
+		applet.ClearAuth(Password::PW1);
 		return Util::Error::NoError;
 	}
 
 	if (p1 == 0xff && p2 == 0x83){
-		applet.ClearAuth(Applet::Password::PW3);
+		applet.ClearAuth(Password::PW3);
 		return Util::Error::NoError;
 	}
 
 	// mock!!!!
 	if (p1 == 0x00 && p2 == 0x81 && data == "123456"_bstr){
-		applet.SetAuth(Applet::Password::PW1);
+		applet.SetAuth(Password::PW1);
 		return Util::Error::NoError;
 	}
 
 	if (p1 == 0x00 && p2 == 0x82 && data == "123456"_bstr){
-		applet.SetAuth(Applet::Password::PW1);
+		applet.SetAuth(Password::PW1);
 		return Util::Error::NoError;
 	}
 
 	if (p1 == 0x00 && p2 == 0x83 && data == "12345678"_bstr){
-		applet.SetAuth(Applet::Password::PW3);
+		applet.SetAuth(Password::PW3);
 		return Util::Error::NoError;
 	}
 

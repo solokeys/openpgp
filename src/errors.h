@@ -20,7 +20,10 @@ namespace Util {
 		WrongAPDUCLA,
 		WrongAPDUINS,
 		WrongAPDUP1P2,
+		WrongAPDUDataLength,
 		WrongCommand,
+
+		DataNotFound,
 
 		FileNotFound,
 		FileWriteError,
@@ -38,7 +41,12 @@ namespace Util {
 		"Wrong APDU CLA",
 		"Wrong APDU INS",
 		"Wrong APDU P1 or P2",
+		"Wrong APDU data length",
 		"Wrong command",
+
+		"Data not found",
+		"File not found",
+		"File write error",
 
 		"n/a"};
 
