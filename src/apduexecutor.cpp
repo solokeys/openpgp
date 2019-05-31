@@ -30,6 +30,7 @@ void APDUExecutor::SetResultError(bstr& result, Util::Error error) {
 		break;
 	case Error::WrongAPDUP1P2:
     	result.setAPDURes(APDUResponse::WrongParametersP1orP2);
+    	break;
 	case Error::WrongAPDULength:
     	result.setAPDURes(APDUResponse::WrongLength);
 		break;

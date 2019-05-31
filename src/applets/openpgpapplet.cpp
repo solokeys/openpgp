@@ -42,9 +42,11 @@ Util::Error OpenPGPApplet::APDUExchange(bstr apdu, bstr &result) {
 	auto p1 = apdu[2];
 	auto p2 = apdu[3];
 	auto len = apdu[4];
-	if (len != apdu.length() + 5U || len != apdu.length() + 6U)
-		len = apdu.length() - 6U;
+	// try to fix some error with GNUK get data command
+	if (len + 5U != apdu.length() && len + 6U != apdu.length())
+		len = apdu.length() - MIN(6U, apdu.length());
 	auto data = bstr(apdu.substr(5, len));
+
 
 	auto err = securty.CommandAccessCheck(cla, ins, p1, p2);
 	if (err != Util::Error::NoError)
