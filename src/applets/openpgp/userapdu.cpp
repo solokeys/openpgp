@@ -44,34 +44,40 @@ Util::Error APDUVerify::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 	Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
 	//OpenPGP::OpenPGPFactory &opgp_factory = solo.GetOpenPGPFactory();
 	Applet::OpenPGPApplet &applet = solo.GetAppletStorage().GetOpenPGPApplet();
-	//File::FileSystem &filesystem = solo.GetFileSystem();
+	File::FileSystem &filesystem = solo.GetFileSystem();
 
-	if (p1 == 0xff && (p2 == 0x81 || p2 == 0x82)){
-		applet.ClearAuth(Password::PW1);
+	Password passwd_id = Password::PW1;
+	if (p2 == 0x83)
+		passwd_id = Password::PW3;
+
+	if (p1 == 0xff){
+		applet.ClearAuth(passwd_id);
 		return Util::Error::NoError;
 	}
 
-	if (p1 == 0xff && p2 == 0x83){
-		applet.ClearAuth(Password::PW3);
-		return Util::Error::NoError;
-	}
+	size_t min_length = PGPConst::PWMinLength(passwd_id);
+	size_t max_length = PGPConst::PWMaxLength(passwd_id);
+	uint8_t _passwd[max_length] = {0};
+	bstr passwd(_passwd, 0, max_length);
 
-	// mock!!!!
-	if (p1 == 0x00 && p2 == 0x81 && data == "123456"_bstr){
-		applet.SetAuth(Password::PW1);
-		return Util::Error::NoError;
-	}
+	auto file_err = filesystem.ReadFile(File::AppletID::OpenPGP,
+			(passwd_id == Password::PW1) ? File::KeyFileID::PW1 : File::KeyFileID::PW3,
+			File::Key,
+			passwd);
+	if (file_err != Util::Error::NoError)
+		return file_err;
 
-	if (p1 == 0x00 && p2 == 0x82 && data == "123456"_bstr){
-		applet.SetAuth(Password::PW1);
-		return Util::Error::NoError;
-	}
+	size_t passwd_length = passwd.length();
 
-	if (p1 == 0x00 && p2 == 0x83 && data == "12345678"_bstr){
-		applet.SetAuth(Password::PW3);
-		return Util::Error::NoError;
-	}
+	if (passwd_length < min_length)
+		return Util::Error::InternalError;
 
+	// check password
+	if (data != passwd)
+		return Util::Error::WrongPassword;
+
+	// TODO: p2 = 0x82 not implemented!!!
+	applet.SetAuth(passwd_id);
 
 	return Util::Error::NoError;
 }
