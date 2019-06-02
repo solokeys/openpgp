@@ -220,6 +220,7 @@ Util::Error FileSystem::ReadFile(AppID_t AppId, KeyID_t FileID,
 	    		}
 
 	    		if (ctag.WithTag) {
+	    			// TODO: move code to tlvelm!
 					if (ctag.TagElm > 0xff)
 						data.appendAPDUres(ctag.TagElm);
 					else
