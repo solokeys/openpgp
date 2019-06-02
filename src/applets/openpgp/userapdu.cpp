@@ -176,12 +176,16 @@ Util::Error APDUGetData::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 	OpenPGP::APDUSecurityCheck &security = opgp_factory.GetAPDUSecurityCheck();
 	File::FileSystem &filesystem = solo.GetFileSystem();
 
+	auto err_check = Check(cla, ins, p1, p2);
+	if (err_check != Util::Error::NoError)
+		return err_check;
+
 	uint16_t object_id = (p1 << 8) + p2;
 	auto err = security.DataObjectAccessCheck(object_id, false);
 	if (err != Util::Error::NoError)
 		return err;
 
-	printf("object id = 0x%04x\n", object_id);
+	printf("read object id = 0x%04x\n", object_id);
 
 	filesystem.ReadFile(File::AppletID::OpenPGP, object_id, File::File, dataOut);
 
@@ -189,12 +193,40 @@ Util::Error APDUGetData::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 }
 
 Util::Error APDUPutData::Check(uint8_t cla, uint8_t ins, uint8_t p1, uint8_t p2) {
-	return Util::Error::WrongCommand;
+	if (ins != Applet::APDUcommands::PutData && ins != Applet::APDUcommands::PutData2)
+		return Util::Error::WrongCommand;
+
+	if (cla != 0x00 && cla != 0x0c)
+		return Util::Error::WrongAPDUCLA;
+
+	return Util::Error::NoError;
 }
 
 Util::Error APDUPutData::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 		uint8_t p2, bstr data, bstr &dataOut) {
-	return Util::Error::WrongCommand;
+
+	dataOut.clear();
+
+	Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
+	OpenPGP::OpenPGPFactory &opgp_factory = solo.GetOpenPGPFactory();
+	OpenPGP::APDUSecurityCheck &security = opgp_factory.GetAPDUSecurityCheck();
+	File::FileSystem &filesystem = solo.GetFileSystem();
+
+	auto err_check = Check(cla, ins, p1, p2);
+	if (err_check != Util::Error::NoError)
+		return err_check;
+
+
+	uint16_t object_id = (p1 << 8) + p2;
+	auto err = security.DataObjectAccessCheck(object_id, true);
+	if (err != Util::Error::NoError)
+		return err;
+
+	printf("write object id = 0x%04x\n", object_id);
+
+	filesystem.WriteFile(File::AppletID::OpenPGP, object_id, File::File, data);
+
+	return Util::Error::NoError;
 }
 
 } // namespace OpenPGP
