@@ -20,7 +20,7 @@ struct CompositeTag_t {
 	size_t TagLength; // If WithTag=false here must be constant length
 };
 
-std::array<CompositeTag_t, 20> CompositeTag = {{
+std::array<CompositeTag_t, 24> CompositeTag = {{
 //CompositeTag_t CompositeTag[] = {
 	// Cardholder Related Data
 	{0x65, 0x5b,   true,  0},  // name
@@ -53,7 +53,36 @@ std::array<CompositeTag_t, 20> CompositeTag = {{
 	{0xc6, 0xcb,   false, 20}, // Dec
 	{0xc6, 0xcc,   false, 20}, // Auth
 
+// List of generation dates/times
+	{0xcd, 0xce,   false, 4}, // Sig
+	{0xcd, 0xcf,   false, 4}, // Dec
+	{0xcd, 0xd0,   false, 4}, // Auth
 }};
+
+/*  Application Related Data
+ *  4F 10 D2 76 00 01 24 01 02 01 00 05 00 00 31 88 00 00 Full Application identifier (AID), ISO 7816-4
+ *  5F 52 0A 00 31 C5 73 C0 01 40 05 90 00  Historical bytes (page 38) 00 - iso format ....  05 - operational state 90 00 - ok
+ *  Discretionary data objects
+ *  73 81 B7
+ *  C0 0A 7C 00 08 00 08 00 08 00 08 00 Extended Capabilities
+ *  C1 06 01 08 00 00 20 00             Algorithm attributes signature
+ *  C2 06 01 08 00 00 20 00             Algorithm attributes decryption
+ *  C3 06 01 08 00 00 20 00             Algorithm attributes authentication
+ *  C4 07 00 20 20 20 03 00 03          PW status Bytes
+ *  C5 3C 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 Fingerprints 20b per key. order: Sig, Dec, Auth
+ *        00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+ *        00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+ *        00 00 00 00 00 00 00 00 00 00 00 00
+ *  C6 3C 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 List of CA-Fingerprints
+ *        00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+ *        00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+ *        00 00 00 00 00 00 00 00 00 00 00 00
+ *  CD 0C 00 00 00 00 00 00 00 00 00 00 00 00             List of generation dates/times of public key pairs,
+ *                                                        4 bytes each, order: Sig, Dec, Auth, seconds since Jan 1, 1970,
+ *
+ *	0x65 Cardholder Related Data
+ *	5B 00  5F 2D 02 65 6e  5F 35 01 39    5b name, 5f2d language = en, 5f35 sex = 9(n/a)
+*/
 
 Util::Error FileSystem::SetFileName(AppID_t AppId, KeyID_t FileID,
 		FileType FileType, char* name) {
@@ -93,39 +122,6 @@ Util::Error ConfigFileSystem::ReadFile(AppID_t AppId, KeyID_t FileID,
 		data.set("\x81\x01\x28"_bstr); // Button and LED
 		return Util::Error::NoError;
 
-	// Application Related Data
-	case 0x6e:
-    /*  4F 10 D2 76 00 01 24 01 02 01 00 05 00 00 31 88 00 00 Full Application identifier (AID), ISO 7816-4
-     *  5F 52 0A 00 31 C5 73 C0 01 40 05 90 00  Historical bytes (page 38) 00 - iso format ....  05 - operational state 90 00 - ok
-     *  Discretionary data objects
-     *  73 81 B7
-     *  C0 0A 7C 00 08 00 08 00 08 00 08 00 Extended Capabilities
-     *  C1 06 01 08 00 00 20 00             Algorithm attributes signature
-     *  C2 06 01 08 00 00 20 00             Algorithm attributes decryption
-     *  C3 06 01 08 00 00 20 00             Algorithm attributes authentication
-     *  C4 07 00 20 20 20 03 00 03          PW status Bytes
-     *  C5 3C 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 Fingerprints 20b per key. order: Sig, Dec, Auth
-     *        00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-     *        00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-     *        00 00 00 00 00 00 00 00 00 00 00 00
-     *  C6 3C 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 List of CA-Fingerprints
-     *        00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-     *        00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-     *        00 00 00 00 00 00 00 00 00 00 00 00
-     *  CD 0C 00 00 00 00 00 00 00 00 00 00 00 00             List of generation dates/times of public key pairs,
-     *                                                        4 bytes each, order: Sig, Dec, Auth, seconds since Jan 1, 1970,
-    */
-		data.set("\x4F\x10\xD2\x76\x00\x01\x24\x01\x02\x01\x00\x05\x00\x00\x31\x88\x00\x00\x5F\x52\x0A\x00\x31\xC5\x73\xC0\x01\x40\x05"\
-				 "\x90\x00\x73\x81\xB7\xC0\x0A\x74\x00\x00\x20\x08\x00\x00\xff\x01\x00\xC1\x06\x01\x08\x00\x00\x20\x00\xC2\x06\x01\x08"\
-				 "\x00\x00\x20\x00\xC3\x06\x01\x08\x00\x00\x20\x00\xC4\x07\x00\x20\x20\x20\x03\x00\x03\xC5\x3C\x00\x00\x00\x00\x00\x00"\
-				 "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"\
-				 "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xC6\x3C\x00\x00"\
-				 "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"\
-				 "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"\
-				 "\xCD\x0C\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"_bstr);
-
-		return Util::Error::NoError;
-
 	// AID
 	case 0x4f:
 		data.set("\xD2\x76\x00\x01\x24\x01\x02\x01\x00\x05\x00\x00\x31\x88\x00\x00"_bstr); // from 0x6e
@@ -142,9 +138,9 @@ Util::Error ConfigFileSystem::ReadFile(AppID_t AppId, KeyID_t FileID,
 		return Util::Error::NoError;
 
 	// Algorithm Attributes
-	case 0xc1:
-	case 0xc2:
-	case 0xc3:
+	case 0xc1:  // Sig
+	case 0xc2:  // Dec
+	case 0xc3:  // Auth
 		data.set("\x01\x08\x00\x00\x20\x00"_bstr); // from 0x6e
 		return Util::Error::NoError;
 
@@ -153,13 +149,27 @@ Util::Error ConfigFileSystem::ReadFile(AppID_t AppId, KeyID_t FileID,
 		data.set("\x00\x20\x20\x20\x03\x00\x03"_bstr); // from 0x6e
 		return Util::Error::NoError;
 
-	// Fingerprints
-	case 0xc5:  // fingerprints
-	case 0xc6:  // ca-fingerprints
-		data.set("\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"\
-				 "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"\
-				 "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"_bstr); // from 0x6e
+	// Security support template
+	case 0x7a:
+		data.set("\x93\x03\x00\x00\x00"_bstr); // 93 - Digital signature counter (counts usage of Compute	Digital Signature command), binary, ISO 7816-4
+
 		return Util::Error::NoError;
+
+	// Sex
+	case 0x5f35:
+		data.set("\x39"_bstr); // sex = 9(n/a)
+		return Util::Error::NoError;
+
+	// empty files
+	case 0x5b:   // name
+	case 0x5f2d: // language
+	case 0x5e:   // Login data
+	case 0x5f50: //  URL with Link to a set of public keys
+
+	// individual list of dates/times. from 0xcd
+	case 0xce: // Sig
+	case 0xcf: // Dec
+	case 0xd0: // Auth
 
 	// individual Fingerprints. from 0xc5
 	case 0xc7: // Sig
@@ -170,37 +180,6 @@ Util::Error ConfigFileSystem::ReadFile(AppID_t AppId, KeyID_t FileID,
 	case 0xca: // Sig
 	case 0xcb: // Dec
 	case 0xcc: // Auth
-		//data.set("\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"_bstr);
-		data.clear();
-		return Util::Error::NoError;
-
-	case 0xcd: // List of generation dates/times
-		data.set("\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"_bstr);
-		return Util::Error::NoError;
-
-	// individual list of dates/times. from 0xcd
-	case 0xce: // Sig
-	case 0xcf: // Dec
-	case 0xd0: // Auth
-		data.clear();
-		return Util::Error::NoError;
-
-
-	// Security support template
-	case 0x7a:
-		data.set("\x93\x03\x00\x00\x00"_bstr); // 93 - Digital signature counter (counts usage of Compute	Digital Signature command), binary, ISO 7816-4
-
-		return Util::Error::NoError;
-
-	// Cardholder Related Data
-	case 0x65:
-		//data.set("\x5B\x00\x5F\x2D\x02\x65\x6e\x5F\x35\x01\x39"_bstr); // 5b name, 5f2d language = en, 5f35 sex = 9(n/a)
-		data.set("\x5B\x00\x5F\x2D\x00\x5F\x35\x01\x39"_bstr); // 5b name, 5f2d language = en, 5f35 sex = 9(n/a)
-		return Util::Error::NoError;
-
-	// empty files
-	case 0x5e: // Login data
-	case 0x5f50: //  URL with Link to a set of public keys
 		data.clear();
 		return Util::Error::NoError;
 
@@ -233,10 +212,24 @@ Util::Error FileSystem::ReadFile(AppID_t AppId, KeyID_t FileID,
 		for(const auto& ctag: CompositeTag) {
 	    	if (ctag.TagGroup == FileID) {
 	    		vdata.clear();
+
 	    		ReadFile(AppId, ctag.TagElm, FileType, vdata);
-	    		data.append(ctag.TagElm);
-	    		data.append(vdata.length());
-	    		data.append(vdata);
+
+	    		if (ctag.WithTag) {
+					if (ctag.TagElm > 0xff)
+						data.appendAPDUres(ctag.TagElm);
+					else
+						data.append(ctag.TagElm);
+					data.append(vdata.length());
+					data.append(vdata);
+	    		} else {
+	    			if (ctag.TagLength == vdata.length()) {
+	    				data.append(vdata);
+	    			} else {
+	    				for (size_t i = 0; i < ctag.TagLength; i++)
+	    					data.append(0x00);
+	    			}
+	    		}
 	    	}
 	    }
 		return Util::Error::NoError;
