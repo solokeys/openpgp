@@ -154,7 +154,12 @@ Util::Error APDUResetRetryCounter::Check(uint8_t cla, uint8_t ins, uint8_t p1, u
 
 Util::Error APDUResetRetryCounter::Process(uint8_t cla, uint8_t ins,
 		uint8_t p1, uint8_t p2, bstr data, bstr &dataOut) {
-	return Util::Error::WrongCommand;
+
+	auto err = Check(cla, ins, p1, p2);
+	if (err != Util::Error::NoError)
+		return err;
+
+	return Util::Error::NoError;
 }
 
 // Open PGP application v 3.3.1 page 49
