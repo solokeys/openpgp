@@ -8,9 +8,52 @@
  */
 
 #include "filesystem.h"
+#include <array>
 #include "device.h"
 
 namespace File {
+
+struct CompositeTag_t {
+	Util::tag_t TagGroup;
+	Util::tag_t TagElm;
+	bool WithTag;
+	size_t TagLength; // If WithTag=false here must be constant length
+};
+
+std::array<CompositeTag_t, 20> CompositeTag = {{
+//CompositeTag_t CompositeTag[] = {
+	// Cardholder Related Data
+	{0x65, 0x5b,   true,  0},  // name
+	{0x65, 0x5f2d, true,  0},  // language
+	{0x65, 0x5f35, true,  0},  // sex  1 male 2 female 9(n/a)
+
+	// Application Related Data
+	{0x6e, 0x4f,   true,  0},  // Full Application identifier (AID), ISO 7816-4
+	{0x6e, 0x5f52, true,  0},  // Historical bytes (page 38)
+	{0x6e, 0x73,   true,  0},  // Discretionary data objects
+
+	// Discretionary data objects
+	{0x73, 0xc0,   true,  0},  // Extended Capabilities
+	{0x73, 0xc1,   true,  0},  // Algorithm attributes signature
+	{0x73, 0xc2,   true,  0},  // Algorithm attributes decryption
+	{0x73, 0xc3,   true,  0},  // Algorithm attributes authentication
+	{0x73, 0xc4,   true,  0},  // PW status Bytes
+	{0x73, 0xc5,   true,  0},  // List of Fingerprints 20b per key. order: Sig, Dec, Auth
+	{0x73, 0xc6,   true,  0},  // List of CA-Fingerprints 20b per key. order: Sig, Dec, Auth
+	{0x73, 0xcd,   true,  0},  // List of generation dates/times of public key pairs,
+                               // 4 bytes each, order: Sig, Dec, Auth, seconds since Jan 1, 1970,
+
+	// individual Fingerprints
+	{0xc5, 0xc7,   false, 20}, // Sig
+	{0xc5, 0xc8,   false, 20}, // Dec
+	{0xc5, 0xc9,   false, 20}, // Auth
+
+	// individual CA-Fingerprints
+	{0xc6, 0xca,   false, 20}, // Sig
+	{0xc6, 0xcb,   false, 20}, // Dec
+	{0xc6, 0xcc,   false, 20}, // Auth
+
+}};
 
 Util::Error FileSystem::SetFileName(AppID_t AppId, KeyID_t FileID,
 		FileType FileType, char* name) {
@@ -169,11 +212,35 @@ Util::Error ConfigFileSystem::ReadFile(AppID_t AppId, KeyID_t FileID,
 	return Util::Error::FileNotFound;
 }
 
+bool FileSystem::isTagComposite(Util::tag_t tag) {
+	for(const auto& ctag: CompositeTag) {
+    	if (ctag.TagGroup == tag) {
+    		return true;
+    	}
+    }
+	return false;
+}
 
 Util::Error FileSystem::ReadFile(AppID_t AppId, KeyID_t FileID,
 		FileType FileType, bstr& data) {
 
 	data.clear();
+
+	// check if it needs to compose file
+	if (isTagComposite(FileID)) {
+		uint8_t _vdata[1024] = {0};
+		bstr vdata(_vdata);
+		for(const auto& ctag: CompositeTag) {
+	    	if (ctag.TagGroup == FileID) {
+	    		vdata.clear();
+	    		ReadFile(AppId, ctag.TagElm, FileType, vdata);
+	    		data.append(ctag.TagElm);
+	    		data.append(vdata.length());
+	    		data.append(vdata);
+	    	}
+	    }
+		return Util::Error::NoError;
+	}
 
 	// try to read file
 	char file_name[100] = {0};

@@ -13,6 +13,7 @@
 
 #include <util.h>
 #include <errors.h>
+#include "tlvelm.h"
 
 namespace File {
 
@@ -45,6 +46,7 @@ class FileSystem {
 private:
 	ConfigFileSystem cfgFiles;
 	Util::Error SetFileName(AppID_t AppId, KeyID_t FileID, FileType FileType, char *name);
+	bool isTagComposite(Util::tag_t tag);
 
 public:
 	Util::Error ReadFile(AppID_t AppId, KeyID_t FileID, FileType FileType, bstr &data);
