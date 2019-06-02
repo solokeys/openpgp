@@ -213,7 +213,11 @@ Util::Error FileSystem::ReadFile(AppID_t AppId, KeyID_t FileID,
 	    	if (ctag.TagGroup == FileID) {
 	    		vdata.clear();
 
-	    		ReadFile(AppId, ctag.TagElm, FileType, vdata);
+	    		auto rerr = ReadFile(AppId, ctag.TagElm, FileType, vdata);
+	    		if (rerr != Util::Error::NoError){
+	    			data.clear();
+	    			return rerr;
+	    		}
 
 	    		if (ctag.WithTag) {
 					if (ctag.TagElm > 0xff)
