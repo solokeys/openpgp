@@ -95,8 +95,6 @@ private:
 		if (elm_length > byteStr.length())
 			return Error::TLVDecodeValueError;
 
-		printf("----ptr %lu elmlen %d len %d rest %d\n", ptr, elm_length, length, rest_length);
-
 		if (length > 0)
 			dataptr = byteStr.uint8Data() + ptr;
 		else
@@ -182,7 +180,6 @@ public:
 	}
 
 	constexpr bool GoParent() {
-		printf("goparent\n");
 		if (currLevel == 0)
 			return false;
 		currLevel--;
@@ -190,27 +187,45 @@ public:
 	}
 
 	constexpr bool GoChild() {
-		printf("gochild %x\n", _elm[currLevel].Tag());
 		if (currLevel >= MaxTreeLevel - 1) // !isTagConstructed(_elm[currLevel].Tag()) ||
 			return false;
 
 		bstr data = _elm[currLevel].GetData();
-		printf("--- %lu\n", data.length());
 		if (data.length() == 0 || _elm[currLevel + 1].Init(data) != Util::Error::NoError)
 			return false;
 
 		currLevel++;
-		printf("gochild ok lvl:%d\n", currLevel);
 		return true;
 	}
 
 	constexpr bool GoNext() {
-		printf("gonext %x\n", _elm[currLevel].Tag());
 		if (_elm[currLevel].RestLength() == 0)
 			return false;
 
-		printf("gonext ok \n");
 		return _elm[currLevel].InitRest() == Util::Error::NoError;
+	}
+
+	constexpr bool GoNextTreeElm() {
+		if (GoChild())
+			return true;
+
+		if (GoNext()) {
+			return true;
+		} else {
+			// return condition
+			if (currLevel == 0)
+				return false;
+		}
+
+		while (true) {
+			if (GoNext()) {
+				return true;
+			} else {
+				// exit condition
+				if (!GoParent())
+					return false;
+			}
+		}
 	}
 
 	constexpr TLVElm *Search(tag_t tag) {
@@ -219,29 +234,26 @@ public:
 			if (CurrentElm().Tag() == tag)
 				return &CurrentElm();
 
-			if (GoChild())
-				continue;
-
-			if (GoNext()) {
-				continue;
-			} else {
-				// return condition
-				if (currLevel == 0)
-					return nullptr;
-			}
-
-			while (true) {
-				if (GoNext()) {
-					continue;
-				} else {
-					// exit condition
-					if (!GoParent())
-						return nullptr;
-				}
-			}
+			if (!GoNextTreeElm())
+				return nullptr;
 		}
 
 		return nullptr;
+	}
+
+	constexpr void PrintTree() {
+		GoFirst();
+		while (true) {
+			printf("%.*s [%03d] %x [%d] \n",
+					(currLevel + 1) * 2, "------------",
+					CurrentElm().ElmLength(),
+					CurrentElm().Tag(),
+					CurrentElm().Length());
+
+			if (!GoNextTreeElm())
+				break;
+		}
+
 	}
 };
 

@@ -85,6 +85,9 @@ Util::Error KeyStorage::SetKeyExtHeader(AppID_t appID, bstr keyData,
 			return err;
 		}
 
+		printf("-------------- tlv -----------------\n");
+		tlv.PrintTree();
+
 		// check wrong format
 		if (tlv.CurrentElm().Tag() != 0x4d)
 			return Util::Error::WrongData;
