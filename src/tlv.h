@@ -187,7 +187,7 @@ public:
 	}
 
 	constexpr bool GoChild() {
-		if (currLevel >= MaxTreeLevel - 1) // !isTagConstructed(_elm[currLevel].Tag()) ||
+		if (!isTagConstructed(_elm[currLevel].Tag()) || currLevel >= MaxTreeLevel - 1)
 			return false;
 
 		bstr data = _elm[currLevel].GetData();
