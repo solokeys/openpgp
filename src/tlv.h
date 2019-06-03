@@ -12,10 +12,34 @@
 
 #include "util.h"
 #include "errors.h"
+#include <array>
 
 namespace Util {
 
 using tag_t = uint32_t;
+
+static const std::array<tag_t, 9> ConstructedTagsList = {
+	0x65,
+	0x6e,
+	0x73,
+	0x7a,
+	//0x7f21, // Cardholder certificate
+	0x7f66,
+	0x7f74,
+	0xf4,
+	0xf9,
+
+	0x4d,
+};
+
+constexpr bool isTagConstructed(tag_t tag) {
+	for(const auto& ctag: ConstructedTagsList) {
+    	if (ctag == tag) {
+    		return true;
+    	}
+    }
+	return false;
+}
 
 class TLVElm {
 private:
@@ -25,8 +49,15 @@ private:
 	tag_t length = 0;
 	uint8_t *dataptr = nullptr;
 	tag_t elm_length = 0;
+	tag_t rest_length = 0;
 
 	constexpr Error Deserialize() {
+		tag = 0;
+		length = 0;
+		dataptr = nullptr;
+		elm_length = 0;
+		rest_length = 0;
+
 		if (byteStr.length() < 2)
 			return Error::TLVDecodeLengthError;
 
@@ -59,11 +90,12 @@ private:
 
 		ptr++; if (ptr >= byteStr.length()) return Error::TLVDecodeLengthError;
 		elm_length = ptr + length;
+		rest_length = byteStr.length() - elm_length;
 		// length check
 		if (elm_length > byteStr.length())
 			return Error::TLVDecodeValueError;
 
-		printf("----ptr %lu elmlen %d len %d\n", ptr, elm_length, length);
+		printf("----ptr %lu elmlen %d len %d rest %d\n", ptr, elm_length, length, rest_length);
 
 		if (length > 0)
 			dataptr = byteStr.uint8Data() + ptr;
@@ -79,6 +111,14 @@ private:
 public:
 	constexpr Util::Error Init (bstr &_bytestr) {
 		byteStr = _bytestr;
+		return Deserialize();
+	}
+
+	constexpr Util::Error InitRest () {
+		if (rest_length == 0)
+			return Util::Error::TLVDecodeLengthError;
+
+		byteStr = byteStr.substr(elm_length, rest_length);
 		return Deserialize();
 	}
 
@@ -108,6 +148,10 @@ public:
 
 	constexpr tag_t ElmLength() {
 		return elm_length;
+	}
+
+	constexpr tag_t RestLength() {
+		return rest_length;
 	}
 
 	constexpr bstr GetData() {
@@ -147,7 +191,7 @@ public:
 
 	constexpr bool GoChild() {
 		printf("gochild %x\n", _elm[currLevel].Tag());
-		if (currLevel >= MaxTreeLevel - 1)
+		if (currLevel >= MaxTreeLevel - 1) // !isTagConstructed(_elm[currLevel].Tag()) ||
 			return false;
 
 		bstr data = _elm[currLevel].GetData();
@@ -162,7 +206,11 @@ public:
 
 	constexpr bool GoNext() {
 		printf("gonext %x\n", _elm[currLevel].Tag());
-		return false;
+		if (_elm[currLevel].RestLength() == 0)
+			return false;
+
+		printf("gonext ok \n");
+		return _elm[currLevel].InitRest() == Util::Error::NoError;
 	}
 
 	constexpr TLVElm *Search(tag_t tag) {
