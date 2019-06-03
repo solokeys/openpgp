@@ -105,7 +105,7 @@ Util::Error KeyStorage::SetKeyExtHeader(AppID_t appID, bstr keyData,
 			return Util::Error::WrongData;
 
 		printf("save key data [%02x] len:%lu\n", type, prvStr.length());
-		filesystem.WriteFile(File::AppletID::OpenPGP, type, File::Key, prvStr);
+		filesystem.WriteFile(File::AppletID::OpenPGP, type, File::Secure, prvStr);
 	}
 
 	return Util::Error::InternalError;

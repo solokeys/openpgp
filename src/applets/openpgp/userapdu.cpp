@@ -61,7 +61,7 @@ Util::Error APDUVerify::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 
 	auto file_err = filesystem.ReadFile(File::AppletID::OpenPGP,
 			(passwd_id == Password::PW1) ? File::KeyFileID::PW1 : File::KeyFileID::PW3,
-			File::Key,
+			File::Secure,
 			passwd);
 	if (file_err != Util::Error::NoError)
 		return file_err;
@@ -116,7 +116,7 @@ Util::Error APDUChangeReferenceData::Process(uint8_t cla, uint8_t ins,
 
 	auto err = filesystem.ReadFile(File::AppletID::OpenPGP,
 			(passwd_id == Password::PW1) ? File::KeyFileID::PW1 : File::KeyFileID::PW3,
-			File::Key,
+			File::Secure,
 			passwd);
 	if (err != Util::Error::NoError)
 		return err;
@@ -140,7 +140,7 @@ Util::Error APDUChangeReferenceData::Process(uint8_t cla, uint8_t ins,
 
 	err = filesystem.WriteFile(File::AppletID::OpenPGP,
 			(passwd_id == Password::PW1) ? File::KeyFileID::PW1 : File::KeyFileID::PW3,
-			File::Key,
+			File::Secure,
 			passwd);
 	if (err != Util::Error::NoError)
 		return err;

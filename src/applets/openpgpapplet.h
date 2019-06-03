@@ -25,6 +25,8 @@ struct OpenPGPAppletConfig {
 	OpenPGP::LifeCycleState state;
 	bstr pw1;
 	bstr pw3;
+	Util::Error Load();
+	Util::Error Save();
 };
 
 class OpenPGPApplet: public Applet {

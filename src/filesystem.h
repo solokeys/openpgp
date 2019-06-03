@@ -20,7 +20,7 @@ namespace File {
 enum FileType {
 	File,
 	TLVFile,
-	Key
+	Secure
 };
 
 enum KeyFileID {

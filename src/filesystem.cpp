@@ -97,7 +97,7 @@ Util::Error ConfigFileSystem::ReadFile(AppID_t AppId, KeyID_t FileID,
 		FileType FileType, bstr& data) {
 
 	// secure objects
-	if (FileType == FileType::Key)
+	if (FileType == FileType::Secure)
 		switch (FileID) {
 		case KeyFileID::PW1:
 			data.set("123456"_bstr);
