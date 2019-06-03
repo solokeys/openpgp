@@ -23,9 +23,10 @@ enum FileType {
 	Secure
 };
 
-enum KeyFileID {
+enum SecureFileID {
 	PW1 = 0x80,
-	PW3 = 0x81
+	PW3 = 0x81,
+	RC  = 0x82,
 };
 
 enum AppletID {
@@ -34,6 +35,12 @@ enum AppletID {
 	OpenPGP = 2,
 };
 
+class SettingsFileSystem {
+private:
+public:
+	Util::Error ReadFile(AppID_t AppId, KeyID_t FileID, FileType FileType, bstr &data);
+	Util::Error WriteFile(AppID_t AppId, KeyID_t FileID, FileType FileType, bstr &data);
+};
 
 // Read only file system for system files. files lays in program flash.
 class ConfigFileSystem {

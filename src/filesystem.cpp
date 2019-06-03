@@ -99,10 +99,10 @@ Util::Error ConfigFileSystem::ReadFile(AppID_t AppId, KeyID_t FileID,
 	// secure objects
 	if (FileType == FileType::Secure)
 		switch (FileID) {
-		case KeyFileID::PW1:
+		case SecureFileID::PW1:
 			data.set("123456"_bstr);
 			return Util::Error::NoError;
-		case KeyFileID::PW3:
+		case SecureFileID::PW3:
 			data.set("12345678"_bstr);
 			return Util::Error::NoError;
 		default:
