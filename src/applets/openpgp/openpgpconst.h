@@ -43,10 +43,10 @@ public:
 };
 
 enum OpenPGPKeyType {
-	Unknown,
-	DigitalSignature,
-	Confidentiality,
-	Authentication,
+	Unknown          = 0x00,
+	DigitalSignature = 0xb6,
+	Confidentiality  = 0xb8,
+	Authentication   = 0xa4,
 };
 
 // OpenPGP v3.3.1 page 38 and 78

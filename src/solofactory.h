@@ -34,6 +34,7 @@ namespace Factory {
 		CryptoLib cryptoLib;
 
 		FileSystem fileSystem;
+		KeyStorage keyStorage;
 	public:
 		Util::Error Init();
 
@@ -46,6 +47,7 @@ namespace Factory {
 
 		OpenPGPFactory &GetOpenPGPFactory();
 		FileSystem &GetFileSystem();
+		KeyStorage &GetKeyStorage();
 
 		static SoloFactory &GetSoloFactory();
 	};

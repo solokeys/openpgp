@@ -201,7 +201,10 @@ Util::Error APDUPutData::Check(uint8_t cla, uint8_t ins, uint8_t p1, uint8_t p2)
 	if (ins != Applet::APDUcommands::PutData && ins != Applet::APDUcommands::PutData2)
 		return Util::Error::WrongCommand;
 
-	if (cla != 0x00 && cla != 0x0c)
+	if (ins == Applet::APDUcommands::PutData2 && (p1 != 0x3f || p2 != 0xff))
+		return Util::Error::WrongCommand;
+
+	if (cla != 0x00 && cla != 0x0c && cla != 0x10)
 		return Util::Error::WrongAPDUCLA;
 
 	return Util::Error::NoError;
@@ -216,20 +219,26 @@ Util::Error APDUPutData::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 	OpenPGP::OpenPGPFactory &opgp_factory = solo.GetOpenPGPFactory();
 	OpenPGP::APDUSecurityCheck &security = opgp_factory.GetAPDUSecurityCheck();
 	File::FileSystem &filesystem = solo.GetFileSystem();
+	Crypto::KeyStorage &key_storage = solo.GetKeyStorage();
 
 	auto err_check = Check(cla, ins, p1, p2);
 	if (err_check != Util::Error::NoError)
 		return err_check;
 
+	if (ins == Applet::APDUcommands::PutData) {
+		uint16_t object_id = (p1 << 8) + p2;
+		auto err = security.DataObjectAccessCheck(object_id, true);
+		if (err != Util::Error::NoError)
+			return err;
 
-	uint16_t object_id = (p1 << 8) + p2;
-	auto err = security.DataObjectAccessCheck(object_id, true);
-	if (err != Util::Error::NoError)
-		return err;
+		printf("write object id = 0x%04x\n", object_id);
 
-	printf("write object id = 0x%04x\n", object_id);
-
-	filesystem.WriteFile(File::AppletID::OpenPGP, object_id, File::File, data);
+		filesystem.WriteFile(File::AppletID::OpenPGP, object_id, File::File, data);
+	} else {
+		// more APDU to follow
+		bool more_pck_follow = cla & 0x10;
+		key_storage.SetKeyExtHeader(File::AppletID::OpenPGP, data, more_pck_follow);
+	}
 
 	return Util::Error::NoError;
 }

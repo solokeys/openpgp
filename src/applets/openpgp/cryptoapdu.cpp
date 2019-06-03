@@ -62,7 +62,7 @@ Util::Error APDUGenerateAsymmetricKeyPair::Process(uint8_t cla,
 	if (err_check != Util::Error::NoError)
 		return err_check;
 
-	printf("as key p - %d\n", data.length());
+	printf("as key p - %lu\n", data.length());
 	if (data.length() != 2)
 		return Util::Error::WrongAPDUDataLength;
 

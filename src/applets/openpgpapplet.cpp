@@ -67,11 +67,6 @@ Util::Error OpenPGPApplet::APDUExchange(bstr apdu, bstr &result) {
 	if (cmderr != Util::Error::NoError)
 		return cmderr;
 
-/*	result.append(0xaa);
-	uint8_t d[3] = {0x01, 0x02, 0x03};
-	result.append(d, 3);
-	result.append("\xa0\x00\xa1"_bstr);
-*/
 	printf("0<"); dump_hex(result);
 
 	return Util::Error::NoError;

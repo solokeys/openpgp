@@ -22,6 +22,7 @@ namespace Util {
 		WrongAPDUP1P2,
 		WrongAPDUDataLength,
 		WrongCommand,
+		WrongData,
 
 		DataNotFound,
 		WrongPassword,
@@ -30,6 +31,9 @@ namespace Util {
 		FileWriteError,
 
 		InternalError,
+		TLVDecodeTagError,
+		TLVDecodeLengthError,
+		TLVDecodeValueError,
 
 		// this error links to the end of array
 		lastError
@@ -46,6 +50,7 @@ namespace Util {
 		"Wrong APDU P1 or P2",
 		"Wrong APDU data length",
 		"Wrong command",
+		"Wrong data",
 
 		"Data not found",
 		"Wrong password",
@@ -53,6 +58,9 @@ namespace Util {
 		"File write error",
 
 		"Internal error",
+		"TLV decode tag error",
+		"TLV decode length error",
+		"TLV decode value error",
 
 		"n/a"};
 

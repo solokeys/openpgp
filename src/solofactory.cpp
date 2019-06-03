@@ -46,4 +46,9 @@ FileSystem& Factory::SoloFactory::GetFileSystem() {
 	return fileSystem;
 }
 
+KeyStorage& Factory::SoloFactory::GetKeyStorage() {
+	return keyStorage;
 }
+
+}
+

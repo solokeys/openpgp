@@ -26,26 +26,30 @@ namespace Crypto {
 	private:
 
 	public:
-		Util::Error GenerateRandom(size_t length, bstr dataOut);
+		Util::Error GenerateRandom(size_t length, bstr &dataOut);
 
-		Util::Error AESEncrypt(bstr key, bstr dataIn, bstr dataOut);
-		Util::Error AESDecrypt(bstr key, bstr dataIn, bstr dataOut);
+		Util::Error AESEncrypt(bstr key, bstr dataIn, bstr &dataOut);
+		Util::Error AESDecrypt(bstr key, bstr dataIn, bstr &dataOut);
 
-		Util::Error RSAGenKey(bstr keyOut);
-		Util::Error RSASign(bstr key, bstr data, bstr signature);
+		Util::Error RSAGenKey(bstr &keyOut);
+		Util::Error RSASign(bstr key, bstr data, bstr &signature);
 		Util::Error RSAVerify(bstr key, bstr data, bstr signature);
 
-		Util::Error ECDSAGenKey(bstr keyOut);
-		Util::Error ECDSASign(bstr key, bstr data, bstr signature);
+		Util::Error ECDSAGenKey(bstr &keyOut);
+		Util::Error ECDSASign(bstr key, bstr data, bstr &signature);
 		Util::Error ECDSAVerify(bstr key, bstr data, bstr signature);
 	};
 
 	class KeyStorage {
 	private:
-
+		uint8_t prvData[1024] = {0};
+		bstr prvStr{prvData};
 	public:
-		Util::Error GetKey(AppID_t appID, KeyID_t keyID, KeyType keyType, bstr key);
+		KeyStorage() {prvStr.clear();};
+
+		Util::Error GetKey(AppID_t appID, KeyID_t keyID, KeyType keyType, bstr &key);
 		Util::Error SetKey(AppID_t appID, KeyID_t keyID, KeyType keyType, bstr key);
+		Util::Error SetKeyExtHeader(AppID_t appID, bstr keyData, bool MorePacketsFollow);
 	};
 
 	class CryptoEngine {
@@ -53,13 +57,13 @@ namespace Crypto {
 		CryptoLib *cryptoLib;
 		KeyStorage *keyStorage;
 	public:
-		Util::Error AESEncrypt(AppID_t appID, KeyID_t keyID, bstr dataIn, bstr dataOut);
-		Util::Error AESDecrypt(AppID_t appID, KeyID_t keyID, bstr dataIn, bstr dataOut);
+		Util::Error AESEncrypt(AppID_t appID, KeyID_t keyID, bstr dataIn, bstr &dataOut);
+		Util::Error AESDecrypt(AppID_t appID, KeyID_t keyID, bstr dataIn, bstr &dataOut);
 
-		Util::Error RSASign(AppID_t appID, KeyID_t keyID, bstr data, bstr signature);
+		Util::Error RSASign(AppID_t appID, KeyID_t keyID, bstr data, bstr &signature);
 		Util::Error RSAVerify(AppID_t appID, KeyID_t keyID, bstr data, bstr signature);
 
-		Util::Error ECDSASign(AppID_t appID, KeyID_t keyID, bstr data, bstr signature);
+		Util::Error ECDSASign(AppID_t appID, KeyID_t keyID, bstr data, bstr &signature);
 		Util::Error ECDSAVerify(AppID_t appID, KeyID_t keyID, bstr data, bstr signature);
 	};
 
