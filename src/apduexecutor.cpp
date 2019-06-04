@@ -41,6 +41,10 @@ void APDUExecutor::SetResultError(bstr& result, Util::Error error) {
     	result.setAPDURes(APDUResponse::ReferencedDataNotFound);
 		break;
 
+
+	case Error::ErrorPutInData:
+    	// error already in the data field
+		break;
 	default:
     	result.setAPDURes(APDUResponse::InternalException);
 	}

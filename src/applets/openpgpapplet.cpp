@@ -80,6 +80,8 @@ void OpenPGPApplet::ClearAuth(OpenPGP::Password passwdId) {
 	case OpenPGP::Password::PW3:
 		state.pw3Authenticated = false;
 		break;
+	default:
+		break;
 	}
 }
 
@@ -91,7 +93,21 @@ void OpenPGPApplet::SetAuth(OpenPGP::Password passwdId) {
 	case OpenPGP::Password::PW3:
 		state.pw3Authenticated = true;
 		break;
+	default:
+		break;
 	}
+}
+
+bool OpenPGPApplet::GetAuth(OpenPGP::Password passwdId) {
+	switch (passwdId){
+	case OpenPGP::Password::PW1:
+		return state.pw1Authenticated;
+	case OpenPGP::Password::PW3:
+		return state.pw3Authenticated;
+	default:
+		break;
+	}
+	return false;
 }
 
 }

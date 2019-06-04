@@ -14,6 +14,7 @@
 #include "applets/openpgpapplet.h"
 #include "applets/openpgp/apdusecuritycheck.h"
 #include "openpgpconst.h"
+#include "openpgpstruct.h"
 #include "filesystem.h"
 
 namespace OpenPGP {
@@ -45,10 +46,14 @@ Util::Error APDUVerify::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 	Applet::OpenPGPApplet &applet = solo.GetAppletStorage().GetOpenPGPApplet();
 	File::FileSystem &filesystem = solo.GetFileSystem();
 
+	PWStatusBytes pwstatus;
+	pwstatus.Load(filesystem);
+
 	Password passwd_id = Password::PW1;
 	if (p2 == 0x83)
 		passwd_id = Password::PW3;
 
+	// clear authentication status
 	if (p1 == 0xff){
 		applet.ClearAuth(passwd_id);
 		return Util::Error::NoError;
@@ -68,15 +73,35 @@ Util::Error APDUVerify::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 
 	size_t passwd_length = passwd.length();
 
+	// check status
+	if (passwd_length == 0) {
+		// TODO: p2 = 0x82 not implemented!!!
+
+		if (applet.GetAuth(passwd_id)) {
+			return Util::Error::NoError;
+		} else {
+			dataOut.appendAPDUres(0x6300 + pwstatus.PasswdTryRemains(passwd_id));
+			return Util::Error::ErrorPutInData;
+		}
+	}
+
 	if (passwd_length < min_length)
 		return Util::Error::InternalError;
 
-	// check password
-	if (data != passwd)
-		return Util::Error::WrongPassword;
+	// check allowing passwd check
+	if (pwstatus.PasswdTryRemains(passwd_id) == 0)
+		return Util::Error::PasswordLocked;
 
-	// TODO: p2 = 0x82 not implemented!!!
+	// check password
+	if (data != passwd) {
+		pwstatus.DecErrorCounter(passwd_id);
+		pwstatus.Save(filesystem);
+		return Util::Error::WrongPassword;
+	}
+
 	applet.SetAuth(passwd_id);
+	pwstatus.PasswdSetRemains(passwd_id, 3);
+	pwstatus.Save(filesystem);
 
 	return Util::Error::NoError;
 }

@@ -35,6 +35,10 @@ namespace Util {
 		TLVDecodeLengthError,
 		TLVDecodeValueError,
 
+		PasswordLocked,
+
+		// error code was put in the response
+		ErrorPutInData,
 		// this error links to the end of array
 		lastError
 	};
@@ -62,6 +66,9 @@ namespace Util {
 		"TLV decode length error",
 		"TLV decode value error",
 
+		"Password locked",
+
+		"Error. Error code already in the response"
 		"n/a"};
 
 	inline const char *GetStrError(Error err) {

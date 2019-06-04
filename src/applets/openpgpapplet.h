@@ -35,6 +35,7 @@ public:
 
 	void ClearAuth(OpenPGP::Password passwdId);
 	void SetAuth(OpenPGP::Password passwdId);
+	bool GetAuth(OpenPGP::Password passwdId);
 };
 
 } // namespace Applet

@@ -34,7 +34,7 @@ struct AppletConfig {
 	Util::Error Save();
 };
 
-struct PWStatusBytes {
+struct __attribute__ ((packed)) PWStatusBytes {
 	uint8_t PW1ValidSeveralCDS;
 	uint8_t MaxLengthAndFormatPW1;
 	uint8_t MaxLengthRCforPW1;
@@ -43,8 +43,12 @@ struct PWStatusBytes {
 	uint8_t ErrorCounterRC;
 	uint8_t ErrorCounterPW3;
 
-	Util::Error Load();
-	Util::Error Save();
+	Util::Error Load(File::FileSystem &fs);
+	Util::Error Save(File::FileSystem &fs);
+	void DecErrorCounter(Password passwdId);
+	bool PasswdTryRemains(Password passwdId);
+	void PasswdSetRemains(Password passwdId, uint8_t rem);
+	void Print();
 };
 
 } // namespace OpenPGP
