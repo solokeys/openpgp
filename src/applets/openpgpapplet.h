@@ -13,26 +13,15 @@
 #include "applet.h"
 #include "openpgp/openpgpfactory.h"
 #include "openpgp/openpgpconst.h"
+#include "openpgp/openpgpstruct.h"
 
 namespace Applet {
 
-struct OpenPGPAppletState {
-	bool pw1Authenticated;
-	bool pw3Authenticated;
-};
-
-struct OpenPGPAppletConfig {
-	OpenPGP::LifeCycleState state;
-	bstr pw1;
-	bstr pw3;
-	Util::Error Load();
-	Util::Error Save();
-};
-
 class OpenPGPApplet: public Applet {
 	// TODO: applet state. INIT/WORK. save/load to file
-	OpenPGPAppletState state;
-	OpenPGPAppletConfig config;
+	OpenPGP::AppletState state;
+	OpenPGP::AppletConfig config;
+	OpenPGP::PWStatusBytes pwstatus;
 
 private:
 	// OpenPGP AID

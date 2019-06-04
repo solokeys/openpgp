@@ -39,9 +39,14 @@ enum AppletID {
 	OpenPGP = 2,
 };
 
+class FileSystem;
+
 class SettingsFileSystem {
 private:
+	FileSystem &fs;
 public:
+	SettingsFileSystem(FileSystem &_fs) : fs(_fs){};
+
 	Util::Error ReadFile(AppID_t AppId, KeyID_t FileID, FileType FileType, bstr &data);
 	Util::Error WriteFile(AppID_t AppId, KeyID_t FileID, FileType FileType, bstr &data);
 };
@@ -66,7 +71,7 @@ class FileSystem {
 private:
 	ConfigFileSystem cfgFiles;
 	GenericFileSystem genFiles;
-	SettingsFileSystem settingsFiles;
+	SettingsFileSystem settingsFiles{*this};
 
 	bool isTagComposite(Util::tag_t tag);
 
@@ -76,6 +81,18 @@ public:
 
 	Util::Error DeleteFile(AppID_t AppId, KeyID_t FileID, FileType FileType);
 	Util::Error DeleteFiles(AppID_t AppId);
+
+	ConfigFileSystem &getCfgFiles() {
+		return cfgFiles;
+	}
+
+	GenericFileSystem &getGenFiles() {
+		return genFiles;
+	}
+
+	SettingsFileSystem &getSettingsFiles() {
+		return settingsFiles;
+	}
 };
 
 }

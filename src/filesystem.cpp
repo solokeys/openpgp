@@ -294,15 +294,15 @@ Util::Error FileSystem::WriteFile(AppID_t AppId, KeyID_t FileID,
 
 	// to settings file system
 	auto err = settingsFiles.WriteFile(AppId, FileID, FileType, data);
-	if (err == Util::Error::NoError)
+	if (err != Util::Error::FileNotFound)
 		return err;
 
 	// main write to filesystem
 	err = genFiles.WriteFile(AppId, FileID, FileType, data);
-	if (err != Util::Error::NoError)
+	if (err != Util::Error::FileNotFound)
 		return err;
 
-	return Util::Error::NoError;
+	return Util::Error::FileNotFound;
 }
 
 
@@ -334,6 +334,36 @@ Util::Error SettingsFileSystem::ReadFile(AppID_t AppId, KeyID_t FileID,
 
 Util::Error SettingsFileSystem::WriteFile(AppID_t AppId, KeyID_t FileID,
 		FileType FileType, bstr& data) {
+
+	// PW status Bytes
+	if (FileID == 0xc4) {
+		if ((data.length() != 1) && (data.length() != 4))
+			return Util::Error::WrongAPDUDataLength;
+
+		uint8_t _vdata[50] = {0};
+		bstr vdata(_vdata);
+
+		// read from generic filesystem
+		auto err = fs.ReadFile(AppId, FileID, FileType, vdata);
+		if (err != Util::Error::NoError)
+			return err;
+
+		if (vdata.length() != 7)
+			return Util::Error::InternalError;
+
+		uint8_t *d = vdata.uint8Data();
+		d[0] = data[0];
+		if (data.length() == 4) {
+			d[1] = data[1];
+			d[2] = data[2];
+			d[3] = data[3];
+		}
+
+		// write to generic filesystem
+		err = fs.getGenFiles().WriteFile(AppId, FileID, FileType, vdata);
+		return err;
+
+	}
 
 	return Util::Error::FileNotFound;
 }
