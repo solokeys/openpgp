@@ -80,7 +80,33 @@ Util::Error KeyStorage::GetPublicKey(AppID_t appID, KeyID_t keyID,
 
 	printf("key %x [%lu] loaded.\n", keyID, prvStr.length());
 
+	Util::TLVTree tlv;
+	err = tlv.Init(prvStr);
+	if (err != Util::Error::NoError) {
+		prvStr.clear();
+		return err;
+	}
 
+	Util::TLVElm *eheader = tlv.Search(0x7f48);
+	if (!eheader || eheader->Length() == 0)
+		return Util::Error::StoredKeyError;
+
+	bstr header = eheader->GetData();
+
+	Util::DOL dol;
+	err = dol.Init(header);
+	if (err != Util::Error::NoError) {
+		prvStr.clear();
+		return err;
+	}
+
+	Util::TLVElm *edata = tlv.Search(0x5f48);
+	if (!edata || edata->Length() == 0)
+		return Util::Error::StoredKeyError;
+
+	bstr data = edata->GetData();
+
+	printf("key %lu %lu. tag1: %x\n", header.length(), data.length(), dol.CurrentElm().Tag());
 	// TODO: dataOut.append("\7f\49\00............"_bstr);
 
 	return Util::Error::NoError;

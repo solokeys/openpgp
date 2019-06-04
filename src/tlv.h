@@ -257,6 +257,79 @@ public:
 	}
 };
 
+// Data Object List
+class DOLElm {
+private:
+	bstr byteStr;
+
+	tag_t tag = 0;
+	tag_t length = 0;
+	tag_t elm_length = 0;
+	tag_t rest_length = 0;
+
+	constexpr Error Deserialize() {
+		tag = 0;
+		length = 0;
+		elm_length = 0;
+		rest_length = 0;
+
+		return Error::NoError;
+	}
+	constexpr Error Serialize() {
+
+		return Error::NoError;
+	}
+public:
+	constexpr Util::Error Init (bstr &_bytestr) {
+		byteStr = _bytestr;
+		return Deserialize();
+	}
+	constexpr Util::Error InitRest () {
+		if (rest_length == 0)
+			return Util::Error::TLVDecodeLengthError;
+
+		byteStr = byteStr.substr(elm_length, rest_length);
+		return Deserialize();
+	}
+
+	constexpr tag_t Tag() {
+		return tag;
+	}
+	constexpr tag_t Length() {
+		return length;
+	}
+	constexpr tag_t ElmLength() {
+		return elm_length;
+	}
+	constexpr tag_t RestLength() {
+		return rest_length;
+	}
+
+	void constexpr Clear() {
+		length = 0;
+	}
+};
+
+class DOL {
+private:
+	bstr _data;
+	DOLElm _dolElm;
+public:
+	constexpr Util::Error Init(bstr data) {
+		_data = data;
+		return _dolElm.Init(_data);
+	};
+	constexpr DOLElm &CurrentElm() {
+		return _dolElm;
+	}
+	constexpr bool GoNext() {
+		if (_dolElm.RestLength() == 0)
+			return false;
+
+		return _dolElm.InitRest() == Util::Error::NoError;
+	}
+};
+
 } /* namespace Util */
 
 #endif /* SRC_TLV_H_ */

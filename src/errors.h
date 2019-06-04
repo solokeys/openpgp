@@ -36,6 +36,7 @@ namespace Util {
 		TLVDecodeValueError,
 
 		PasswordLocked,
+		StoredKeyError,
 
 		// error code was put in the response
 		ErrorPutInData,
@@ -67,6 +68,7 @@ namespace Util {
 		"TLV decode value error",
 
 		"Password locked",
+		"Stored key error",
 
 		"Error. Error code already in the response"
 		"n/a"};
