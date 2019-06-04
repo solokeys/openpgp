@@ -47,6 +47,7 @@ namespace Crypto {
 	public:
 		KeyStorage() {prvStr.clear();};
 
+		Util::Error GetPublicKey(AppID_t appID, KeyID_t keyID, bstr &tlvKey);
 		Util::Error GetKey(AppID_t appID, KeyID_t keyID, KeyType keyType, bstr &key);
 		Util::Error SetKey(AppID_t appID, KeyID_t keyID, KeyType keyType, bstr key);
 		Util::Error SetKeyExtHeader(AppID_t appID, bstr keyData, bool MorePacketsFollow);

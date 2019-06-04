@@ -64,6 +64,28 @@ Util::Error KeyStorage::SetKey(AppID_t appID, KeyID_t keyID,
 	return Util::Error::InternalError;
 }
 
+Util::Error KeyStorage::GetPublicKey(AppID_t appID, KeyID_t keyID,
+		bstr& tlvKey) {
+
+	tlvKey.clear();
+
+	Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
+	File::FileSystem &filesystem = solo.GetFileSystem();
+
+	// clear key storage
+	prvStr.clear();
+	auto err = filesystem.ReadFile(appID, keyID, File::Secure, prvStr);
+	if (err != Util::Error::NoError)
+		return err;
+
+	printf("key %x [%lu] loaded.\n", keyID, prvStr.length());
+
+
+	// TODO: dataOut.append("\7f\49\00............"_bstr);
+
+	return Util::Error::NoError;
+}
+
 Util::Error KeyStorage::SetKeyExtHeader(AppID_t appID, bstr keyData,
 		bool MorePacketsFollow) {
 	Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
@@ -74,14 +96,12 @@ Util::Error KeyStorage::SetKeyExtHeader(AppID_t appID, bstr keyData,
 		prvStr.clear();
 
 	prvStr.append(keyData);
-	printf("append key data len:%lu\n", keyData.length());
 
 	if (!MorePacketsFollow) {
 		Util::TLVTree tlv;
 		auto err = tlv.Init(prvStr);
 		if (err != Util::Error::NoError) {
 			prvStr.clear();
-			printf("tlv decoding error\n");
 			return err;
 		}
 
@@ -105,7 +125,7 @@ Util::Error KeyStorage::SetKeyExtHeader(AppID_t appID, bstr keyData,
 			return Util::Error::WrongData;
 
 		printf("save key data [%02x] len:%lu\n", type, prvStr.length());
-		filesystem.WriteFile(File::AppletID::OpenPGP, type, File::Secure, prvStr);
+		filesystem.WriteFile(appID, type, File::Secure, prvStr);
 	}
 
 	return Util::Error::InternalError;

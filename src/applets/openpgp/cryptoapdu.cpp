@@ -67,8 +67,8 @@ Util::Error APDUGenerateAsymmetricKeyPair::Process(uint8_t cla,
 		return Util::Error::WrongAPDUDataLength;
 
 	Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
-	File::FileSystem &filesystem = solo.GetFileSystem();
-	//Crypto::KeyStorage &key_storage = solo.GetKeyStorage();
+	//File::FileSystem &filesystem = solo.GetFileSystem();
+	Crypto::KeyStorage &key_storage = solo.GetKeyStorage();
 
 	OpenPGPKeyType key_type = OpenPGPKeyType::Unknown;
 	if (data[0] == OpenPGPKeyType::DigitalSignature ||
@@ -85,8 +85,11 @@ Util::Error APDUGenerateAsymmetricKeyPair::Process(uint8_t cla,
 
 		return Util::Error::DataNotFound;
 	} else {
-		// TODO: this: dataOut.append("\7f\49\00............"_bstr);
-		return Util::Error::DataNotFound;
+		auto err = key_storage.GetPublicKey(File::AppletID::OpenPGP, key_type, dataOut);
+		if (err != Util::Error::NoError || dataOut.length() == 0)
+			return Util::Error::DataNotFound;
+
+		return Util::Error::NoError;
 	}
 
 	return Util::Error::NoError;
