@@ -10,7 +10,6 @@
 #include "cryptolib.h"
 #include "solofactory.h"
 #include "filesystem.h"
-#include "tlv.h"
 #include "applets/openpgp/openpgpconst.h"
 
 namespace Crypto {
@@ -64,6 +63,47 @@ Util::Error KeyStorage::SetKey(AppID_t appID, KeyID_t keyID,
 	return Util::Error::InternalError;
 }
 
+Util::Error KeyStorage::GetKeyPart(bstr dataIn, Util::tag_t keyPart,
+		bstr& dataOut) {
+	Util::TLVTree tlv;
+	auto err = tlv.Init(dataIn);
+	if (err != Util::Error::NoError) {
+		dataIn.clear();
+		return err;
+	}
+
+	Util::TLVElm *eheader = tlv.Search(0x7f48);
+	if (!eheader || eheader->Length() == 0)
+		return Util::Error::StoredKeyError;
+
+	bstr header = eheader->GetData();
+
+	Util::DOL dol;
+	err = dol.Init(header);
+	if (err != Util::Error::NoError) {
+		dataIn.clear();
+		return err;
+	}
+
+	Util::TLVElm *edata = tlv.Search(0x5f48);
+	if (!edata || edata->Length() == 0)
+		return Util::Error::StoredKeyError;
+
+	bstr data = edata->GetData();
+
+	printf("key %lu %lu\n ------------ dol --------------\n", header.length(), data.length());
+	dol.Print();
+
+	size_t offset = 0;
+	size_t length = 0;
+	err = dol.Search(keyPart, offset, length);
+	if (offset + length > data.length())
+		return Util::Error::StoredKeyError;
+
+	dataOut = data.substr(offset, length);
+	return Util::Error::NoError;
+}
+
 Util::Error KeyStorage::GetPublicKey(AppID_t appID, KeyID_t keyID,
 		bstr& tlvKey) {
 
@@ -80,34 +120,20 @@ Util::Error KeyStorage::GetPublicKey(AppID_t appID, KeyID_t keyID,
 
 	printf("key %x [%lu] loaded.\n", keyID, prvStr.length());
 
-	Util::TLVTree tlv;
-	err = tlv.Init(prvStr);
-	if (err != Util::Error::NoError) {
-		prvStr.clear();
+	bstr strP;
+	err = GetKeyPart(prvStr, KeyPartsRSA::P, strP);
+	if (err != Util::Error::NoError)
 		return err;
-	}
 
-	Util::TLVElm *eheader = tlv.Search(0x7f48);
-	if (!eheader || eheader->Length() == 0)
-		return Util::Error::StoredKeyError;
-
-	bstr header = eheader->GetData();
-
-	Util::DOL dol;
-	err = dol.Init(header);
-	if (err != Util::Error::NoError) {
-		prvStr.clear();
+	bstr strQ;
+	err = GetKeyPart(prvStr, KeyPartsRSA::Q, strQ);
+	if (err != Util::Error::NoError)
 		return err;
-	}
 
-	Util::TLVElm *edata = tlv.Search(0x5f48);
-	if (!edata || edata->Length() == 0)
-		return Util::Error::StoredKeyError;
+	printf("Plen: %d Qlen: %d\n", strP.length(), strQ.length());
+	dump_hex(strP);
+	dump_hex(strQ);
 
-	bstr data = edata->GetData();
-
-	printf("key %lu %lu\n ------------ dol --------------\n", header.length(), data.length());
-	dol.Print();
 	// TODO: dataOut.append("\7f\49\00............"_bstr);
 
 	return Util::Error::NoError;

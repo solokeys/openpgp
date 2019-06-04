@@ -351,9 +351,11 @@ class DOL {
 private:
 	bstr _data;
 	DOLElm _dolElm;
+	size_t _elmptr;
 public:
 	constexpr Util::Error Init(bstr data) {
 		_data = data;
+		_elmptr = 0;
 		return _dolElm.Init(_data);
 	};
 	constexpr DOLElm &CurrentElm() {
@@ -366,8 +368,25 @@ public:
 		if (_dolElm.RestLength() == 0)
 			return false;
 
+		_elmptr += _dolElm.Length();
 		return _dolElm.InitRest() == Util::Error::NoError;
 	}
+	constexpr Error Search(tag_t tag, size_t &offset, size_t &length) {
+		GoFirst();
+		while (true) {
+			if (CurrentElm().Tag() == tag) {
+				offset = _elmptr;
+				length = CurrentElm().Length();
+				return Error::NoError;
+			}
+
+			if (!GoNext())
+				return Error::DataNotFound;
+		}
+
+		return Error::DataNotFound;
+	}
+
 	constexpr void Print() {
 		GoFirst();
 		while (true) {

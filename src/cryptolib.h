@@ -12,6 +12,7 @@
 
 #include <util.h>
 #include <errors.h>
+#include "tlv.h"
 
 namespace Crypto {
 
@@ -20,6 +21,21 @@ namespace Crypto {
 		FullAsymmetric,
 		Public,
 		Private
+	};
+
+	enum KeyPartsRSA {
+		PublicExponent = 0x91, // key format: standard and crt
+		P              = 0x92, // standard and crt
+		Q              = 0x93, // standard and crt
+		PQ             = 0x94, // crt
+		DP1            = 0x95, // crt
+		DQ1            = 0x96, // crt
+		Modulus        = 0x97  // optional for standard and crt
+	};
+
+	enum KeyPartsECDSA {
+		PrivateKey     = 0x92, // mandatory
+		PublicKey      = 0x99  // optional
 	};
 
 	class CryptoLib {
@@ -47,6 +63,7 @@ namespace Crypto {
 	public:
 		KeyStorage() {prvStr.clear();};
 
+		Util::Error GetKeyPart(bstr data, Util::tag_t keyPart, bstr &dataOut);
 		Util::Error GetPublicKey(AppID_t appID, KeyID_t keyID, bstr &tlvKey);
 		Util::Error GetKey(AppID_t appID, KeyID_t keyID, KeyType keyType, bstr &key);
 		Util::Error SetKey(AppID_t appID, KeyID_t keyID, KeyType keyType, bstr key);
