@@ -27,6 +27,10 @@ enum SecureFileID {
 	PW1 = 0x80,
 	PW3 = 0x81,
 	RC  = 0x82,
+
+	DigitalSignature = 0xb6,
+	Confidentiality  = 0xb8,
+	Authentication   = 0xa4,
 };
 
 enum AppletID {
@@ -49,10 +53,21 @@ public:
 	Util::Error ReadFile(AppID_t AppId, KeyID_t FileID, FileType FileType, bstr &data);
 };
 
+class GenericFileSystem {
+private:
+public:
+	Util::Error SetFileName(AppID_t AppId, KeyID_t FileID, FileType FileType, char *name);
+
+	Util::Error ReadFile(AppID_t AppId, KeyID_t FileID, FileType FileType, bstr &data);
+	Util::Error WriteFile(AppID_t AppId, KeyID_t FileID, FileType FileType, bstr &data);
+};
+
 class FileSystem {
 private:
 	ConfigFileSystem cfgFiles;
-	Util::Error SetFileName(AppID_t AppId, KeyID_t FileID, FileType FileType, char *name);
+	GenericFileSystem genFiles;
+	SettingsFileSystem settingsFiles;
+
 	bool isTagComposite(Util::tag_t tag);
 
 public:

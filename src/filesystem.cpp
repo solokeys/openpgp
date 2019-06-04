@@ -84,15 +84,6 @@ std::array<CompositeTag_t, 24> CompositeTag = {{
  *	5B 00  5F 2D 02 65 6e  5F 35 01 39    5b name, 5f2d language = en, 5f35 sex = 9(n/a)
 */
 
-Util::Error FileSystem::SetFileName(AppID_t AppId, KeyID_t FileID,
-		FileType FileType, char* name) {
-	name[0] = '\0';
-
-	sprintf(name, "%d_%d_%d", AppId, FileID, FileType);
-
-	return Util::Error::NoError;
-}
-
 Util::Error ConfigFileSystem::ReadFile(AppID_t AppId, KeyID_t FileID,
 		FileType FileType, bstr& data) {
 
@@ -191,6 +182,45 @@ Util::Error ConfigFileSystem::ReadFile(AppID_t AppId, KeyID_t FileID,
 	return Util::Error::FileNotFound;
 }
 
+Util::Error GenericFileSystem::SetFileName(AppID_t AppId, KeyID_t FileID,
+		FileType FileType, char* name) {
+	name[0] = '\0';
+
+	sprintf(name, "%d_%d_%d", AppId, FileID, FileType);
+
+	return Util::Error::NoError;
+}
+
+Util::Error GenericFileSystem::ReadFile(AppID_t AppId, KeyID_t FileID,
+		FileType FileType, bstr& data) {
+
+	// try to read file
+	char file_name[100] = {0};
+	SetFileName(AppId, FileID, FileType, file_name);
+
+	size_t len = 0;
+	int res = readfile(file_name, data.uint8Data(), 1024, &len); // TODO: change 1024 to `data` max length
+	if (res == 0) {
+		data.set_length(len);
+		return Util::Error::NoError;
+	}
+
+	return Util::Error::FileNotFound;
+}
+
+Util::Error GenericFileSystem::WriteFile(AppID_t AppId, KeyID_t FileID,
+		FileType FileType, bstr& data) {
+
+	char file_name[100] = {0};
+	SetFileName(AppId, FileID, FileType, file_name);
+
+	int res = writefile(file_name, data.uint8Data(), data.length());
+	if (res != 0)
+		return Util::Error::FileWriteError;
+
+	return Util::Error::NoError;
+}
+
 bool FileSystem::isTagComposite(Util::tag_t tag) {
 	for(const auto& ctag: CompositeTag) {
     	if (ctag.TagGroup == tag) {
@@ -240,37 +270,37 @@ Util::Error FileSystem::ReadFile(AppID_t AppId, KeyID_t FileID,
 		return Util::Error::NoError;
 	}
 
-	// try to read file
-	char file_name[100] = {0};
-	SetFileName(AppId, FileID, FileType, file_name);
-
-	size_t len = 0;
-	int res = readfile(file_name, data.uint8Data(), 1024, &len); // TODO: change 1024 to `data` max length
-	if (res == 0) {
-		data.set_length(len);
-		return Util::Error::NoError;
-	}
-
-	// try to read file from tlv config
-	// TODO:
-
-	// check if we can read file from config area. here always a lowest priority
-	auto err = cfgFiles.ReadFile(AppId, FileID, FileType, data);
+	// from settings file system
+	auto err = settingsFiles.ReadFile(AppId, FileID, FileType, data);
 	if (err == Util::Error::NoError)
 		return err;
 
-	return Util::Error::NoError;
+	// from general file system
+	err = genFiles.ReadFile(AppId, FileID, FileType, data);
+	if (err == Util::Error::NoError)
+		return err;
+
+	// check if we can read file from config area. here always a lowest priority
+	err = cfgFiles.ReadFile(AppId, FileID, FileType, data);
+	printf("fileid %x [%lu] ", FileID, data.length()); dump_hex(data);
+	if (err == Util::Error::NoError)
+		return err;
+
+	return Util::Error::FileNotFound;
 }
 
 Util::Error FileSystem::WriteFile(AppID_t AppId, KeyID_t FileID,
 		FileType FileType, bstr& data) {
 
-	char file_name[100] = {0};
-	SetFileName(AppId, FileID, FileType, file_name);
+	// to settings file system
+	auto err = settingsFiles.WriteFile(AppId, FileID, FileType, data);
+	if (err == Util::Error::NoError)
+		return err;
 
-	int res = writefile(file_name, data.uint8Data(), data.length());
-	if (res != 0)
-		return Util::Error::FileWriteError;
+	// main write to filesystem
+	err = genFiles.WriteFile(AppId, FileID, FileType, data);
+	if (err != Util::Error::NoError)
+		return err;
 
 	return Util::Error::NoError;
 }
@@ -280,7 +310,7 @@ Util::Error FileSystem::DeleteFile(AppID_t AppId, KeyID_t FileID,
 		FileType FileType) {
 
 	char file_name[100] = {0};
-	SetFileName(AppId, FileID, FileType, file_name);
+	genFiles.SetFileName(AppId, FileID, FileType, file_name);
 
 	deletefile(file_name);
 
@@ -296,4 +326,18 @@ Util::Error FileSystem::DeleteFiles(AppID_t AppId) {
 	return Util::Error::NoError;
 }
 
+Util::Error SettingsFileSystem::ReadFile(AppID_t AppId, KeyID_t FileID,
+		FileType FileType, bstr& data) {
+
+	return Util::Error::FileNotFound;
+}
+
+Util::Error SettingsFileSystem::WriteFile(AppID_t AppId, KeyID_t FileID,
+		FileType FileType, bstr& data) {
+
+	return Util::Error::FileNotFound;
+}
+
 } // namespace File
+
+
