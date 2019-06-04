@@ -41,6 +41,45 @@ constexpr bool isTagConstructed(tag_t tag) {
 	return false;
 }
 
+constexpr Error ExtractTag(bstr &str, size_t &pos, tag_t &tag) {
+	if (str.length() < 2)
+		return Error::TLVDecodeLengthError;
+
+	tag = str[pos];
+	if ((tag & 0x1f) == 0x1f) {
+		// maximum 4-byte type length
+		for (uint8_t i = 0; i < 3; i ++) {
+			pos++; if (pos >= str.length()) return Error::TLVDecodeTagError;
+			tag = (tag << 8) + str[pos];
+			if ((str[pos] & 0x80) == 0)
+				break;
+		}
+	}
+
+	return Error::NoError;
+}
+
+constexpr Error ExtractLength(bstr &str, size_t &pos, tag_t &length) {
+	if (str.length() < 2)
+		return Error::TLVDecodeLengthError;
+
+	uint8_t len1 = str[pos];
+	length = len1;
+	if (len1 == 0x81) {
+		pos++; if (pos >= str.length()) return Error::TLVDecodeLengthError;
+		length = str[pos];
+	}
+	if (len1 == 0x82) {
+		pos++; if (pos >= str.length()) return Error::TLVDecodeLengthError;
+		length = (str[pos] << 8) + str[pos + 1];
+		pos++; if (pos >= str.length()) return Error::TLVDecodeLengthError;
+	}
+	if (len1 > 0x82)
+		return Error::TLVDecodeLengthError;
+
+	return Error::NoError;
+}
+
 class TLVElm {
 private:
 	bstr byteStr;
@@ -58,37 +97,18 @@ private:
 		elm_length = 0;
 		rest_length = 0;
 
-		if (byteStr.length() < 2)
-			return Error::TLVDecodeLengthError;
-
 		size_t ptr = 0;
-		tag = byteStr[ptr];
-		if ((tag & 0x1f) == 0x1f) {
-			// maximum 4-byte type length
-			for (uint8_t i = 0; i < 3; i ++) {
-				ptr++; if (ptr >= byteStr.length()) return Error::TLVDecodeTagError;
-				tag = (tag << 8) + byteStr[ptr];
-				if ((byteStr[ptr] & 0x80) == 0)
-					break;
-			}
-		}
+		auto err = ExtractTag(byteStr, ptr, tag);
+		if (err != Error::NoError)
+			return err;
 
 		ptr++; if (ptr >= byteStr.length()) return Error::TLVDecodeLengthError;
-		uint8_t len1 = byteStr[ptr];
-		length = len1;
-		if (len1 == 0x81) {
-			ptr++; if (ptr >= byteStr.length()) return Error::TLVDecodeLengthError;
-			length = byteStr[ptr];
-		}
-		if (len1 == 0x82) {
-			ptr++; if (ptr >= byteStr.length()) return Error::TLVDecodeLengthError;
-			length = (byteStr[ptr] << 8) + byteStr[ptr + 1];
-			ptr++; if (ptr >= byteStr.length()) return Error::TLVDecodeLengthError;
-		}
-		if (len1 > 0x82)
-			return Error::TLVDecodeLengthError;
+		err = ExtractLength(byteStr, ptr, length);
+		if (err != Error::NoError)
+			return err;
 
-		ptr++; if (ptr >= byteStr.length()) return Error::TLVDecodeLengthError;
+		// ptr can be out of range if length of elm = 0
+		ptr++; if (ptr > byteStr.length()) return Error::TLVDecodeLengthError;
 		elm_length = ptr + length;
 		rest_length = byteStr.length() - elm_length;
 		// length check
@@ -99,7 +119,6 @@ private:
 			dataptr = byteStr.uint8Data() + ptr;
 		else
 			dataptr = nullptr;
-
 
 		return Error::NoError;
 	}
@@ -273,6 +292,24 @@ private:
 		elm_length = 0;
 		rest_length = 0;
 
+		size_t ptr = 0;
+		auto err = ExtractTag(byteStr, ptr, tag);
+		if (err != Error::NoError)
+			return err;
+
+		ptr++; if (ptr >= byteStr.length()) return Error::TLVDecodeLengthError;
+		err = ExtractLength(byteStr, ptr, length);
+		if (err != Error::NoError)
+			return err;
+
+		// ptr out of range
+		ptr++; if (ptr > byteStr.length()) return Error::TLVDecodeLengthError;
+		elm_length = ptr;
+		rest_length = byteStr.length() - elm_length;
+		// length check
+		if (elm_length > byteStr.length())
+			return Error::TLVDecodeValueError;
+
 		return Error::NoError;
 	}
 	constexpr Error Serialize() {
@@ -322,11 +359,27 @@ public:
 	constexpr DOLElm &CurrentElm() {
 		return _dolElm;
 	}
+	constexpr void GoFirst() {
+		Init(_data);
+	}
 	constexpr bool GoNext() {
 		if (_dolElm.RestLength() == 0)
 			return false;
 
 		return _dolElm.InitRest() == Util::Error::NoError;
+	}
+	constexpr void Print() {
+		GoFirst();
+		while (true) {
+			printf("== [%03d] %x [%d] \n",
+					CurrentElm().ElmLength(),
+					CurrentElm().Tag(),
+					CurrentElm().Length());
+
+			if (!GoNext())
+				break;
+		}
+
 	}
 };
 

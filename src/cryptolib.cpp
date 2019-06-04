@@ -106,7 +106,8 @@ Util::Error KeyStorage::GetPublicKey(AppID_t appID, KeyID_t keyID,
 
 	bstr data = edata->GetData();
 
-	printf("key %lu %lu. tag1: %x\n", header.length(), data.length(), dol.CurrentElm().Tag());
+	printf("key %lu %lu\n ------------ dol --------------\n", header.length(), data.length());
+	dol.Print();
 	// TODO: dataOut.append("\7f\49\00............"_bstr);
 
 	return Util::Error::NoError;
