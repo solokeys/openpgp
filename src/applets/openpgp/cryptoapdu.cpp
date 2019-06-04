@@ -66,14 +66,16 @@ Util::Error APDUGenerateAsymmetricKeyPair::Process(uint8_t cla,
 	if (data.length() != 2)
 		return Util::Error::WrongAPDUDataLength;
 
-	printf("aready\n");
+	Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
+	File::FileSystem &filesystem = solo.GetFileSystem();
+	//Crypto::KeyStorage &key_storage = solo.GetKeyStorage();
+
 	OpenPGPKeyType key_type = OpenPGPKeyType::Unknown;
-	if (data == "\xb6\x00"_bstr)
-		key_type = OpenPGPKeyType::DigitalSignature;
-	if (data == "\xb8\x00"_bstr)
-		key_type = OpenPGPKeyType::Confidentiality;
-	if (data == "\xa4\x00"_bstr)
-		key_type = OpenPGPKeyType::Authentication;
+	if (data[0] == OpenPGPKeyType::DigitalSignature ||
+		data[0] == OpenPGPKeyType::Confidentiality ||
+		data[0] == OpenPGPKeyType::Authentication
+		)
+		key_type = static_cast<OpenPGPKeyType>(data[0]);
 
 	// OpenPGP v3.3.1 page 64
 	// 0x80 - Generation of key pair
