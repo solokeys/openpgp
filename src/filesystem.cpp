@@ -282,7 +282,6 @@ Util::Error FileSystem::ReadFile(AppID_t AppId, KeyID_t FileID,
 
 	// check if we can read file from config area. here always a lowest priority
 	err = cfgFiles.ReadFile(AppId, FileID, FileType, data);
-	printf("fileid %x [%lu] ", FileID, data.length()); dump_hex(data);
 	if (err == Util::Error::NoError)
 		return err;
 
