@@ -22,6 +22,7 @@ namespace Crypto {
 
 // OpenPGP 3.3.1 page 31. RFC 4880 and 6637
 enum AlgoritmID {
+	None                  = 0x00,
 	RSA                   = 0x01,
 	ECDSAforCDSandIntAuth = 0x13,
 	ECDHforDEC            = 0x12
@@ -108,7 +109,8 @@ public:
 	KeyStorage(CryptoEngine &_cryptoEngine): cryptoEngine(_cryptoEngine) {prvStr.clear();};
 
 	Util::Error GetKeyPart(bstr data, Util::tag_t keyPart, bstr &dataOut);
-	Util::Error GetPublicKey(AppID_t appID, KeyID_t keyID, bstr &tlvKey);
+	Util::Error GetPublicKey(AppID_t appID, KeyID_t keyID, uint8_t AlgoritmID, bstr &pubKey);
+	Util::Error GetPublicKey7F49(AppID_t appID, KeyID_t keyID, uint8_t AlgoritmID, bstr &tlvKey);
 	Util::Error GetKey(AppID_t appID, KeyID_t keyID, KeyType keyType, bstr &key);
 	Util::Error SetKey(AppID_t appID, KeyID_t keyID, KeyType keyType, bstr key);
 	Util::Error SetKeyExtHeader(AppID_t appID, bstr keyData, bool MorePacketsFollow);

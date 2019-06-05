@@ -14,6 +14,7 @@
 #include "filesystem.h"
 #include "util.h"
 #include "openpgpconst.h"
+#include "cryptolib.h"
 
 namespace OpenPGP {
 
@@ -49,6 +50,32 @@ struct __attribute__ ((packed)) PWStatusBytes {
 	bool PasswdTryRemains(Password passwdId);
 	void PasswdSetRemains(Password passwdId, uint8_t rem);
 	void Print();
+};
+
+// Open PGP 3.3.1 page 31
+struct  RSAAlgorithmAttr {
+	uint16_t NLen;      // modulus length in bit
+	uint16_t PubExpLen; // public exponent length in bits
+	uint8_t KeyFormat;  // Crypto::RSAKeyImportFormat. Import-Format of private key
+};
+
+// Open PGP 3.3.1 page 31
+struct  ECDSAAlgorithmAttr {
+	uint8_t bOID[10];
+	bstr OID{bOID, sizeof(bOID)};
+	uint8_t KeyFormat; // Import-Format of private key, optional. if Format byte is not present `FF` = standard with public key
+};
+
+// Open PGP 3.3.1 page 31
+struct  AlgoritmAttr {
+	uint8_t _data[50];
+	bstr data{_data, sizeof(_data)};
+
+	uint8_t AlgorithmID; // Crypto::AlgoritmID
+	RSAAlgorithmAttr RSAa;
+	ECDSAAlgorithmAttr ECDSAa;
+
+	Util::Error Load(File::FileSystem &fs, KeyID_t file_id);
 };
 
 } // namespace OpenPGP

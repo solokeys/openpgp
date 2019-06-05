@@ -74,7 +74,7 @@ Util::Error CryptoLib::RSAGetPublicKey(bstr strP, bstr strQ, bstr &strN) {
 			break;
 		}
 
-		size_t length = mbedtls_mpi_bitlen(&N) / 8 + 1;
+		size_t length = (mbedtls_mpi_bitlen(&N) + 1) / 8;
 		if (mbedtls_mpi_write_binary(&N, strN.uint8Data(), length)) {
 			ret = Util::Error::CryptoDataError;
 			break;
@@ -148,10 +148,10 @@ Util::Error KeyStorage::GetKeyPart(bstr dataIn, Util::tag_t keyPart,
 	return Util::Error::NoError;
 }
 
-Util::Error KeyStorage::GetPublicKey(AppID_t appID, KeyID_t keyID,
-		bstr& tlvKey) {
+Util::Error KeyStorage::GetPublicKey(AppID_t appID, KeyID_t keyID, uint8_t AlgoritmID,
+		bstr& pubKey) {
 
-	tlvKey.clear();
+	pubKey.clear();
 
 	Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
 	File::FileSystem &filesystem = solo.GetFileSystem();
@@ -165,31 +165,76 @@ Util::Error KeyStorage::GetPublicKey(AppID_t appID, KeyID_t keyID,
 
 	printf("key %x [%lu] loaded.\n", keyID, prvStr.length());
 
-	uint8_t binN[1024] = {0};
-	bstr strN{binN, sizeof(binN)};
+	if (AlgoritmID == Crypto::AlgoritmID::RSA) {
+		err = GetKeyPart(prvStr, KeyPartsRSA::N, pubKey);
+		if (err != Util::Error::NoError || pubKey.length() == 0) {
+			bstr strP;
+			err = GetKeyPart(prvStr, KeyPartsRSA::P, strP);
+			if (err != Util::Error::NoError)
+				return err;
 
-	// TODO: add ECDSA!!!!
-	err = GetKeyPart(prvStr, KeyPartsRSA::N, strN);
-	if (err != Util::Error::NoError || strN.length() == 0) {
-		bstr strP;
-		err = GetKeyPart(prvStr, KeyPartsRSA::P, strP);
-		if (err != Util::Error::NoError)
-			return err;
+			bstr strQ;
+			err = GetKeyPart(prvStr, KeyPartsRSA::Q, strQ);
+			if (err != Util::Error::NoError)
+				return err;
 
-		bstr strQ;
-		err = GetKeyPart(prvStr, KeyPartsRSA::Q, strQ);
-		if (err != Util::Error::NoError)
-			return err;
+			printf("Plen: %lu Qlen: %lu\n", strP.length(), strQ.length());
+			dump_hex(strP);
+			dump_hex(strQ);
 
-		printf("Plen: %lu Qlen: %lu\n", strP.length(), strQ.length());
-		dump_hex(strP);
-		dump_hex(strQ);
+			crypto.RSAGetPublicKey(strP, strQ, pubKey);
+		}
+	} else {
+		err = GetKeyPart(prvStr, KeyPartsECDSA::PublicKey, pubKey);
+		if (err != Util::Error::NoError || pubKey.length() == 0) {
+			bstr privateKey;
+			err = GetKeyPart(prvStr, KeyPartsECDSA::PrivateKey, privateKey);
+			if (err != Util::Error::NoError)
+				return err;
 
-		crypto.RSAGetPublicKey(strP, strQ, strN);
+			printf("Private len: %lu", privateKey.length());
+			dump_hex(privateKey);
+
+			// TODO: add ECDSA calc public key from private!!!!
+
+			return Util::Error::InternalError;
+		}
+
 	}
 
-	printf("Nlen: %lu\n", strN.length());
-	dump_hex(strN);
+	return Util::Error::NoError;
+}
+
+Util::Error KeyStorage::GetPublicKey7F49(AppID_t appID, KeyID_t keyID,
+		uint8_t AlgoritmID, bstr& tlvKey) {
+
+	uint8_t _pubKey[1024] = {0};
+	bstr pubKey{_pubKey, sizeof(_pubKey)};
+	auto err = GetPublicKey(appID, keyID, AlgoritmID, pubKey);
+	if (err != Util::Error::NoError)
+		return err;
+
+	printf("pubKey: %lu\n", pubKey.length());
+	dump_hex(pubKey);
+
+	Util::TLVTree tlv;
+	tlv.Init(tlvKey);
+	tlv.AddRoot(0x7f49);
+	tlv.AddChild(0x81);
+	tlv.AddNext(0x82);
+	tlv.PrintTree();
+
+	//Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
+	//File::FileSystem &filesystem = solo.GetFileSystem();
+	//CryptoLib &crypto = cryptoEngine.getCryptoLib();
+
+	if (AlgoritmID == Crypto::AlgoritmID::RSA) {
+
+
+	} else {
+
+
+	}
 
 	// TODO: dataOut.append("\7f\49\00............"_bstr);
 
@@ -272,3 +317,4 @@ Util::Error CryptoEngine::ECDSAVerify(AppID_t appID, KeyID_t keyID,
 }
 
 } // namespace Crypto
+

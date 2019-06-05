@@ -80,6 +80,27 @@ constexpr Error ExtractLength(bstr &str, size_t &pos, tag_t &length) {
 	return Error::NoError;
 }
 
+constexpr Error EncodeTag(bstr &str, size_t &size, tag_t tag) {
+
+	if (tag > 0xffffff) {
+		str.append((tag & 0xff000000) >> 24);
+		size++;
+	}
+	if (tag > 0xffff) {
+		str.append((tag & 0xff0000) >> 16);
+		size++;
+	}
+	if (tag > 0xff) {
+		str.append((tag & 0xff00) >> 8);
+		size++;
+	}
+	str.append(tag & 0xff);
+	size++;
+
+	return Error::NoError;
+}
+
+
 class TLVElm {
 private:
 	bstr byteStr;
@@ -122,9 +143,6 @@ private:
 
 		return Error::NoError;
 	}
-	constexpr Error Serialize() {
-		return Error::NoError;
-	}
 public:
 	constexpr Util::Error Init (bstr &_bytestr) {
 		byteStr = _bytestr;
@@ -137,22 +155,6 @@ public:
 
 		byteStr = byteStr.substr(elm_length, rest_length);
 		return Deserialize();
-	}
-
-	void constexpr Clear() {
-		length = 0;
-	}
-	void constexpr Delete() { // maybe not here...
-		tag = 0;
-		length = 0;
-	}
-	void constexpr Append(bstr &data) {
-		;
-	}
-	constexpr Util::Error Set(bstr &data) {
-		length = 0;
-		Append(data);
-		return Error::NoError;
 	}
 
 	constexpr tag_t Tag() {
@@ -258,6 +260,18 @@ public:
 		}
 
 		return nullptr;
+	}
+
+	constexpr void AddRoot(tag_t tag) {
+		_data.clear();
+		size_t size = 0;
+		EncodeTag(_data, size, tag);
+		_data.append(0);
+		Init(_data);
+	}
+	constexpr void AddChild(tag_t tag) {
+	}
+	constexpr void AddNext(tag_t tag) {
 	}
 
 	constexpr void PrintTree() {

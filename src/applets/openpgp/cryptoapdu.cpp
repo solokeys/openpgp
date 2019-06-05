@@ -14,6 +14,7 @@
 #include "applets/openpgpapplet.h"
 #include "applets/openpgp/apdusecuritycheck.h"
 #include "applets/openpgp/openpgpconst.h"
+#include "applets/openpgp/openpgpstruct.h"
 
 namespace OpenPGP {
 
@@ -67,7 +68,7 @@ Util::Error APDUGenerateAsymmetricKeyPair::Process(uint8_t cla,
 		return Util::Error::WrongAPDUDataLength;
 
 	Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
-	//File::FileSystem &filesystem = solo.GetFileSystem();
+	File::FileSystem &filesystem = solo.GetFileSystem();
 	Crypto::KeyStorage &key_storage = solo.GetKeyStorage();
 
 	OpenPGPKeyType key_type = OpenPGPKeyType::Unknown;
@@ -85,7 +86,33 @@ Util::Error APDUGenerateAsymmetricKeyPair::Process(uint8_t cla,
 
 		return Util::Error::DataNotFound;
 	} else {
-		auto err = key_storage.GetPublicKey(File::AppletID::OpenPGP, key_type, dataOut);
+		OpenPGP::AlgoritmAttr alg;
+		KeyID_t file_id = 0;
+		switch (key_type) {
+		case OpenPGPKeyType::DigitalSignature:
+			file_id = 0xc1;
+			break;
+		case OpenPGPKeyType::Confidentiality:
+			file_id = 0xc2;
+			break;
+		case OpenPGPKeyType::Authentication:
+			file_id = 0xc3;
+			break;
+		default:
+			break;
+		};
+		if (file_id == 0)
+			return Util::Error::DataNotFound;
+
+		auto err = alg.Load(filesystem, file_id);
+		if (err != Util::Error::NoError || alg.AlgorithmID == 0)
+			return Util::Error::DataNotFound;
+
+		err = key_storage.GetPublicKey7F49(
+				File::AppletID::OpenPGP,
+				key_type,
+				alg.AlgorithmID,
+				dataOut);
 		if (err != Util::Error::NoError || dataOut.length() == 0)
 			return Util::Error::DataNotFound;
 

@@ -88,6 +88,26 @@ void PWStatusBytes::Print() {
 	);
 }
 
+Util::Error OpenPGP::AlgoritmAttr::Load(File::FileSystem& fs, KeyID_t file_id) {
+	auto err = fs.ReadFile(File::AppletID::OpenPGP, file_id, File::FileType::File, data);
+	if (err != Util::Error::NoError)
+		return err;
+
+	if ((data.length() < 2) ||
+		(data[0] == Crypto::AlgoritmID::RSA && data.length() != 6))
+		return Util::Error::InternalError;
+
+	AlgorithmID = data[0];
+	if (AlgorithmID == Crypto::AlgoritmID::RSA) {
+		RSAa.NLen = (data[1] << 8) + data[2];
+		RSAa.PubExpLen = (data[3] << 8) + data[4];
+		RSAa.KeyFormat = data[5];
+	} else {
+		ECDSAa.KeyFormat = 0xff; // default!!!
+		ECDSAa.OID = data.substr(1, data.length() - 1);
+	}
+
+	return Util::Error::NoError;
+}
 
 } // namespace OpenPGP
-
