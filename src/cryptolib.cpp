@@ -141,7 +141,7 @@ Util::Error KeyStorage::GetKeyPart(bstr dataIn, Util::tag_t keyPart,
 	size_t offset = 0;
 	size_t length = 0;
 	err = dol.Search(keyPart, offset, length);
-	if (offset + length > data.length())
+	if (offset + length > data.length() || length == 0)
 		return Util::Error::StoredKeyError;
 
 	dataOut = data.substr(offset, length);
@@ -155,6 +155,7 @@ Util::Error KeyStorage::GetPublicKey(AppID_t appID, KeyID_t keyID,
 
 	Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
 	File::FileSystem &filesystem = solo.GetFileSystem();
+	CryptoLib &crypto = cryptoEngine.getCryptoLib();
 
 	// clear key storage
 	prvStr.clear();
@@ -164,19 +165,31 @@ Util::Error KeyStorage::GetPublicKey(AppID_t appID, KeyID_t keyID,
 
 	printf("key %x [%lu] loaded.\n", keyID, prvStr.length());
 
-	bstr strP;
-	err = GetKeyPart(prvStr, KeyPartsRSA::P, strP);
-	if (err != Util::Error::NoError)
-		return err;
+	uint8_t binN[1024] = {0};
+	bstr strN{binN, sizeof(binN)};
 
-	bstr strQ;
-	err = GetKeyPart(prvStr, KeyPartsRSA::Q, strQ);
-	if (err != Util::Error::NoError)
-		return err;
+	// TODO: add ECDSA!!!!
+	err = GetKeyPart(prvStr, KeyPartsRSA::N, strN);
+	if (err != Util::Error::NoError || strN.length() == 0) {
+		bstr strP;
+		err = GetKeyPart(prvStr, KeyPartsRSA::P, strP);
+		if (err != Util::Error::NoError)
+			return err;
 
-	printf("Plen: %d Qlen: %d\n", strP.length(), strQ.length());
-	dump_hex(strP);
-	dump_hex(strQ);
+		bstr strQ;
+		err = GetKeyPart(prvStr, KeyPartsRSA::Q, strQ);
+		if (err != Util::Error::NoError)
+			return err;
+
+		printf("Plen: %lu Qlen: %lu\n", strP.length(), strQ.length());
+		dump_hex(strP);
+		dump_hex(strQ);
+
+		crypto.RSAGetPublicKey(strP, strQ, strN);
+	}
+
+	printf("Nlen: %lu\n", strN.length());
+	dump_hex(strN);
 
 	// TODO: dataOut.append("\7f\49\00............"_bstr);
 

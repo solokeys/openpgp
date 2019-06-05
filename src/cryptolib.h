@@ -34,7 +34,7 @@ namespace Crypto {
 		PQ             = 0x94, // crt
 		DP1            = 0x95, // crt
 		DQ1            = 0x96, // crt
-		Modulus        = 0x97  // optional for standard and crt
+		N              = 0x97  // optional for standard and crt. Modulus.
 	};
 
 	enum KeyPartsECDSA {
@@ -42,10 +42,15 @@ namespace Crypto {
 		PublicKey      = 0x99  // optional
 	};
 
+	class CryptoEngine;
+
 	class CryptoLib {
 	private:
+		CryptoEngine &cryptoEngine;
 
 	public:
+		CryptoLib(CryptoEngine &_cryptoEngine): cryptoEngine(_cryptoEngine) {};
+
 		Util::Error GenerateRandom(size_t length, bstr &dataOut);
 
 		Util::Error AESEncrypt(bstr key, bstr dataIn, bstr &dataOut);
@@ -63,10 +68,12 @@ namespace Crypto {
 
 	class KeyStorage {
 	private:
+		CryptoEngine &cryptoEngine;
+
 		uint8_t prvData[1024] = {0};
 		bstr prvStr{prvData};
 	public:
-		KeyStorage() {prvStr.clear();};
+		KeyStorage(CryptoEngine &_cryptoEngine): cryptoEngine(_cryptoEngine) {prvStr.clear();};
 
 		Util::Error GetKeyPart(bstr data, Util::tag_t keyPart, bstr &dataOut);
 		Util::Error GetPublicKey(AppID_t appID, KeyID_t keyID, bstr &tlvKey);
@@ -77,8 +84,8 @@ namespace Crypto {
 
 	class CryptoEngine {
 	private:
-		CryptoLib *cryptoLib;
-		KeyStorage *keyStorage;
+		CryptoLib cryptoLib{*this};
+		KeyStorage keyStorage{*this};
 	public:
 		Util::Error AESEncrypt(AppID_t appID, KeyID_t keyID, bstr dataIn, bstr &dataOut);
 		Util::Error AESDecrypt(AppID_t appID, KeyID_t keyID, bstr dataIn, bstr &dataOut);
@@ -88,7 +95,15 @@ namespace Crypto {
 
 		Util::Error ECDSASign(AppID_t appID, KeyID_t keyID, bstr data, bstr &signature);
 		Util::Error ECDSAVerify(AppID_t appID, KeyID_t keyID, bstr data, bstr signature);
-	};
+
+	CryptoLib &getCryptoLib() {
+		return cryptoLib;
+	}
+
+	KeyStorage &getKeyStorage() {
+		return keyStorage;
+	}
+};
 
 }
 

@@ -35,7 +35,11 @@ CryptoEngine& SoloFactory::GetCryptoEngine() {
 }
 
 CryptoLib& SoloFactory::GetCryptoLib() {
-	return cryptoLib;
+	return cryptoEngine.getCryptoLib();
+}
+
+KeyStorage& Factory::SoloFactory::GetKeyStorage() {
+	return cryptoEngine.getKeyStorage();
 }
 
 OpenPGPFactory& SoloFactory::GetOpenPGPFactory() {
@@ -44,10 +48,6 @@ OpenPGPFactory& SoloFactory::GetOpenPGPFactory() {
 
 FileSystem& Factory::SoloFactory::GetFileSystem() {
 	return fileSystem;
-}
-
-KeyStorage& Factory::SoloFactory::GetKeyStorage() {
-	return keyStorage;
 }
 
 }

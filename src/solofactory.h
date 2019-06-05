@@ -30,11 +30,10 @@ namespace Factory {
 
 		AppletStorage appletStorage;
 		APDUExecutor apduExecutor;
+
 		CryptoEngine cryptoEngine;
-		CryptoLib cryptoLib;
 
 		FileSystem fileSystem;
-		KeyStorage keyStorage;
 	public:
 		Util::Error Init();
 
@@ -44,10 +43,10 @@ namespace Factory {
 
 		CryptoEngine &GetCryptoEngine();
 		CryptoLib &GetCryptoLib();
+		KeyStorage &GetKeyStorage();
 
 		OpenPGPFactory &GetOpenPGPFactory();
 		FileSystem &GetFileSystem();
-		KeyStorage &GetKeyStorage();
 
 		static SoloFactory &GetSoloFactory();
 	};
