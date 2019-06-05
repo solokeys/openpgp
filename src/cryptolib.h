@@ -35,6 +35,23 @@ enum RSAKeyImportFormat {
 	CrtWithN     = 0x03
 };
 
+// ECDSA OIDs. OpenPGP 3.3.1 pages 90-92.
+// ansix9p256r1, OID = {1.2.840.10045.3.1.7} = ´2A8648CE3D030107´
+// ansix9p384r1, OID = {1.3.132.0.34} = '2B81040022'
+// ansix9p521r1, OID = {1.3.132.0.35} = '2B81040023'
+// brainpoolP256r1, OID={1.3.36.3.3.2.8.1.1.7} = ´2B2403030208010107´
+// brainpoolP384r1, OID={1.3.36.3.3.2.8.1.1.11} = ´2B240303020801010B´
+// brainpoolP512r1, OID={1.3.36.3.3.2.8.1.1.13} = ´2B240303020801010D´
+// max OID length 9 bytes
+enum ECDSAaid {
+	ansix9p256r1,
+	ansix9p384r1,
+	ansix9p521r1,
+	brainpoolP256r1,
+	brainpoolP384r1,
+	brainpoolP512r1
+};
+
 enum KeyType {
 	Symmetric,
 	FullAsymmetric,
