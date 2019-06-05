@@ -234,7 +234,8 @@ Util::Error KeyStorage::GetPublicKey7F49(AppID_t appID, KeyID_t keyID,
 
 		printf("exp: %lu\n", strExp.length());
 
-		tlv.AddChild(0x81);
+		bstr test = "1234"_bstr;
+		tlv.AddChild(0x81, &test);
 		tlv.AddNext(0x82, &strExp);
 		tlv.PrintTree();
 
