@@ -100,6 +100,38 @@ constexpr Error EncodeTag(bstr &str, size_t &size, tag_t tag) {
 	return Error::NoError;
 }
 
+constexpr Error EncodeLength(bstr &str, size_t &size, tag_t length) {
+
+	if (length < 0x80) {
+		str.append(length);
+		size++;
+		return Error::NoError;
+	}
+	if (length < 0x100) {
+		str.append(0x81);
+		str.append(length);
+		size += 2;
+		return Error::NoError;
+	}
+	if (length < 0x10000) {
+		str.append(0x82);
+		str.append((length >> 8) & 0xff);
+		str.append(length & 0xff);
+		size += 3;
+		return Error::NoError;
+	}
+	if (length < 0x1000000) {
+		str.append(0x83);
+		str.append((length >> 16) & 0xff);
+		str.append((length >> 8) & 0xff);
+		str.append(length & 0xff);
+		size += 4;
+		return Error::NoError;
+	}
+
+	return Error::NoError;
+}
+
 
 class TLVElm {
 private:
@@ -167,6 +199,10 @@ public:
 
 	constexpr tag_t ElmLength() {
 		return elm_length;
+	}
+
+	constexpr tag_t HeaderLength() {
+		return elm_length - length;
 	}
 
 	constexpr tag_t RestLength() {
@@ -262,16 +298,19 @@ public:
 		return nullptr;
 	}
 
-	constexpr void AddRoot(tag_t tag) {
+	constexpr void AddRoot(tag_t tag, tag_t length = 0, bstr *data = nullptr) {
 		_data.clear();
 		size_t size = 0;
 		EncodeTag(_data, size, tag);
-		_data.append(0);
+		EncodeLength(_data, size, length);
+		if (length && data)
+			_data.append(*data);
 		Init(_data);
 	}
-	constexpr void AddChild(tag_t tag) {
+	constexpr void AddChild(tag_t tag, tag_t length = 0, bstr *data = nullptr) {
+		//size_t header_size = _elm[currLevel].HeaderLength();
 	}
-	constexpr void AddNext(tag_t tag) {
+	constexpr void AddNext(tag_t tag, tag_t length = 0, bstr *data = nullptr) {
 	}
 
 	constexpr void PrintTree() {

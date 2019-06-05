@@ -220,16 +220,15 @@ Util::Error KeyStorage::GetPublicKey7F49(AppID_t appID, KeyID_t keyID,
 	Util::TLVTree tlv;
 	tlv.Init(tlvKey);
 	tlv.AddRoot(0x7f49);
-	tlv.AddChild(0x81);
-	tlv.AddNext(0x82);
-	tlv.PrintTree();
 
 	//Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
 	//File::FileSystem &filesystem = solo.GetFileSystem();
 	//CryptoLib &crypto = cryptoEngine.getCryptoLib();
 
 	if (AlgoritmID == Crypto::AlgoritmID::RSA) {
-
+		tlv.AddChild(0x81);
+		tlv.AddNext(0x82);
+		tlv.PrintTree();
 
 	} else {
 
