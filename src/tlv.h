@@ -13,12 +13,13 @@
 #include "util.h"
 #include "errors.h"
 #include <array>
+#include <string.h>
 
 namespace Util {
 
 using tag_t = uint32_t;
 
-static const std::array<tag_t, 9> ConstructedTagsList = {
+static const std::array<tag_t, 10> ConstructedTagsList = {
 	0x65,
 	0x6e,
 	0x73,
@@ -30,6 +31,8 @@ static const std::array<tag_t, 9> ConstructedTagsList = {
 	0xf9,
 
 	0x4d,
+
+	0x7f49  // key structure response
 };
 
 constexpr bool isTagConstructed(tag_t tag) {
@@ -212,6 +215,9 @@ public:
 	constexpr bstr GetData() {
 		return bstr(byteStr.substr(elm_length - length, length));
 	}
+	constexpr uint8_t *GetPtr() {
+		return byteStr.uint8Data();
+	}
 };
 
 const static size_t MaxTreeLevel = 10U;
@@ -315,7 +321,60 @@ public:
 		Init(_data);
 	}
 	constexpr void AddChild(tag_t tag, bstr *data = nullptr) {
-		//size_t header_size = _elm[currLevel].HeaderLength();
+		size_t datalen = 0;
+		if (data)
+			datalen = data->length();
+
+		_data.append(0xaa); // test
+
+		tag_t old_parent_tag = CurrentElm().Tag();
+		size_t need_buf_len = 8 + 8 + datalen; // maxT = 4, maxL = 4. parent tag + child tag
+		size_t old_elm_len = CurrentElm().ElmLength();
+		size_t old_data_len = _data.length();
+		uint8_t *current_ptr = CurrentElm().GetPtr();
+		size_t current_offset = current_ptr - _data.uint8Data();
+		printf("current_ptr: %lu\n", current_offset);
+
+		// needs to move memory
+		size_t move_data_len = old_data_len - current_offset - old_elm_len;
+		uint8_t *move_data_ptr = current_ptr + old_elm_len;
+		memmove(current_ptr + need_buf_len, move_data_ptr, move_data_len);
+
+		if (old_elm_len < need_buf_len) { // test only!!!!
+			_data.set_length(old_data_len + need_buf_len - old_elm_len);
+		}
+
+		bstr child_place(_data.uint8Data() + current_offset + 8, 0, 8 + datalen); // base address + current elm start offset + 4T + 4L
+		size_t child_size = 0;
+		EncodeTag(child_place, child_size, tag);
+		EncodeLength(child_place, child_size, datalen);
+		if (data) {
+			child_place.append(*data);
+			child_size += datalen;
+		}
+		printf("child_size: %lu\n", child_size);
+
+		bstr parent_place(_data.substr(current_offset, 0), 8); // base address + current elm start offset
+		size_t parent_size = 0;
+		EncodeTag(parent_place, parent_size, CurrentElm().Tag());
+		EncodeLength(parent_place, parent_size, child_size);
+		printf("parent_size: %lu\n", parent_size);
+		//dump_hex(_data);
+
+		// memmove child
+		memmove(current_ptr + parent_size, current_ptr + 8, child_size);
+		// memmove rest
+		memmove(current_ptr + parent_size + child_size, current_ptr + need_buf_len, move_data_len);
+		// set real length
+		_data.set_length(old_data_len - old_elm_len + parent_size + child_size);
+
+		Init(_data);
+
+		// because the tag is unique.
+		if (Search(old_parent_tag))
+			GoChild();
+
+		printf("curr elm tag: %x\n", CurrentElm().Tag());
 	}
 	constexpr void AddNext(tag_t tag, bstr *data = nullptr) {
 	}

@@ -7,16 +7,3 @@
 
 #include "util.h"
 
-void dump_hex(uint8_t * buf, int size)
-{
-    while(size--)
-    {
-        printf("%02x ", *buf++);
-    }
-    printf("\n");
-}
-
-void dump_hex(bstr data) {
-	dump_hex(const_cast<uint8_t*>(&data.front()), data.length());
-}
-
