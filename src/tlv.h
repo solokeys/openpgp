@@ -298,19 +298,26 @@ public:
 		return nullptr;
 	}
 
-	constexpr void AddRoot(tag_t tag, tag_t length = 0, bstr *data = nullptr) {
+	constexpr bstr &GetDataLink() {
+		return _data;
+	}
+
+	constexpr void AddRoot(tag_t tag, bstr *data = nullptr) {
 		_data.clear();
 		size_t size = 0;
 		EncodeTag(_data, size, tag);
-		EncodeLength(_data, size, length);
-		if (length && data)
+		if (data) {
+			EncodeLength(_data, size, data->length());
 			_data.append(*data);
+		} else {
+			EncodeLength(_data, size, 0);
+		}
 		Init(_data);
 	}
-	constexpr void AddChild(tag_t tag, tag_t length = 0, bstr *data = nullptr) {
+	constexpr void AddChild(tag_t tag, bstr *data = nullptr) {
 		//size_t header_size = _elm[currLevel].HeaderLength();
 	}
-	constexpr void AddNext(tag_t tag, tag_t length = 0, bstr *data = nullptr) {
+	constexpr void AddNext(tag_t tag, bstr *data = nullptr) {
 	}
 
 	constexpr void PrintTree() {

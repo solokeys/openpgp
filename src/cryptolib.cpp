@@ -226,8 +226,16 @@ Util::Error KeyStorage::GetPublicKey7F49(AppID_t appID, KeyID_t keyID,
 	//CryptoLib &crypto = cryptoEngine.getCryptoLib();
 
 	if (AlgoritmID == Crypto::AlgoritmID::RSA) {
+		bstr strExp;
+		// prvStr was filled by GetPublicKey
+		err = GetKeyPart(prvStr, KeyPartsRSA::PublicExponent, strExp);
+		if (err != Util::Error::NoError)
+			return err;
+
+		printf("exp: %lu\n", strExp.length());
+
 		tlv.AddChild(0x81);
-		tlv.AddNext(0x82);
+		tlv.AddNext(0x82, &strExp);
 		tlv.PrintTree();
 
 	} else {
@@ -235,8 +243,7 @@ Util::Error KeyStorage::GetPublicKey7F49(AppID_t appID, KeyID_t keyID,
 
 	}
 
-	// TODO: dataOut.append("\7f\49\00............"_bstr);
-
+	tlvKey = tlv.GetDataLink();
 	return Util::Error::NoError;
 }
 
