@@ -10,6 +10,10 @@
 #ifndef SRC_CRYPTOLIB_H_
 #define SRC_CRYPTOLIB_H_
 
+#include <mbedtls/config.h>
+#include <mbedtls/rsa.h>
+#include <mbedtls/aes.h>
+
 #include <util.h>
 #include <errors.h>
 #include "tlv.h"
@@ -48,6 +52,7 @@ namespace Crypto {
 		Util::Error AESDecrypt(bstr key, bstr dataIn, bstr &dataOut);
 
 		Util::Error RSAGenKey(bstr &keyOut);
+		Util::Error RSAGetPublicKey(bstr strP, bstr strQ, bstr &strN);
 		Util::Error RSASign(bstr key, bstr data, bstr &signature);
 		Util::Error RSAVerify(bstr key, bstr data, bstr signature);
 

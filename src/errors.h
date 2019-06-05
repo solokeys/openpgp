@@ -37,6 +37,8 @@ namespace Util {
 
 		PasswordLocked,
 		StoredKeyError,
+		CryptoDataError,
+		CryptoOperationError,
 
 		// error code was put in the response
 		ErrorPutInData,
@@ -69,6 +71,8 @@ namespace Util {
 
 		"Password locked",
 		"Stored key error",
+		"Crypto data error",
+		"Crypto operation error",
 
 		"Error. Error code already in the response"
 		"n/a"};

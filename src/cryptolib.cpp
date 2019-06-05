@@ -48,6 +48,50 @@ Util::Error CryptoLib::ECDSASign(bstr key, bstr data, bstr& signature) {
 	return Util::Error::InternalError;
 }
 
+Util::Error CryptoLib::RSAGetPublicKey(bstr strP, bstr strQ, bstr &strN) {
+	Util::Error ret = Util::Error::NoError;
+
+	mbedtls_rsa_context rsa;
+	mbedtls_mpi N, P, Q;
+
+	mbedtls_rsa_init(&rsa, MBEDTLS_RSA_PKCS_V15, 0);
+	mbedtls_mpi_init(&N);
+	mbedtls_mpi_init(&P);
+	mbedtls_mpi_init(&Q);
+
+	while (true) {
+		if (mbedtls_mpi_read_binary(&P, strP.uint8Data(), strP.length())) {
+			ret = Util::Error::CryptoDataError;
+			break;
+		}
+		if (mbedtls_mpi_read_binary(&Q, strQ.uint8Data(), strQ.length())) {
+			ret = Util::Error::CryptoDataError;
+			break;
+		}
+
+		if (mbedtls_mpi_mul_mpi(&N, &P, &Q)) {
+			ret = Util::Error::CryptoOperationError;
+			break;
+		}
+
+		size_t length = mbedtls_mpi_bitlen(&N) / 8 + 1;
+		if (mbedtls_mpi_write_binary(&N, strN.uint8Data(), length)) {
+			ret = Util::Error::CryptoDataError;
+			break;
+		}
+		strN.set_length(length);
+
+		break;
+	}
+
+	mbedtls_rsa_free(&rsa);
+	mbedtls_mpi_free(&N);
+	mbedtls_mpi_free(&P);
+	mbedtls_mpi_free(&Q);
+
+	return ret;
+}
+
 Util::Error CryptoLib::ECDSAVerify(bstr key, bstr data,
 		bstr signature) {
 	return Util::Error::InternalError;
