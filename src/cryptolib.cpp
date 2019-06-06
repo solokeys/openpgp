@@ -222,10 +222,6 @@ Util::Error KeyStorage::GetPublicKey7F49(AppID_t appID, KeyID_t keyID,
 	tlv.Init(tlvKey);
 	tlv.AddRoot(0x7f49);
 
-	//Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
-	//File::FileSystem &filesystem = solo.GetFileSystem();
-	//CryptoLib &crypto = cryptoEngine.getCryptoLib();
-
 	if (AlgoritmID == Crypto::AlgoritmID::RSA) {
 		bstr strExp;
 		// prvStr was filled by GetPublicKey
@@ -233,14 +229,12 @@ Util::Error KeyStorage::GetPublicKey7F49(AppID_t appID, KeyID_t keyID,
 		if (err != Util::Error::NoError)
 			return err;
 
-		printf("exp: %lu\n", strExp.length());
 		tlv.AddChild(0x81, &pubKey);
 		tlv.AddNext(0x82, &strExp);
 		tlv.PrintTree();
 
 	} else {
-
-
+		tlv.AddChild(0x86, &pubKey);
 	}
 
 	tlvKey = tlv.GetDataLink();
