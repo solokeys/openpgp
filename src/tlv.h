@@ -320,6 +320,39 @@ public:
 		}
 		Init(_data);
 	}
+	constexpr void NormalizeParents(int offset) {
+		if (offset == 0 || currLevel == 0)
+			return;
+
+		currLevel--;
+		printf("offset %d currLevel %d\n", offset, currLevel);
+		for (int lvl = currLevel; lvl >= 0; lvl--) {
+			printf("--lvl %d\n", lvl);
+
+			uint8_t _strdata[8] = {0};
+			bstr strdata(_strdata, 0, 8);
+
+			tag_t tag = _elm[lvl].Tag();
+			tag_t len = _elm[lvl].Length() + offset;
+			size_t header_length = _elm[lvl].HeaderLength();
+
+			size_t new_len = 0;
+			EncodeTag(strdata, new_len, tag);
+			EncodeLength(strdata, new_len, len);
+
+			// needs to move string's tail
+			if (header_length != new_len) {
+				uint8_t *elm_end = _elm[lvl].GetPtr() + header_length;
+				size_t elm_end_offset = _elm[lvl].GetPtr() - _data.uint8Data();
+				size_t move_data_len = _data.length() - elm_end_offset;
+				int delta_size = new_len - header_length;
+				printf("elm_length %lu, new_len %lu, delta_size %d, move_data_len %lu\n",header_length, new_len, delta_size, move_data_len);
+				_data.set_length(_data.length() + delta_size);
+				memmove(elm_end + delta_size, elm_end, move_data_len);
+			};
+			memmove(_elm[lvl].GetPtr(), _strdata, new_len);
+		}
+	}
 	constexpr void AddChild(tag_t tag, bstr *data = nullptr) {
 		size_t datalen = 0;
 		if (data)
@@ -333,7 +366,7 @@ public:
 		size_t old_data_len = _data.length();
 		uint8_t *current_ptr = CurrentElm().GetPtr();
 		size_t current_offset = current_ptr - _data.uint8Data();
-		printf("current_ptr: %lu\n", current_offset);
+		printf("add child current_ptr: %lu\n", current_offset);
 
 		// needs to move memory
 		size_t move_data_len = old_data_len - current_offset - old_elm_len;
@@ -359,7 +392,7 @@ public:
 		EncodeTag(parent_place, parent_size, CurrentElm().Tag());
 		EncodeLength(parent_place, parent_size, child_size);
 		printf("parent_size: %lu\n", parent_size);
-		//dump_hex(_data);
+		dump_hex(_data);
 
 		// memmove child
 		memmove(current_ptr + parent_size, current_ptr + 8, child_size);
@@ -369,6 +402,9 @@ public:
 		_data.set_length(old_data_len - old_elm_len + parent_size + child_size);
 
 		// TODO: normalize parent lengths
+		dump_hex(_data);
+		NormalizeParents(child_size - CurrentElm().Length());
+		dump_hex(_data);
 
 		Init(_data);
 
@@ -421,6 +457,7 @@ public:
 		dump_hex(_data);
 
 		// TODO: normalize parent lengths
+		NormalizeParents(elm_size);
 
 		Init(_data);
 
