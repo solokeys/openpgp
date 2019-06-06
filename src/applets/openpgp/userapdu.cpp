@@ -133,6 +133,7 @@ Util::Error APDUChangeReferenceData::Process(uint8_t cla, uint8_t ins,
 	if (p2 == 0x83)
 		passwd_id = Password::PW3;
 
+	// TODO: move some values to PWStatusBytes
 	size_t min_length = PGPConst::PWMinLength(passwd_id);
 	size_t max_length = PGPConst::PWMaxLength(passwd_id);
 
@@ -170,19 +171,93 @@ Util::Error APDUChangeReferenceData::Process(uint8_t cla, uint8_t ins,
 	if (err != Util::Error::NoError)
 		return err;
 
+	// clear pw1/pw3 access counter
+	PWStatusBytes pwstatus;
+	pwstatus.Load(filesystem);
+	pwstatus.PasswdSetRemains(passwd_id, 3);
+	pwstatus.Save(filesystem);
+
 	return Util::Error::NoError;
 }
 
 Util::Error APDUResetRetryCounter::Check(uint8_t cla, uint8_t ins, uint8_t p1, uint8_t p2) {
-	return Util::Error::WrongCommand;
+	if (ins != Applet::APDUcommands::ResetRetryCounter)
+		return Util::Error::WrongCommand;
+
+	if (cla != 0x00 && cla != 0x0c)
+		return Util::Error::WrongAPDUCLA;
+
+	if ((p1 != 0x00 && p1 != 0x02) ||
+		(p2 != 0x81))
+		return Util::Error::WrongAPDUP1P2;
+
+	return Util::Error::NoError;
 }
 
 Util::Error APDUResetRetryCounter::Process(uint8_t cla, uint8_t ins,
 		uint8_t p1, uint8_t p2, bstr data, bstr &dataOut) {
+	Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
+	File::FileSystem &filesystem = solo.GetFileSystem();
+	Applet::OpenPGPApplet &applet = solo.GetAppletStorage().GetOpenPGPApplet();
 
 	auto err = Check(cla, ins, p1, p2);
 	if (err != Util::Error::NoError)
 		return err;
+
+	// TODO: move some values to PWStatusBytes
+	size_t min_length = PGPConst::PW1MinLength;
+	size_t max_length = PGPConst::PW1MaxLength;
+	size_t max_rc_length = PGPConst::RCMaxLength;
+
+	uint8_t _passwd[MAX(max_length, max_rc_length)] = {0};
+	bstr passwd(_passwd, 0, max_length);
+
+	// 0x02 - after correct verification of PW3
+	// 0x00 - resetting code (RC) in data
+	if (p1 == 0x02) {
+		if ((data.length() < min_length) ||
+			(data.length() > max_length))
+			return Util::Error::WrongAPDUDataLength;
+
+		if (!applet.GetAuth(Password::PW3))
+			return Util::Error::AccessDenied;
+
+		passwd.append(data);
+	} else {
+		auto err = filesystem.ReadFile(File::AppletID::OpenPGP,
+				0xd3,
+				File::File,
+				passwd);
+		if (err != Util::Error::NoError)
+			return err;
+
+		size_t rc_length = passwd.length();
+
+		if ((data.length() < rc_length + min_length) ||
+			(data.length() > rc_length + max_length))
+			return Util::Error::WrongAPDUDataLength;
+
+		// check RC
+		if (data.find(passwd) != 0)
+			return Util::Error::WrongPassword;
+
+		// set new password
+		passwd.clear();
+		passwd.append(data.substr(rc_length, data.length() - rc_length));
+	}
+
+	err = filesystem.WriteFile(File::AppletID::OpenPGP,
+			File::SecureFileID::PW1,
+			File::Secure,
+			passwd);
+	if (err != Util::Error::NoError)
+		return err;
+
+	// clear pw1 access counter
+	PWStatusBytes pwstatus;
+	pwstatus.Load(filesystem);
+	pwstatus.PasswdSetRemains(Password::PW1, 3);
+	pwstatus.Save(filesystem);
 
 	return Util::Error::NoError;
 }
