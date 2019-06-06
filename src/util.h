@@ -95,15 +95,22 @@ constexpr bstr operator "" _bstr(const char* data, size_t len){
 using KeyID_t = uint16_t;
 using AppID_t = uint16_t;
 
-constexpr void dump_hex(uint8_t * buf, int size) {
-    while(size--) {
+constexpr void dump_hex(uint8_t * buf, int size, size_t maxlen = 0) {
+	if (maxlen == 0)
+		maxlen = size + 1;
+
+    while(size-- && maxlen--) {
         printf("%02x ", *buf++);
     }
+
+    if (maxlen == 0 && size != 0)
+    	printf("...");
+
     printf("\n");
 }
 
-constexpr void dump_hex(bstr data) {
-	dump_hex(const_cast<uint8_t*>(&data.front()), data.length());
+constexpr void dump_hex(bstr data, size_t maxlen = 0) {
+	dump_hex(const_cast<uint8_t*>(&data.front()), data.length(), maxlen);
 }
 
 #endif

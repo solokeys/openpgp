@@ -401,10 +401,8 @@ public:
 		// set real length
 		_data.set_length(old_data_len - old_elm_len + parent_size + child_size);
 
-		// TODO: normalize parent lengths
-		dump_hex(_data);
+		// normalize parent lengths
 		NormalizeParents(child_size - CurrentElm().Length());
-		dump_hex(_data);
 
 		Init(_data);
 
@@ -437,8 +435,6 @@ public:
 
 		_data.set_length(old_data_len + need_buf_len + 4); // 4-test
 
-		dump_hex(_data);
-
 		bstr elm_place(_data.uint8Data() + cur_elm_end_offset, 0, 8 + datalen); // base address + current elm end offset + 4T + 4L
 		size_t elm_size = 0;
 		EncodeTag(elm_place, elm_size, tag);
@@ -449,14 +445,11 @@ public:
 		}
 		printf("elm_size: %lu\n", elm_size);
 
-		dump_hex(_data);
-
 		memmove(start_ptr + cur_elm_end_offset + elm_size, start_ptr + cur_elm_end_offset + need_buf_len, move_data_len);
-		dump_hex(_data);
 		_data.set_length(old_data_len + elm_size);
 		dump_hex(_data);
 
-		// TODO: normalize parent lengths
+		// normalize parent lengths
 		NormalizeParents(elm_size);
 
 		Init(_data);
@@ -466,15 +459,35 @@ public:
 
 		printf("curr elm tag: %x\n", CurrentElm().Tag());
 	}
+	constexpr void DeleteCurrent() {
+		// current element params
+		uint8_t *start_ptr = _data.uint8Data();
+		uint8_t *current_ptr = CurrentElm().GetPtr();
+		size_t cur_elm_offset = current_ptr - start_ptr;
+		size_t cur_elm_len = CurrentElm().ElmLength();
+		size_t cur_elm_end_offset = cur_elm_offset + cur_elm_len;
+		size_t move_data_len = _data.length() - cur_elm_end_offset;
+
+		memmove(current_ptr, current_ptr + cur_elm_len, move_data_len);
+		_data.set_length(_data.length() - cur_elm_len);
+
+		// normalize parent lengths
+		dump_hex(_data);
+		NormalizeParents(-cur_elm_len);
+		dump_hex(_data);
+
+		Init(_data);
+	}
 
 	constexpr void PrintTree() {
 		GoFirst();
 		while (true) {
-			printf("%.*s [%03d] %x [%d] \n",
+			printf("%.*s [%03d] %x [%d] ",
 					(currLevel + 1) * 2, "------------",
 					CurrentElm().ElmLength(),
 					CurrentElm().Tag(),
 					CurrentElm().Length());
+			dump_hex(CurrentElm().GetData(), 16);
 
 			if (!GoNextTreeElm())
 				break;

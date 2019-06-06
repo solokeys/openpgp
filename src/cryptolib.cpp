@@ -234,13 +234,8 @@ Util::Error KeyStorage::GetPublicKey7F49(AppID_t appID, KeyID_t keyID,
 			return err;
 
 		printf("exp: %lu\n", strExp.length());
-
-		bstr test = "1234"_bstr;
-		tlv.AddChild(0xf4, &test);
+		tlv.AddChild(0x81, &pubKey);
 		tlv.AddNext(0x82, &strExp);
-		tlv.Search(0xf4);
-		printf("tlv currtag %x\n", tlv.CurrentElm().Tag());
-		tlv.AddChild(0x83, &test);
 		tlv.PrintTree();
 
 	} else {
