@@ -100,7 +100,7 @@ Util::Error APDUVerify::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 	}
 
 	applet.SetAuth(passwd_id);
-	pwstatus.PasswdSetRemains(passwd_id, 3);
+	pwstatus.PasswdSetRemains(passwd_id, PGPConst::DefaultPWResetCounter);
 	pwstatus.Save(filesystem);
 
 	return Util::Error::NoError;
@@ -174,7 +174,7 @@ Util::Error APDUChangeReferenceData::Process(uint8_t cla, uint8_t ins,
 	// clear pw1/pw3 access counter
 	PWStatusBytes pwstatus;
 	pwstatus.Load(filesystem);
-	pwstatus.PasswdSetRemains(passwd_id, 3);
+	pwstatus.PasswdSetRemains(passwd_id, PGPConst::DefaultPWResetCounter);
 	pwstatus.Save(filesystem);
 
 	return Util::Error::NoError;
@@ -256,7 +256,7 @@ Util::Error APDUResetRetryCounter::Process(uint8_t cla, uint8_t ins,
 	// clear pw1 access counter
 	PWStatusBytes pwstatus;
 	pwstatus.Load(filesystem);
-	pwstatus.PasswdSetRemains(Password::PW1, 3);
+	pwstatus.PasswdSetRemains(Password::PW1, PGPConst::DefaultPWResetCounter);
 	pwstatus.Save(filesystem);
 
 	return Util::Error::NoError;
