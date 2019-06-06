@@ -325,10 +325,7 @@ public:
 			return;
 
 		currLevel--;
-		printf("offset %d currLevel %d\n", offset, currLevel);
 		for (int lvl = currLevel; lvl >= 0; lvl--) {
-			printf("--lvl %d\n", lvl);
-
 			uint8_t _strdata[8] = {0};
 			bstr strdata(_strdata, 0, 8);
 
@@ -358,7 +355,7 @@ public:
 		if (data)
 			datalen = data->length();
 
-		_data.append(0xaa); // test
+		//_data.append(0xaa); // test
 
 		tag_t old_parent_tag = CurrentElm().Tag();
 		size_t need_buf_len = 8 + 8 + datalen; // maxT = 4, maxL = 4. parent tag + child tag
@@ -366,7 +363,6 @@ public:
 		size_t old_data_len = _data.length();
 		uint8_t *current_ptr = CurrentElm().GetPtr();
 		size_t current_offset = current_ptr - _data.uint8Data();
-		printf("add child current_ptr: %lu\n", current_offset);
 
 		// needs to move memory
 		size_t move_data_len = old_data_len - current_offset - old_elm_len;
@@ -385,14 +381,12 @@ public:
 			child_place.append(*data);
 			child_size += datalen;
 		}
-		printf("child_size: %lu\n", child_size);
 
 		bstr parent_place(_data.substr(current_offset, 0), 8); // base address + current elm start offset
 		size_t parent_size = 0;
 		EncodeTag(parent_place, parent_size, CurrentElm().Tag());
 		EncodeLength(parent_place, parent_size, child_size);
-		printf("parent_size: %lu\n", parent_size);
-		dump_hex(_data);
+		//dump_hex(_data);
 
 		// memmove child
 		memmove(current_ptr + parent_size, current_ptr + 8, child_size);
@@ -409,8 +403,6 @@ public:
 		// because the tag is unique.
 		if (Search(old_parent_tag))
 			GoChild();
-
-		printf("curr elm tag: %x\n", CurrentElm().Tag());
 	}
 	constexpr void AddNext(tag_t tag, bstr *data = nullptr) {
 		size_t datalen = 0;
@@ -427,7 +419,6 @@ public:
 		size_t cur_elm_end_offset = cur_elm_offset + cur_elm_len;
 
 		size_t old_data_len = _data.length();
-		printf("-- current_offset: %lu\n", cur_elm_offset);
 
 		// needs to move memory
 		size_t move_data_len = old_data_len - cur_elm_end_offset;
@@ -443,11 +434,10 @@ public:
 			elm_place.append(*data);
 			elm_size += datalen;
 		}
-		printf("elm_size: %lu\n", elm_size);
 
 		memmove(start_ptr + cur_elm_end_offset + elm_size, start_ptr + cur_elm_end_offset + need_buf_len, move_data_len);
 		_data.set_length(old_data_len + elm_size);
-		dump_hex(_data);
+		//dump_hex(_data);
 
 		// normalize parent lengths
 		NormalizeParents(elm_size);
@@ -456,8 +446,6 @@ public:
 
 		// because the tag is unique.
 		Search(tag);
-
-		printf("curr elm tag: %x\n", CurrentElm().Tag());
 	}
 	constexpr void DeleteCurrent() {
 		// current element params

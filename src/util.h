@@ -99,8 +99,9 @@ constexpr void dump_hex(uint8_t * buf, int size, size_t maxlen = 0) {
 	if (maxlen == 0)
 		maxlen = size + 1;
 
-    while(size-- && maxlen--) {
+    while(size-- && maxlen) {
         printf("%02x ", *buf++);
+    	maxlen--;
     }
 
     if (maxlen == 0 && size != 0)
