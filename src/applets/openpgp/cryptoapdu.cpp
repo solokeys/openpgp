@@ -180,15 +180,26 @@ Util::Error APDUPSO::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 	PWStatusBytes pwstatus;
 	pwstatus.Load(filesystem);
 
+	//PSO:CDS OpenPGP 3.3.1 page 53. iso 7816-8:2004 page 6-8
 	if (p1 == 0x9e && p2 == 0x9a) {
 		auto err = crypto_e.Sign(File::AppletID::OpenPGP, OpenPGPKeyType::DigitalSignature, data, dataOut);
 
 		if (!pwstatus.PW1ValidSeveralCDS)
 			applet.ClearPSOCDSAccess();
 
-		// clear CDS flag if sign cant be done
+		// clear CDS flag if sign cant be done too
 		if (err != Util::Error::NoError)
 			return err;
+	}
+
+	// 	PSO:DECIPHER OpenPGP 3.3.1 page 57. iso 7816-8:2004 page 6-8
+	if (p1 == 0x80 && p2 == 0x86) {
+
+	}
+
+	// 	PSO:ENCIPHER OpenPGP 3.3.1 page 60. iso 7816-8:2004 page 6-8
+	if (p1 == 0x86 && p2 == 0x80) {
+
 	}
 
 	return Util::Error::NoError;
