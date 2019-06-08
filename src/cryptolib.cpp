@@ -312,22 +312,12 @@ Util::Error CryptoEngine::AESDecrypt(AppID_t appID, KeyID_t keyID,
 	return Util::Error::InternalError;
 }
 
-Util::Error CryptoEngine::RSASign(AppID_t appID, KeyID_t keyID,
+Util::Error CryptoEngine::Sign(AppID_t appID, KeyID_t keyID,
 		bstr data, bstr& signature) {
 	return Util::Error::InternalError;
 }
 
-Util::Error CryptoEngine::RSAVerify(AppID_t appID, KeyID_t keyID,
-		bstr data, bstr signature) {
-	return Util::Error::InternalError;
-}
-
-Util::Error CryptoEngine::ECDSASign(AppID_t appID, KeyID_t keyID,
-		bstr data, bstr& signature) {
-	return Util::Error::InternalError;
-}
-
-Util::Error CryptoEngine::ECDSAVerify(AppID_t appID, KeyID_t keyID,
+Util::Error CryptoEngine::Verify(AppID_t appID, KeyID_t keyID,
 		bstr data, bstr signature) {
 	return Util::Error::InternalError;
 }

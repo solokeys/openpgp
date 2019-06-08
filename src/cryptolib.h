@@ -120,11 +120,8 @@ public:
 	Util::Error AESEncrypt(AppID_t appID, KeyID_t keyID, bstr dataIn, bstr &dataOut);
 	Util::Error AESDecrypt(AppID_t appID, KeyID_t keyID, bstr dataIn, bstr &dataOut);
 
-	Util::Error RSASign(AppID_t appID, KeyID_t keyID, bstr data, bstr &signature);
-	Util::Error RSAVerify(AppID_t appID, KeyID_t keyID, bstr data, bstr signature);
-
-	Util::Error ECDSASign(AppID_t appID, KeyID_t keyID, bstr data, bstr &signature);
-	Util::Error ECDSAVerify(AppID_t appID, KeyID_t keyID, bstr data, bstr signature);
+	Util::Error Sign(AppID_t appID, KeyID_t keyID, bstr data, bstr &signature);
+	Util::Error Verify(AppID_t appID, KeyID_t keyID, bstr data, bstr signature);
 
 	CryptoLib &getCryptoLib() {
 		return cryptoLib;

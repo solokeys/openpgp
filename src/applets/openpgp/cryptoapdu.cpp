@@ -168,28 +168,28 @@ Util::Error APDUPSO::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 	Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
 	File::FileSystem &filesystem = solo.GetFileSystem();
 	Applet::OpenPGPApplet &applet = solo.GetAppletStorage().GetOpenPGPApplet();
+	Crypto::CryptoEngine &crypto_e = solo.GetCryptoEngine();
 
 	auto err_check = Check(cla, ins, p1, p2);
 	if (err_check != Util::Error::NoError)
 		return err_check;
 
-	if (!applet.GetAuth(Password::PW1))
+	if (!applet.GetPSOCDSAccess())
 		return Util::Error::AccessDenied;
 
 	PWStatusBytes pwstatus;
 	pwstatus.Load(filesystem);
 
+	if (p1 == 0x9e && p2 == 0x9a) {
+		auto err = crypto_e.Sign(File::AppletID::OpenPGP, OpenPGPKeyType::DigitalSignature, data, dataOut);
 
+		if (!pwstatus.PW1ValidSeveralCDS)
+			applet.ClearPSOCDSAccess();
 
-
-
-
-
-
-	if (!pwstatus.PW1ValidSeveralCDS)
-		applet.ClearAuth(Password::PW1);
-
-	pwstatus.Save(filesystem);
+		// clear CDS flag if sign cant be done
+		if (err != Util::Error::NoError)
+			return err;
+	}
 
 	return Util::Error::NoError;
 }

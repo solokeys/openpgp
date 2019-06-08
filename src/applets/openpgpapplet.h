@@ -32,10 +32,15 @@ public:
 	virtual const bstr *GetAID();
 
 	virtual Util::Error APDUExchange(bstr apdu, bstr &result);
+	virtual Util::Error Select(bstr &result);
 
 	void ClearAuth(OpenPGP::Password passwdId);
 	void SetAuth(OpenPGP::Password passwdId);
 	bool GetAuth(OpenPGP::Password passwdId);
+
+	void ClearPSOCDSAccess();
+	void SetPSOCDSAccess();
+	bool GetPSOCDSAccess();
 };
 
 } // namespace Applet

@@ -75,13 +75,21 @@ Util::Error APDUVerify::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 
 	// check status
 	if (passwd_length == 0) {
-		// TODO: p2 = 0x82 not implemented!!!
-
-		if (applet.GetAuth(passwd_id)) {
-			return Util::Error::NoError;
+		// OpenPGP v3.3.1 page 44
+		if (p2 == 0x81){
+			if (applet.GetPSOCDSAccess()) {
+				return Util::Error::NoError;
+			} else {
+				dataOut.appendAPDUres(0x6300 + pwstatus.PasswdTryRemains(passwd_id));
+				return Util::Error::ErrorPutInData;
+			}
 		} else {
-			dataOut.appendAPDUres(0x6300 + pwstatus.PasswdTryRemains(passwd_id));
-			return Util::Error::ErrorPutInData;
+			if (applet.GetAuth(passwd_id)) {
+				return Util::Error::NoError;
+			} else {
+				dataOut.appendAPDUres(0x6300 + pwstatus.PasswdTryRemains(passwd_id));
+				return Util::Error::ErrorPutInData;
+			}
 		}
 	}
 
@@ -99,7 +107,12 @@ Util::Error APDUVerify::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 		return Util::Error::WrongPassword;
 	}
 
-	applet.SetAuth(passwd_id);
+	// OpenPGP v3.3.1 page 44
+	if (p2 == 0x81){
+		applet.SetPSOCDSAccess();
+	} else {
+		applet.SetAuth(passwd_id);
+	}
 	pwstatus.PasswdSetRemains(passwd_id, PGPConst::DefaultPWResetCounter);
 	pwstatus.Save(filesystem);
 

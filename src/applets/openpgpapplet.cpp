@@ -18,6 +18,17 @@ OpenPGPApplet::OpenPGPApplet() : Applet() {
 	config.state = OpenPGP::LifeCycleState::Init;
 	state.pw1Authenticated = false;
 	state.pw3Authenticated = false;
+	state.CDSAuthenticated = false;
+}
+
+Util::Error OpenPGPApplet::Select(bstr &result) {
+	auto err = Applet::Select(result);
+
+	state.pw1Authenticated = false;
+	state.pw3Authenticated = false;
+	state.CDSAuthenticated = false;
+
+	return err;
 }
 
 const bstr* OpenPGPApplet::GetAID() {
@@ -110,4 +121,17 @@ bool OpenPGPApplet::GetAuth(OpenPGP::Password passwdId) {
 	return false;
 }
 
+void OpenPGPApplet::ClearPSOCDSAccess() {
+	state.CDSAuthenticated = false;
 }
+
+void OpenPGPApplet::SetPSOCDSAccess() {
+	state.CDSAuthenticated = true;
+}
+
+bool OpenPGPApplet::GetPSOCDSAccess() {
+	return state.CDSAuthenticated;
+}
+
+}
+

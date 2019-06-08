@@ -21,6 +21,7 @@ namespace OpenPGP {
 struct AppletState {
 	bool pw1Authenticated;
 	bool pw3Authenticated;
+	bool CDSAuthenticated;
 
 	Util::Error Load();
 	Util::Error Save();
