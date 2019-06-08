@@ -20,12 +20,34 @@ namespace OpenPGP {
 
 Util::Error APDUGetChallenge::Check(uint8_t cla, uint8_t ins,
 		uint8_t p1, uint8_t p2) {
-	return Util::Error::WrongCommand;
+	if (ins != Applet::APDUcommands::GetChallenge)
+		return Util::Error::WrongCommand;
+
+	if (cla != 0x00)
+		return Util::Error::WrongAPDUCLA;
+
+	if ((p1 != 0x00 && p2 != 0x00))   // encipher
+		return Util::Error::WrongAPDUP1P2;
+
+	return Util::Error::NoError;
 }
 
 Util::Error APDUGetChallenge::Process(uint8_t cla, uint8_t ins,
 		uint8_t p1, uint8_t p2, bstr data, bstr& dataOut) {
-	return Util::Error::WrongCommand;
+
+	dataOut.clear();
+
+	auto err_check = Check(cla, ins, p1, p2);
+	if (err_check != Util::Error::NoError)
+		return err_check;
+
+	if (data.length() > 0)
+		return Util::Error::WrongAPDUDataLength;
+
+
+
+
+	return Util::Error::NoError;
 }
 
 Util::Error APDUInternalAuthenticate::Check(uint8_t cla, uint8_t ins,
@@ -124,12 +146,51 @@ Util::Error APDUGenerateAsymmetricKeyPair::Process(uint8_t cla,
 
 Util::Error APDUPSO::Check(uint8_t cla, uint8_t ins, uint8_t p1,
 		uint8_t p2) {
-	return Util::Error::WrongCommand;
+	if (ins != Applet::APDUcommands::PSO)
+		return Util::Error::WrongCommand;
+
+	if (cla != 0x00 && cla != 0x0c)
+		return Util::Error::WrongAPDUCLA;
+
+	if ((p1 != 0x9e && p2 != 0x9a) || // compute digital signature
+		(p1 != 0x80 && p2 != 0x86) || // decipher
+		(p1 != 0x86 && p2 != 0x80))   // encipher
+		return Util::Error::WrongAPDUP1P2;
+
+	return Util::Error::NoError;
 }
 
+// OpenPGP v3.3.1. page 53
 Util::Error APDUPSO::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 		uint8_t p2, bstr data, bstr& dataOut) {
-	return Util::Error::WrongCommand;
+
+	Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
+	File::FileSystem &filesystem = solo.GetFileSystem();
+	Applet::OpenPGPApplet &applet = solo.GetAppletStorage().GetOpenPGPApplet();
+
+	auto err_check = Check(cla, ins, p1, p2);
+	if (err_check != Util::Error::NoError)
+		return err_check;
+
+	if (!applet.GetAuth(Password::PW1))
+		return Util::Error::AccessDenied;
+
+	PWStatusBytes pwstatus;
+	pwstatus.Load(filesystem);
+
+
+
+
+
+
+
+
+	if (!pwstatus.PW1ValidSeveralCDS)
+		applet.ClearAuth(Password::PW1);
+
+	pwstatus.Save(filesystem);
+
+	return Util::Error::NoError;
 }
 
 } // namespace OpenPGP
