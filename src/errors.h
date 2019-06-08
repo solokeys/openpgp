@@ -31,6 +31,7 @@ namespace Util {
 		FileWriteError,
 
 		InternalError,
+		OutOfMemory,
 		TLVDecodeTagError,
 		TLVDecodeLengthError,
 		TLVDecodeValueError,
@@ -66,6 +67,7 @@ namespace Util {
 		"File write error",
 
 		"Internal error",
+		"Out of memory",
 		"TLV decode tag error",
 		"TLV decode length error",
 		"TLV decode value error",

@@ -10,10 +10,6 @@
 #ifndef SRC_CRYPTOLIB_H_
 #define SRC_CRYPTOLIB_H_
 
-#include <mbedtls/config.h>
-#include <mbedtls/rsa.h>
-#include <mbedtls/aes.h>
-
 #include <util.h>
 #include <errors.h>
 #include "tlv.h"

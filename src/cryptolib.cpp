@@ -8,6 +8,12 @@
  */
 
 #include "cryptolib.h"
+
+#include <mbedtls/config.h>
+#include <mbedtls/rsa.h>
+#include <mbedtls/aes.h>
+#include <mbedtls/havege.h>
+
 #include "tlv.h"
 #include "solofactory.h"
 #include "filesystem.h"
@@ -16,7 +22,17 @@
 namespace Crypto {
 
 Util::Error CryptoLib::GenerateRandom(size_t length, bstr& dataOut) {
-	return Util::Error::InternalError;
+	if (length > dataOut.max_size())
+		return Util::Error::OutOfMemory;
+
+	mbedtls_havege_state state;
+	mbedtls_havege_init(&state);
+	mbedtls_havege_random(nullptr, dataOut.uint8Data(), length);
+	mbedtls_havege_free(&state);
+
+	dataOut.set_length(length);
+
+	return Util::Error::NoError;
 }
 
 Util::Error CryptoLib::AESEncrypt(bstr key, bstr dataIn,

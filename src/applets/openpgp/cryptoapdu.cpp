@@ -45,9 +45,10 @@ Util::Error APDUGetChallenge::Process(uint8_t cla, uint8_t ins,
 		return Util::Error::WrongAPDUDataLength;
 
 
+	Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
+	Crypto::CryptoLib &crypto = solo.GetCryptoLib();
 
-
-	return Util::Error::NoError;
+	return crypto.GenerateRandom(10, dataOut); // TODO: get length from Le
 }
 
 Util::Error APDUInternalAuthenticate::Check(uint8_t cla, uint8_t ins,
