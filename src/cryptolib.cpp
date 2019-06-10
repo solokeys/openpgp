@@ -14,6 +14,8 @@
 #include <mbedtls/aes.h>
 #include <mbedtls/havege.h>
 
+#include <string.h>
+
 #include "tlv.h"
 #include "solofactory.h"
 #include "filesystem.h"
@@ -51,14 +53,103 @@ Util::Error CryptoLib::RSAGenKey(bstr& keyOut) {
 	return Util::Error::InternalError;
 }
 
-Util::Error CryptoLib::RSASign(bstr key, bstr data, bstr& signature) {
+Util::Error CryptoLib::RSASign(RSAKey key, bstr data, bstr& signature) {
+
+	Util::Error ret = Util::Error::NoError;
+
+	if (key.P.length() == 0 ||
+		key.Q.length() == 0 ||
+		key.Exp.length() == 0
+		)
+		return Util::Error::CryptoDataError;
+
+	mbedtls_rsa_context rsa;
+	mbedtls_mpi N, P, Q, E;
+
+	mbedtls_mpi_init(&N);
+	mbedtls_mpi_init(&P);
+	mbedtls_mpi_init(&Q);
+	mbedtls_mpi_init(&E);
+
+	mbedtls_rsa_init(&rsa, MBEDTLS_RSA_PKCS_V15, 0);
+
+	while (true) {
+		if (mbedtls_mpi_read_binary(&P, key.P.uint8Data(), key.P.length())) {
+			ret = Util::Error::CryptoDataError;
+			break;
+		}
+		if (mbedtls_mpi_read_binary(&Q, key.Q.uint8Data(), key.Q.length())) {
+			ret = Util::Error::CryptoDataError;
+			break;
+		}
+		if (mbedtls_mpi_read_binary(&E, key.Exp.uint8Data(), key.Exp.length())) {
+			ret = Util::Error::CryptoDataError;
+			break;
+		}
+		if (key.N.length()) {
+			if (mbedtls_mpi_read_binary(&N, key.N.uint8Data(), key.N.length())) {
+				ret = Util::Error::CryptoDataError;
+				break;
+			}
+
+			if (mbedtls_rsa_import(&rsa, &N, &P, &Q, NULL, &E)) {
+				ret = Util::Error::CryptoDataError;
+				break;
+			}
+		} else {
+			if (mbedtls_rsa_import(&rsa, NULL, &P, &Q, NULL, &E)) {
+				ret = Util::Error::CryptoDataError;
+				break;
+			}
+		}
+
+		if (mbedtls_rsa_complete(&rsa)) {
+			ret = Util::Error::CryptoDataError;
+			break;
+		}
+
+		if (mbedtls_rsa_check_privkey(&rsa)) {
+			ret = Util::Error::CryptoDataError;
+			break;
+		}
+
+		size_t keylen = mbedtls_mpi_size(&rsa.N);
+		printf("rsa key length: %lu bytes, data length: %lu\n", keylen, data.length());
+
+		// OpenPGP 3.3.1 page 54. PKCS#1
+		// command data field is not longer than 40% of the length of the modulus
+		if (keylen * 0.4 < data.length()) {
+			printf("pkcs#1 data length error!\n");
+			ret = Util::Error::CryptoDataError;
+			break;
+		}
+
+		// OpenPGP 3.3.1 page 53
+		uint8_t vdata[keylen] = {0};
+		vdata[1] = 0x01; // Block type
+		memset(&vdata[2], 0xff, keylen - data.length() - 3);
+		memcpy(&vdata[keylen - data.length()], data.uint8Data(), data.length());
+		dump_hex(data);
+		dump_hex(vdata, keylen, 0);
+
+		int res = mbedtls_rsa_public(&rsa, vdata, signature.uint8Data());
+		if (res) {
+			printf("crypto oper error: %d\n", res);
+			ret = Util::Error::CryptoOperationError;
+			break;
+		}
+		signature.set_length(keylen);
 
 
+		break;
+	}
 
-	return Util::Error::InternalError;
+	mbedtls_rsa_free(&rsa);
+
+	return ret;
 }
 
-Util::Error CryptoLib::RSAVerify(bstr key, bstr data, bstr signature) {
+Util::Error CryptoLib::RSAVerify(bstr publicKey, bstr data, bstr signature) {
 	return Util::Error::InternalError;
 }
 
@@ -96,7 +187,7 @@ Util::Error CryptoLib::RSACalcPublicKey(bstr strP, bstr strQ, bstr &strN) {
 			break;
 		}
 
-		size_t length = (mbedtls_mpi_bitlen(&N) + 1) / 8;
+		size_t length = mbedtls_mpi_size(&N);
 		if (mbedtls_mpi_write_binary(&N, strN.uint8Data(), length)) {
 			ret = Util::Error::CryptoDataError;
 			break;
@@ -353,17 +444,12 @@ Util::Error CryptoEngine::AESDecrypt(AppID_t appID, KeyID_t keyID,
 Util::Error CryptoEngine::RSASign(AppID_t appID, KeyID_t keyID,
 		bstr data, bstr& signature) {
 
-	//uint8_t _key[520] = {0};
-	//bstr key(_key, 0, sizeof(_key));
 	RSAKey key;
 	auto err = keyStorage.GetRSAKey(appID, keyID, key);
 	if (err != Util::Error::NoError)
 		return err;
 
-
-
-
-	return Util::Error::NoError;
+	return cryptoLib.RSASign(key, data, signature);
 }
 
 Util::Error CryptoEngine::RSAVerify(AppID_t appID, KeyID_t keyID,

@@ -109,8 +109,8 @@ public:
 
 	Util::Error RSAGenKey(bstr &keyOut);
 	Util::Error RSACalcPublicKey(bstr strP, bstr strQ, bstr &strN);
-	Util::Error RSASign(bstr key, bstr data, bstr &signature);
-	Util::Error RSAVerify(bstr key, bstr data, bstr signature);
+	Util::Error RSASign(RSAKey key, bstr data, bstr &signature);
+	Util::Error RSAVerify(bstr publicKey, bstr data, bstr signature);
 
 	Util::Error ECDSAGenKey(bstr &keyOut);
 	Util::Error ECDSASign(bstr key, bstr data, bstr &signature);
