@@ -110,4 +110,37 @@ Util::Error OpenPGP::AlgoritmAttr::Load(File::FileSystem& fs, KeyID_t file_id) {
 	return Util::Error::NoError;
 }
 
+Util::Error DSCounter::Load(File::FileSystem& fs) {
+	auto err = fs.ReadFile(File::AppletID::OpenPGP, 0x7a, File::File, dsdata);
+	if (err != Util::Error::NoError)
+		return err;
+
+	if (dsdata.length() > 2 &&
+		dsdata[0] == 0x93 &&
+		dsdata[1] > 0 && dsdata[1] <= 4
+		) {
+		Counter = 0;
+		for(uint i = 0; i < dsdata[1]; i++) {
+			Counter = Counter << 8;
+			Counter += dsdata[2 + i];
+		}
+	} else {
+		return Util::Error::InternalError;
+	}
+
+	return Util::Error::NoError;
+}
+
+Util::Error DSCounter::Save(File::FileSystem& fs) {
+	for(uint i = 0; i < dsdata[1]; i++) {
+		dsdata.uint8Data()[2 + i] = (Counter >> ((dsdata[1] - i - 1) * 8)) & 0xff;
+	}
+
+	return fs.WriteFile(File::AppletID::OpenPGP, 0x7a, File::File, dsdata);
+}
+
+Util::Error DSCounter::DeleteFile(File::FileSystem& fs) {
+	return fs.DeleteFile(File::AppletID::OpenPGP, 0x7a, File::File);
+}
+
 } // namespace OpenPGP

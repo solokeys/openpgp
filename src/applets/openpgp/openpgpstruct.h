@@ -79,6 +79,19 @@ struct  AlgoritmAttr {
 	Util::Error Load(File::FileSystem &fs, KeyID_t file_id);
 };
 
+// DS-Counter
+struct DSCounter {
+private:
+	uint8_t _dsdata[20] = {0};
+	bstr dsdata{_dsdata, 0, sizeof(_dsdata)};
+public:
+	uint32_t Counter;
+
+	Util::Error Load(File::FileSystem &fs);
+	Util::Error Save(File::FileSystem &fs);
+	Util::Error DeleteFile(File::FileSystem &fs);
+};
+
 } // namespace OpenPGP
 
 #endif /* SRC_OPENPGP_OPENPGPSTRUCT_H_ */

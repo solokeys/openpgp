@@ -200,30 +200,18 @@ Util::Error APDUPSO::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 			applet.ClearPSOCDSAccess();
 
 		// DS-Counter
-		// TODO: move it!!!!
-		uint8_t _dsdata[20] = {0};
-		bstr dsdata(_dsdata, 0, sizeof(_dsdata));
-		filesystem.ReadFile(File::AppletID::OpenPGP, 0x7a, File::File, dsdata);
-		if (dsdata.length() > 2 &&
-			dsdata[0] == 0x93 &&
-			dsdata[1] > 0 && dsdata[1] <= 4
-			) {
-			uint32_t counter = 0;
-			for(uint i = 0; i < dsdata[1]; i++) {
-				counter = counter << 8;
-				counter += dsdata[2 + i];
-			}
+		DSCounter dscounter;
+		auto cntrerr = dscounter.Load(filesystem);
+		if (cntrerr != Util::Error::NoError)
+			return cntrerr;
 
-			counter++;
+		dscounter.Counter++;
 
-			for(uint i = 0; i < dsdata[1]; i++) {
-				dsdata.uint8Data()[2 + i] = (counter >> ((dsdata[1] - i - 1) * 8)) & 0xff;
-			}
+		cntrerr = dscounter.Save(filesystem);
+		if (cntrerr != Util::Error::NoError)
+			return cntrerr;
 
-			filesystem.WriteFile(File::AppletID::OpenPGP, 0x7a, File::File, dsdata);
-		}
-
-		// clear CDS flag if sign cant be done too
+		// clear CDS flag if sign can't be done too
 		if (err != Util::Error::NoError)
 			return err;
 	}
