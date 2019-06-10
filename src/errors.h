@@ -41,6 +41,7 @@ namespace Util {
 		AccessDenied,
 		CryptoDataError,
 		CryptoOperationError,
+		CryptoResultError,
 
 		// error code was put in the response
 		ErrorPutInData,
@@ -77,6 +78,7 @@ namespace Util {
 		"Access denied",
 		"Crypto data error",
 		"Crypto operation error",
+		"Crypto result error",
 
 		"Error. Error code already in the response"
 		"n/a"};

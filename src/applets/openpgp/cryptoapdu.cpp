@@ -260,15 +260,24 @@ Util::Error APDUPSO::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 		if (err != Util::Error::NoError || alg.AlgorithmID == 0)
 			return Util::Error::DataNotFound;
 
-		printf("--data len %lu\n", data.length());
+		// RSA. OpenPGP 3.3.1 page 59
+		if (data[0] == 0x00) {
+			if (alg.AlgorithmID == Crypto::AlgoritmID::RSA) {
+				err = crypto_e.RSADecipher(File::AppletID::OpenPGP, OpenPGPKeyType::Confidentiality, data.substr(1, data.length() - 1), dataOut);
+			} else {
+				//err = crypto_e.ECDSADecipher(File::AppletID::OpenPGP, OpenPGPKeyType::Confidentiality, data, dataOut);
+			}
+		}
 
-		if (alg.AlgorithmID == Crypto::AlgoritmID::RSA)
-			err = crypto_e.RSASign(File::AppletID::OpenPGP, OpenPGPKeyType::Confidentiality, data, dataOut);
-		else
-			err = crypto_e.ECDSASign(File::AppletID::OpenPGP, OpenPGPKeyType::Confidentiality, data, dataOut);
+		// AES. OpenPGP 3.3.1 page 59
+		if (data[0] == 0x02) {
+			return Util::Error::CryptoOperationError;
+		}
 
-
-
+		// ECDH. OpenPGP 3.3.1 page 59
+		if (data[0] == 0xa6) {
+			return Util::Error::CryptoOperationError;
+		}
 
 		if (err != Util::Error::NoError)
 			return err;

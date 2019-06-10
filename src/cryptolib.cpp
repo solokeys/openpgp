@@ -168,6 +168,69 @@ Util::Error CryptoLib::RSASign(RSAKey key, bstr data, bstr& signature) {
 	return ret;
 }
 
+Util::Error CryptoLib::RSADecipher(RSAKey key, bstr data, bstr &dataOut) {
+	Util::Error ret = Util::Error::NoError;
+
+	if (key.P.length() == 0 ||
+		key.Q.length() == 0 ||
+		key.Exp.length() == 0
+		)
+		return Util::Error::CryptoDataError;
+
+	mbedtls_rsa_context rsa;
+
+	mbedtls_rsa_init(&rsa, MBEDTLS_RSA_PKCS_V15, 0);
+
+	while (true) {
+		ret = RSAFillPrivateKey(&rsa, key);
+		if (ret != Util::Error::NoError)
+			break;
+
+		size_t keylen = mbedtls_mpi_size(&rsa.N);
+		printf("keylen %lu\n", keylen);
+
+		if (keylen != data.length()) {
+			ret = Util::Error::CryptoDataError;
+			break;
+		}
+
+		int res = mbedtls_rsa_private(&rsa, nullptr, nullptr, data.uint8Data(), dataOut.uint8Data());
+		if (res) {
+			printf("crypto oper error: %d\n", res);
+			ret = Util::Error::CryptoOperationError;
+			break;
+		}
+		dataOut.set_length(keylen);
+		break;
+	}
+
+	mbedtls_rsa_free(&rsa);
+
+	// check and get rid of PKCS#1 header
+	// OpenPGP 3.3.1 page 57
+	if (dataOut[0] != 0x00 || dataOut[1] != 0x02) {
+		dataOut.clear();
+		return Util::Error::CryptoResultError;
+	}
+
+	size_t ptr = 2;
+	for (size_t i = 2; i < dataOut.length(); i++)
+		if (dataOut[i] == 0x00) {
+			ptr = i;
+			break;
+		}
+
+	// The length of PS shall be at least 8 bytes. OpenPGP 3.3.1 page 57
+	if (ptr < 10) {
+		dataOut.clear();
+		return Util::Error::CryptoResultError;
+	}
+
+	dataOut.del(0, ptr + 1);
+
+	return ret;
+}
+
 Util::Error CryptoLib::RSAVerify(bstr publicKey, bstr data, bstr signature) {
 	return Util::Error::InternalError;
 }
@@ -468,6 +531,17 @@ Util::Error CryptoEngine::RSASign(AppID_t appID, KeyID_t keyID,
 		return err;
 
 	return cryptoLib.RSASign(key, data, signature);
+}
+
+Util::Error CryptoEngine::RSADecipher(AppID_t appID, KeyID_t keyID,
+		bstr data, bstr& dataOut) {
+
+	RSAKey key;
+	auto err = keyStorage.GetRSAKey(appID, keyID, key);
+	if (err != Util::Error::NoError)
+		return err;
+
+	return cryptoLib.RSADecipher(key, data, dataOut);
 }
 
 Util::Error CryptoEngine::RSAVerify(AppID_t appID, KeyID_t keyID,

@@ -116,6 +116,7 @@ public:
 	Util::Error RSAGenKey(bstr &keyOut);
 	Util::Error RSACalcPublicKey(bstr strP, bstr strQ, bstr &strN);
 	Util::Error RSASign(RSAKey key, bstr data, bstr &signature);
+	Util::Error RSADecipher(RSAKey key, bstr data, bstr &dataOut);
 	Util::Error RSAVerify(bstr publicKey, bstr data, bstr signature);
 
 	Util::Error ECDSAGenKey(bstr &keyOut);
@@ -152,6 +153,7 @@ public:
 	Util::Error AESDecrypt(AppID_t appID, KeyID_t keyID, bstr dataIn, bstr &dataOut);
 
 	Util::Error RSASign(AppID_t appID, KeyID_t keyID, bstr data, bstr &signature);
+	Util::Error RSADecipher(AppID_t appID, KeyID_t keyID, bstr data, bstr &dataOut);
 	Util::Error RSAVerify(AppID_t appID, KeyID_t keyID, bstr data, bstr signature);
 
 	Util::Error ECDSASign(AppID_t appID, KeyID_t keyID, bstr data, bstr &signature);

@@ -186,10 +186,12 @@ Util::Error APDUExecutor::Execute(bstr apdu, bstr& result) {
       	// clear apdu buffer
 		sapdu.clear();
 
-		// TODO
-      	if (sresult.length() > 0xfe) {
-      		//result.append(sresult);
-      		result.setAPDURes(0x6100);
+		// some apdu commands (PSO) needs to have 6100 response!!!  tests bug!!!!!
+      	if (sresult.length() > 0xfe || ins == 0x2a) {
+      		if (sresult.length() > 0xff)
+      			result.setAPDURes(0x6100);
+      		else
+      			result.setAPDURes(0x6100 + (sresult.length() & 0xff));
       	} else {
       		result.append(sresult);
       	}
