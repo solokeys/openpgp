@@ -41,7 +41,7 @@ const bstr* Applet::GetAID() {
 	return &aid;
 }
 
-Util::Error Applet::APDUExchange(bstr apdu, bstr &result) {
+Util::Error Applet::APDUExchange(bstr header, bstr data, bstr &result) {
 	//result->clear();
 
 	if (!selected)

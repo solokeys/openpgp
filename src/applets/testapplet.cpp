@@ -13,9 +13,8 @@ const bstr* Applet::TestApplet::GetAID() {
 	return &aid;
 }
 
-Util::Error Applet::TestApplet::APDUExchange(bstr apdu, bstr &result) {
-	auto len = apdu[4];
+Util::Error Applet::TestApplet::APDUExchange(bstr header, bstr data, bstr &result) {
 	result.clear();
-	result.append(apdu.substr(5, len));
+	result.append(data);
 	return Util::Error::NoError;
 }

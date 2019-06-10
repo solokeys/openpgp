@@ -7,7 +7,7 @@
 
 int main(int argc, char * argv[])
 {
-	uint8_t ccidbuf[1024];
+	uint8_t ccidbuf[350];
     uint32_t sz;
     printf("Hello CCID/OpenPGP\n");
 
@@ -26,7 +26,7 @@ int main(int argc, char * argv[])
     printf("Clear applet memory OK.\n");
 
 
-	uint8_t result[1024] = {0};
+	uint8_t result[300] = {0};
     while (1)
     {
     	auto resstr = bstr(&result[10], 0, sizeof(result) - 10);

@@ -134,7 +134,7 @@ public:
 	Util::Error GetECDSAPrivateKey(AppID_t appID, KeyID_t keyID, bstr &key);
 
 	Util::Error SetKey(AppID_t appID, KeyID_t keyID, KeyType keyType, bstr key);
-	Util::Error SetKeyExtHeader(AppID_t appID, bstr keyData, bool MorePacketsFollow);
+	Util::Error SetKeyExtHeader(AppID_t appID, bstr keyData);
 };
 
 class CryptoEngine {

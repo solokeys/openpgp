@@ -35,7 +35,7 @@ const bstr* OpenPGPApplet::GetAID() {
 	return &aid;
 }
 
-Util::Error OpenPGPApplet::APDUExchange(bstr apdu, bstr &result) {
+Util::Error OpenPGPApplet::APDUExchange(bstr header, bstr data, bstr &result) {
 	result.clear();
 
 	if (!selected)
@@ -46,18 +46,12 @@ Util::Error OpenPGPApplet::APDUExchange(bstr apdu, bstr &result) {
 	OpenPGP::APDUSecurityCheck &securty = opgp_factory.GetAPDUSecurityCheck();
 
 
-	printf("0>"); dump_hex(apdu);
+	printf("0>"); dump_hex(header); dump_hex(data);
 
-	auto cla = apdu[0];
-	auto ins = apdu[1];
-	auto p1 = apdu[2];
-	auto p2 = apdu[3];
-	auto len = apdu[4];
-	// try to fix some error with GNUK get data command
-	if (len + 5U != apdu.length() && len + 6U != apdu.length())
-		len = apdu.length() - MIN(6U, apdu.length());
-	auto data = bstr(apdu.substr(5, len));
-
+	auto cla = header[0];
+	auto ins = header[1];
+	auto p1 = header[2];
+	auto p2 = header[3];
 
 	auto err = securty.CommandAccessCheck(cla, ins, p1, p2);
 	if (err != Util::Error::NoError)

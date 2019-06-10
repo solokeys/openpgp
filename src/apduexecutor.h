@@ -18,6 +18,11 @@ namespace Applet {
 
 class APDUExecutor {
 private:
+	uint8_t apduBuffer[1030];
+	uint8_t resultBuffer[1030];
+	bstr sapdu{apduBuffer, 0, sizeof(apduBuffer)};
+	bstr sresult{resultBuffer, 0, sizeof(resultBuffer)};
+
 	void SetResultError(bstr &result, Util::Error error);
 public:
 	Util::Error Execute(bstr apdu, bstr &result);

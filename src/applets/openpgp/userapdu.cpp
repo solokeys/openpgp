@@ -348,9 +348,7 @@ Util::Error APDUPutData::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 
 		filesystem.WriteFile(File::AppletID::OpenPGP, object_id, File::File, data);
 	} else {
-		// more APDU to follow
-		bool more_pck_follow = cla & 0x10;
-		key_storage.SetKeyExtHeader(File::AppletID::OpenPGP, data, more_pck_follow);
+		key_storage.SetKeyExtHeader(File::AppletID::OpenPGP, data);
 	}
 
 	return Util::Error::NoError;

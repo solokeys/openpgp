@@ -92,9 +92,65 @@ Util::Error APDUExecutor::Execute(bstr apdu, bstr& result) {
     Applet *applet = appletStorage.GetSelectedApplet();
     if (applet != nullptr) {
 
-    	Util::Error err = applet->APDUExchange(apdu, result);
-    	SetResultError(result, err);
+    	// cla & 0x10 - chaining apdu
+    	if (apdu[0] & 0x10) {
+    		if (sapdu.length() == 0) {
+    			// first chaining packet
+    			sapdu.append(apdu);
+        		*sapdu.uint8Data() = *sapdu.uint8Data() & !0x10;
+    		} else {
+    			// we have data in chaining buffer
+    			// check if it the same apdu (ins, p1, p2 the same)
+    			if (sapdu.substr(1, 3) == apdu.substr(1, 3)) {
+    				// the same apdu - append data only
+    				sapdu.append(apdu.substr(5, apdu.length() - 5));
+    			} else {
+    				// not the same apdu - lost packet error...
+    				printf("lost packet... "); dump_hex(sapdu.substr(0, 4));
+    	    		sapdu.clear();
+    	    		sapdu.append(apdu);
+    			}
+    		}
+        	result.setAPDURes(APDUResponse::OK);
+    		return Util::Error::NoError;
+    	} else {
+    		if (sapdu.length() > 0) {
+    			// we have data in chaining buffer
+    			// check if it the same apdu (ins, p1, p2 the same)
+    			if (sapdu.substr(1, 3) == apdu.substr(1, 3)) {
+    				sapdu.append(apdu.substr(5, apdu.length() - 5));
+    			} else {
+    				printf("lost packet... "); dump_hex(sapdu.substr(0, 4));
+    				sapdu.clear();
+        			sapdu.append(apdu);
+    			}
+    			sapdu.uint8Data()[4] = 0xff;
+    			dump_hex(sapdu);
+    		} else {
+    			// no chaining
+    			sapdu.append(apdu);
+    		}
+    	}
+
+    	// TODO: add Le calculation
+    	bstr data;
+    	if (apdu.length() > 5)
+    		data = sapdu.substr(5, sapdu.length() - 5);
+
+    	Util::Error err = applet->APDUExchange(sapdu.substr(0, 4), data, sresult);
+    	SetResultError(sresult, err);
       	printf("appdu exchange result: %s\n", Util::GetStrError(err));
+
+      	// clear apdu buffer
+		sapdu.clear();
+
+		// TODO
+      	if (sresult.length() > 250) {
+      		result.append(sresult);
+      	} else {
+      		result.append(sresult);
+      	}
+
     } else {
     	printf("applet not selected.\n");
     	result.setAPDURes(APDUResponse::ConditionsUseNotSatisfied);

@@ -31,7 +31,7 @@ public:
 
 	virtual const bstr *GetAID();
 
-	virtual Util::Error APDUExchange(bstr apdu, bstr &result);
+	virtual Util::Error APDUExchange(bstr header, bstr data, bstr &result);
 	virtual Util::Error Select(bstr &result);
 
 	void ClearAuth(OpenPGP::Password passwdId);

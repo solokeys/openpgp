@@ -386,49 +386,36 @@ Util::Error KeyStorage::GetRSAKey(AppID_t appID, KeyID_t keyID, RSAKey& key) {
 	return Util::Error::NoError;
 }
 
-Util::Error KeyStorage::SetKeyExtHeader(AppID_t appID, bstr keyData,
-		bool MorePacketsFollow) {
+Util::Error KeyStorage::SetKeyExtHeader(AppID_t appID, bstr keyData) {
 	Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
 	File::FileSystem &filesystem = solo.GetFileSystem();
 
-	// TODO: not a good way to check first packet.
-	if (keyData[0] == 0x4d)
-		prvStr.clear();
+	Util::TLVTree tlv;
+	auto err = tlv.Init(keyData);
+	if (err != Util::Error::NoError)
+		return err;
 
-	prvStr.append(keyData);
+	printf("-------------- tlv -----------------\n");
+	tlv.PrintTree();
 
-	if (!MorePacketsFollow) {
-		Util::TLVTree tlv;
-		auto err = tlv.Init(prvStr);
-		if (err != Util::Error::NoError) {
-			prvStr.clear();
-			return err;
-		}
+	// check wrong format
+	if (tlv.CurrentElm().Tag() != 0x4d)
+		return Util::Error::WrongData;
 
-		printf("-------------- tlv -----------------\n");
-		tlv.PrintTree();
+	using namespace OpenPGP;
+	OpenPGPKeyType type = OpenPGPKeyType::Unknown;
+	if (tlv.Search(OpenPGPKeyType::DigitalSignature) != nullptr)
+		type = OpenPGPKeyType::DigitalSignature;
+	if (tlv.Search(OpenPGPKeyType::Confidentiality) != nullptr)
+		type = OpenPGPKeyType::Confidentiality;
+	if (tlv.Search(OpenPGPKeyType::Authentication) != nullptr)
+		type = OpenPGPKeyType::Authentication;
 
-		// check wrong format
-		if (tlv.CurrentElm().Tag() != 0x4d)
-			return Util::Error::WrongData;
+	if (type == OpenPGPKeyType::Unknown)
+		return Util::Error::WrongData;
 
-		using namespace OpenPGP;
-		OpenPGPKeyType type = OpenPGPKeyType::Unknown;
-		if (tlv.Search(OpenPGPKeyType::DigitalSignature) != nullptr)
-			type = OpenPGPKeyType::DigitalSignature;
-		if (tlv.Search(OpenPGPKeyType::Confidentiality) != nullptr)
-			type = OpenPGPKeyType::Confidentiality;
-		if (tlv.Search(OpenPGPKeyType::Authentication) != nullptr)
-			type = OpenPGPKeyType::Authentication;
-
-		if (type == OpenPGPKeyType::Unknown)
-			return Util::Error::WrongData;
-
-		printf("save key data [%02x] len:%lu\n", type, prvStr.length());
-		filesystem.WriteFile(appID, type, File::Secure, prvStr);
-	}
-
-	return Util::Error::InternalError;
+	printf("save key data [%02x] len:%lu\n", type, keyData.length());
+	return filesystem.WriteFile(appID, type, File::Secure, keyData);
 }
 
 Util::Error CryptoEngine::AESEncrypt(AppID_t appID, KeyID_t keyID,
