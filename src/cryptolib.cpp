@@ -187,7 +187,6 @@ Util::Error CryptoLib::RSADecipher(RSAKey key, bstr data, bstr &dataOut) {
 			break;
 
 		size_t keylen = mbedtls_mpi_size(&rsa.N);
-		printf("keylen %lu\n", keylen);
 
 		if (keylen != data.length()) {
 			ret = Util::Error::CryptoDataError;
