@@ -13,7 +13,7 @@ const bstr* Applet::TestApplet::GetAID() {
 	return &aid;
 }
 
-Util::Error Applet::TestApplet::APDUExchange(bstr header, bstr data, bstr &result) {
+Util::Error Applet::TestApplet::APDUExchange(bstr header, bstr data, uint8_t le, bstr &result) {
 	result.clear();
 	result.append(data);
 	return Util::Error::NoError;

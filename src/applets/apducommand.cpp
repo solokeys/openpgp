@@ -22,7 +22,7 @@ Util::Error APDUCommand::Check(uint8_t cla, uint8_t ins, uint8_t p1,
 }
 
 Util::Error APDUCommand::Process(uint8_t cla, uint8_t ins, uint8_t p1,
-		uint8_t p2, bstr data, bstr &dataOut) {
+		uint8_t p2, bstr data, uint8_t le, bstr &dataOut) {
 
 	return Util::Error::WrongCommand;
 }

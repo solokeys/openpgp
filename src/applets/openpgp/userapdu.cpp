@@ -34,7 +34,8 @@ Util::Error APDUVerify::Check(uint8_t cla, uint8_t ins, uint8_t p1, uint8_t p2) 
 }
 
 Util::Error APDUVerify::Process(uint8_t cla, uint8_t ins, uint8_t p1,
-		uint8_t p2, bstr data, bstr &dataOut) {
+		uint8_t p2, bstr data, uint8_t le, bstr &dataOut) {
+
 	auto err = Check(cla, ins, p1, p2);
 	if (err != Util::Error::NoError)
 		return err;
@@ -134,7 +135,8 @@ Util::Error APDUChangeReferenceData::Check(uint8_t cla, uint8_t ins, uint8_t p1,
 }
 
 Util::Error APDUChangeReferenceData::Process(uint8_t cla, uint8_t ins,
-		uint8_t p1, uint8_t p2, bstr data, bstr &dataOut) {
+		uint8_t p1, uint8_t p2, bstr data, uint8_t le, bstr &dataOut) {
+
 	Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
 	File::FileSystem &filesystem = solo.GetFileSystem();
 
@@ -208,7 +210,8 @@ Util::Error APDUResetRetryCounter::Check(uint8_t cla, uint8_t ins, uint8_t p1, u
 }
 
 Util::Error APDUResetRetryCounter::Process(uint8_t cla, uint8_t ins,
-		uint8_t p1, uint8_t p2, bstr data, bstr &dataOut) {
+		uint8_t p1, uint8_t p2, bstr data, uint8_t le, bstr &dataOut) {
+
 	Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
 	File::FileSystem &filesystem = solo.GetFileSystem();
 	Applet::OpenPGPApplet &applet = solo.GetAppletStorage().GetOpenPGPApplet();
@@ -287,7 +290,7 @@ Util::Error APDUGetData::Check(uint8_t cla, uint8_t ins, uint8_t p1, uint8_t p2)
 }
 
 Util::Error APDUGetData::Process(uint8_t cla, uint8_t ins, uint8_t p1,
-		uint8_t p2, bstr data, bstr &dataOut) {
+		uint8_t p2, bstr data, uint8_t le, bstr &dataOut) {
 
 	Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
 	OpenPGP::OpenPGPFactory &opgp_factory = solo.GetOpenPGPFactory();
@@ -324,7 +327,7 @@ Util::Error APDUPutData::Check(uint8_t cla, uint8_t ins, uint8_t p1, uint8_t p2)
 }
 
 Util::Error APDUPutData::Process(uint8_t cla, uint8_t ins, uint8_t p1,
-		uint8_t p2, bstr data, bstr &dataOut) {
+		uint8_t p2, bstr data, uint8_t le, bstr &dataOut) {
 
 	dataOut.clear();
 

@@ -35,7 +35,7 @@ const bstr* OpenPGPApplet::GetAID() {
 	return &aid;
 }
 
-Util::Error OpenPGPApplet::APDUExchange(bstr header, bstr data, bstr &result) {
+Util::Error OpenPGPApplet::APDUExchange(bstr header, bstr data, uint8_t le, bstr &result) {
 	result.clear();
 
 	if (!selected)
@@ -68,7 +68,7 @@ Util::Error OpenPGPApplet::APDUExchange(bstr header, bstr data, bstr &result) {
 	if (!cmd)
 		return Util::Error::WrongCommand;
 
-	auto cmderr = cmd->Process(cla, ins, p1, p2, data, result);
+	auto cmderr = cmd->Process(cla, ins, p1, p2, data, le, result);
 	if (cmderr != Util::Error::NoError)
 		return cmderr;
 

@@ -33,7 +33,7 @@ Util::Error APDUGetChallenge::Check(uint8_t cla, uint8_t ins,
 }
 
 Util::Error APDUGetChallenge::Process(uint8_t cla, uint8_t ins,
-		uint8_t p1, uint8_t p2, bstr data, bstr& dataOut) {
+		uint8_t p1, uint8_t p2, bstr data, uint8_t le, bstr& dataOut) {
 
 	dataOut.clear();
 
@@ -48,7 +48,10 @@ Util::Error APDUGetChallenge::Process(uint8_t cla, uint8_t ins,
 	Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
 	Crypto::CryptoLib &crypto = solo.GetCryptoLib();
 
-	return crypto.GenerateRandom(10, dataOut); // TODO: get length from Le
+	if (le == 0)
+		le = 0xff;
+
+	return crypto.GenerateRandom(le, dataOut);
 }
 
 Util::Error APDUInternalAuthenticate::Check(uint8_t cla, uint8_t ins,
@@ -57,7 +60,7 @@ Util::Error APDUInternalAuthenticate::Check(uint8_t cla, uint8_t ins,
 }
 
 Util::Error APDUInternalAuthenticate::Process(uint8_t cla, uint8_t ins,
-		uint8_t p1, uint8_t p2, bstr data, bstr& dataOut) {
+		uint8_t p1, uint8_t p2, bstr data, uint8_t le, bstr& dataOut) {
 	return Util::Error::WrongCommand;
 }
 
@@ -78,7 +81,7 @@ Util::Error APDUGenerateAsymmetricKeyPair::Check(uint8_t cla,
 }
 
 Util::Error APDUGenerateAsymmetricKeyPair::Process(uint8_t cla,
-		uint8_t ins, uint8_t p1, uint8_t p2, bstr data, bstr& dataOut) {
+		uint8_t ins, uint8_t p1, uint8_t p2, bstr data, uint8_t le, bstr& dataOut) {
 
 	dataOut.clear();
 
@@ -163,7 +166,7 @@ Util::Error APDUPSO::Check(uint8_t cla, uint8_t ins, uint8_t p1,
 
 // OpenPGP v3.3.1. page 53
 Util::Error APDUPSO::Process(uint8_t cla, uint8_t ins, uint8_t p1,
-		uint8_t p2, bstr data, bstr& dataOut) {
+		uint8_t p2, bstr data, uint8_t le, bstr& dataOut) {
 
 	Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
 	File::FileSystem &filesystem = solo.GetFileSystem();
