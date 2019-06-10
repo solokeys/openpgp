@@ -53,25 +53,17 @@ Util::Error CryptoLib::RSAGenKey(bstr& keyOut) {
 	return Util::Error::InternalError;
 }
 
-Util::Error CryptoLib::RSASign(RSAKey key, bstr data, bstr& signature) {
+Util::Error CryptoLib::RSAFillPrivateKey(mbedtls_rsa_context *context,
+		RSAKey key) {
 
 	Util::Error ret = Util::Error::NoError;
 
-	if (key.P.length() == 0 ||
-		key.Q.length() == 0 ||
-		key.Exp.length() == 0
-		)
-		return Util::Error::CryptoDataError;
-
-	mbedtls_rsa_context rsa;
 	mbedtls_mpi N, P, Q, E;
 
 	mbedtls_mpi_init(&N);
 	mbedtls_mpi_init(&P);
 	mbedtls_mpi_init(&Q);
 	mbedtls_mpi_init(&E);
-
-	mbedtls_rsa_init(&rsa, MBEDTLS_RSA_PKCS_V15, 0);
 
 	while (true) {
 		if (mbedtls_mpi_read_binary(&P, key.P.uint8Data(), key.P.length())) {
@@ -92,26 +84,56 @@ Util::Error CryptoLib::RSASign(RSAKey key, bstr data, bstr& signature) {
 				break;
 			}
 
-			if (mbedtls_rsa_import(&rsa, &N, &P, &Q, NULL, &E)) {
+			if (mbedtls_rsa_import(context, &N, &P, &Q, NULL, &E)) {
 				ret = Util::Error::CryptoDataError;
 				break;
 			}
 		} else {
-			if (mbedtls_rsa_import(&rsa, NULL, &P, &Q, NULL, &E)) {
+			if (mbedtls_rsa_import(context, NULL, &P, &Q, NULL, &E)) {
 				ret = Util::Error::CryptoDataError;
 				break;
 			}
 		}
 
-		if (mbedtls_rsa_complete(&rsa)) {
+		if (mbedtls_rsa_complete(context)) {
 			ret = Util::Error::CryptoDataError;
 			break;
 		}
 
-		if (mbedtls_rsa_check_privkey(&rsa)) {
+		if (mbedtls_rsa_check_privkey(context)) {
 			ret = Util::Error::CryptoDataError;
 			break;
 		}
+
+		break;
+	}
+
+	mbedtls_mpi_free(&N);
+	mbedtls_mpi_free(&P);
+	mbedtls_mpi_free(&Q);
+	mbedtls_mpi_free(&E);
+
+	return ret;
+}
+
+Util::Error CryptoLib::RSASign(RSAKey key, bstr data, bstr& signature) {
+
+	Util::Error ret = Util::Error::NoError;
+
+	if (key.P.length() == 0 ||
+		key.Q.length() == 0 ||
+		key.Exp.length() == 0
+		)
+		return Util::Error::CryptoDataError;
+
+	mbedtls_rsa_context rsa;
+
+	mbedtls_rsa_init(&rsa, MBEDTLS_RSA_PKCS_V15, 0);
+
+	while (true) {
+		ret = RSAFillPrivateKey(&rsa, key);
+		if (ret != Util::Error::NoError)
+			break;
 
 		size_t keylen = mbedtls_mpi_size(&rsa.N);
 

@@ -14,6 +14,11 @@
 #include <errors.h>
 #include "tlv.h"
 
+#include <mbedtls/config.h>
+#include <mbedtls/rsa.h>
+#include <mbedtls/aes.h>
+#include <mbedtls/havege.h>
+
 namespace Crypto {
 
 // OpenPGP 3.3.1 page 31. RFC 4880 and 6637
@@ -99,6 +104,7 @@ class CryptoLib {
 private:
 	CryptoEngine &cryptoEngine;
 
+	Util::Error RSAFillPrivateKey(mbedtls_rsa_context *context, RSAKey key);
 public:
 	CryptoLib(CryptoEngine &_cryptoEngine): cryptoEngine(_cryptoEngine) {};
 

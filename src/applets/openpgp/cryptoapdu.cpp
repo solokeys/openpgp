@@ -80,9 +80,13 @@ Util::Error APDUInternalAuthenticate::Process(uint8_t cla, uint8_t ins,
 	Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
 	File::FileSystem &filesystem = solo.GetFileSystem();
 	Crypto::CryptoEngine &crypto_e = solo.GetCryptoEngine();
+	Applet::OpenPGPApplet &applet = solo.GetAppletStorage().GetOpenPGPApplet();
+
+	if (!applet.GetAuth(OpenPGP::Password::PW1))
+		return Util::Error::AccessDenied;
 
 	OpenPGP::AlgoritmAttr alg;
-	auto err = alg.Load(filesystem, 0xc1);
+	auto err = alg.Load(filesystem, 0xc3); // authentication
 	if (err != Util::Error::NoError || alg.AlgorithmID == 0)
 		return Util::Error::DataNotFound;
 
@@ -208,16 +212,16 @@ Util::Error APDUPSO::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 	if (err_check != Util::Error::NoError)
 		return err_check;
 
-	if (!applet.GetPSOCDSAccess())
-		return Util::Error::AccessDenied;
-
 	PWStatusBytes pwstatus;
 	pwstatus.Load(filesystem);
 
 	//PSO:CDS OpenPGP 3.3.1 page 53. iso 7816-8:2004 page 6-8
 	if (p1 == 0x9e && p2 == 0x9a) {
+		if (!applet.GetPSOCDSAccess())
+			return Util::Error::AccessDenied;
+
 		OpenPGP::AlgoritmAttr alg;
-		auto err = alg.Load(filesystem, 0xc1);
+		auto err = alg.Load(filesystem, 0xc1); // DigitalSignature
 		if (err != Util::Error::NoError || alg.AlgorithmID == 0)
 			return Util::Error::DataNotFound;
 
@@ -248,7 +252,26 @@ Util::Error APDUPSO::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 
 	// 	PSO:DECIPHER OpenPGP 3.3.1 page 57. iso 7816-8:2004 page 6-8
 	if (p1 == 0x80 && p2 == 0x86) {
+		if (!applet.GetAuth(OpenPGP::Password::PW1))
+			return Util::Error::AccessDenied;
 
+		OpenPGP::AlgoritmAttr alg;
+		auto err = alg.Load(filesystem, 0xc2); // Confidentiality
+		if (err != Util::Error::NoError || alg.AlgorithmID == 0)
+			return Util::Error::DataNotFound;
+
+		printf("--data len %lu\n", data.length());
+
+		if (alg.AlgorithmID == Crypto::AlgoritmID::RSA)
+			err = crypto_e.RSASign(File::AppletID::OpenPGP, OpenPGPKeyType::Confidentiality, data, dataOut);
+		else
+			err = crypto_e.ECDSASign(File::AppletID::OpenPGP, OpenPGPKeyType::Confidentiality, data, dataOut);
+
+
+
+
+		if (err != Util::Error::NoError)
+			return err;
 	}
 
 	// 	PSO:ENCIPHER OpenPGP 3.3.1 page 60. iso 7816-8:2004 page 6-8
