@@ -9,6 +9,7 @@
 
 #include <apduexecutor.h>
 #include "applets/apduconst.h"
+#include "applets/applet.h"
 #include "solofactory.h"
 
 namespace Applet {
@@ -66,14 +67,26 @@ Util::Error APDUExecutor::Execute(bstr apdu, bstr& result) {
 	auto p1 = apdu[2];
 	auto p2 = apdu[3];
 	auto len = apdu[4];
+
+	// with Le and without data
+	uint8_t le = 0xff;
+	if (apdu.length() == 5 && len > 0) {
+		le = apdu[4];
+		len = 0;
+	}
+	// Le at the end
+	if (apdu.length() != len + 6U)
+		le = apdu[apdu.length() - 1];
+
 	auto data = bstr(apdu.substr(5, len));
 
-	// TODO: temporary off length check for 0xca (GetData)
-	if (apdu.length() != len + 5U && apdu.length() != len + 6U && ins != APDUcommands::GetData) {
+	// apdu length check
+	if (apdu.length() != len + 5U && apdu.length() != len + 6U) {
     	result.setAPDURes(APDUResponse::WrongLength);
 		return Util::Error::WrongAPDULength;
 	}
 
+	// select applet
 	if (ins == APDUcommands::Select) {
 		if (cla != 0) {
     		result.appendAPDUres(APDUResponse::CLAnotSupported);
@@ -84,6 +97,9 @@ Util::Error APDUExecutor::Execute(bstr apdu, bstr& result) {
     		return Util::Error::WrongAPDUP1P2;
 		}
 
+		sapdu.clear();
+		sresult.clear();
+
 		auto err = appletStorage.SelectApplet(data, result);
     	SetResultError(result, err);
 		return err;
@@ -92,8 +108,31 @@ Util::Error APDUExecutor::Execute(bstr apdu, bstr& result) {
     Applet *applet = appletStorage.GetSelectedApplet();
     if (applet != nullptr) {
 
-    	// cla & 0x10 - chaining apdu
-    	if (apdu[0] & 0x10) {
+    	// output chaining (ins == 0xc0) data
+    	if (ins == 0xc0) {
+    		if (sresult.length()) {
+    			uint8_t need_len = le;
+    			if (need_len == 0)
+    				need_len = MIN(0xff, sresult.length());
+
+    			result.set(sresult.substr(0, need_len));
+    			sresult.del(0, need_len);
+
+    			uint8_t rest_len = 0;
+    			if (sresult.length() < 0xff)
+    				rest_len = sresult.length() & 0xff;
+
+    			if (sresult.length())
+    				result.appendAPDUres(0x6100 + rest_len);
+    		} else {
+    			// error - don't have data
+    			result.setAPDURes(APDUResponse::WrongLength);
+    		}
+    		return Util::Error::NoError;
+    	}
+
+    	// cla & 0x10 - input chaining apdu
+    	if (cla & 0x10) {
     		if (sapdu.length() == 0) {
     			// first chaining packet
     			sapdu.append(apdu);
@@ -137,6 +176,9 @@ Util::Error APDUExecutor::Execute(bstr apdu, bstr& result) {
     	if (apdu.length() > 5)
     		data = sapdu.substr(5, sapdu.length() - 5);
 
+    	// clear result buffer
+    	sresult.clear();
+
     	Util::Error err = applet->APDUExchange(sapdu.substr(0, 4), data, sresult);
     	SetResultError(sresult, err);
       	printf("appdu exchange result: %s\n", Util::GetStrError(err));
@@ -145,8 +187,9 @@ Util::Error APDUExecutor::Execute(bstr apdu, bstr& result) {
 		sapdu.clear();
 
 		// TODO
-      	if (sresult.length() > 250) {
-      		result.append(sresult);
+      	if (sresult.length() > 0xfe) {
+      		//result.append(sresult);
+      		result.setAPDURes(0x6100);
       	} else {
       		result.append(sresult);
       	}

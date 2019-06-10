@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <cstdint>
 #include <string_view>
+#include <string.h>
 
 #ifndef MIN
 #define MIN(a,b) (((a) < (b)) ? (a) : (b))
@@ -83,6 +84,15 @@ namespace std {
 		constexpr void setAPDURes(uint16_t w) {
 			clear();
 			appendAPDUres(w);
+		}
+
+		constexpr void del(size_t begin, size_t len) {
+			if (begin + len > this->length())
+				return;
+
+			uint8_t *data = const_cast<uint8_t*>(this->data());
+			memmove(data + begin, data + begin + len, this->length() - len);
+			set_length(this->length() - len);
 		}
    };
 }
