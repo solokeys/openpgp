@@ -56,12 +56,42 @@ Util::Error APDUGetChallenge::Process(uint8_t cla, uint8_t ins,
 
 Util::Error APDUInternalAuthenticate::Check(uint8_t cla, uint8_t ins,
 		uint8_t p1, uint8_t p2) {
-	return Util::Error::WrongCommand;
+
+	if (ins != Applet::APDUcommands::Internalauthenticate)
+		return Util::Error::WrongCommand;
+
+	if (cla != 0x00)
+		return Util::Error::WrongAPDUCLA;
+
+	if ((p1 != 0x00 || p2 != 0x00))
+		return Util::Error::WrongAPDUP1P2;
+
+	return Util::Error::NoError;
 }
 
+// OpenPGP 3.3.1 page 61
 Util::Error APDUInternalAuthenticate::Process(uint8_t cla, uint8_t ins,
 		uint8_t p1, uint8_t p2, bstr data, uint8_t le, bstr& dataOut) {
-	return Util::Error::WrongCommand;
+
+	auto err_check = Check(cla, ins, p1, p2);
+	if (err_check != Util::Error::NoError)
+		return err_check;
+
+	Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
+	File::FileSystem &filesystem = solo.GetFileSystem();
+	Crypto::CryptoEngine &crypto_e = solo.GetCryptoEngine();
+
+	OpenPGP::AlgoritmAttr alg;
+	auto err = alg.Load(filesystem, 0xc1);
+	if (err != Util::Error::NoError || alg.AlgorithmID == 0)
+		return Util::Error::DataNotFound;
+
+	if (alg.AlgorithmID == Crypto::AlgoritmID::RSA)
+		err = crypto_e.RSASign(File::AppletID::OpenPGP, OpenPGPKeyType::Authentication, data, dataOut);
+	else
+		err = crypto_e.ECDSASign(File::AppletID::OpenPGP, OpenPGPKeyType::Authentication, data, dataOut);
+
+	return err;
 }
 
 Util::Error APDUGenerateAsymmetricKeyPair::Check(uint8_t cla,
