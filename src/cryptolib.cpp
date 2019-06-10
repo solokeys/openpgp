@@ -223,27 +223,29 @@ Util::Error KeyStorage::GetKeyPart(bstr dataIn, Util::tag_t keyPart,
 		bstr& dataOut) {
 	dataOut.set_length(0);
 
-	Util::TLVTree tlv;
+	using namespace Util;
+
+	TLVTree tlv;
 	auto err = tlv.Init(dataIn);
 	if (err != Util::Error::NoError) {
 		dataIn.clear();
 		return err;
 	}
 
-	Util::TLVElm *eheader = tlv.Search(0x7f48);
+	TLVElm *eheader = tlv.Search(0x7f48);
 	if (!eheader || eheader->Length() == 0)
 		return Util::Error::StoredKeyError;
 
 	bstr header = eheader->GetData();
 
-	Util::DOL dol;
+	DOL dol;
 	err = dol.Init(header);
 	if (err != Util::Error::NoError) {
 		dataIn.clear();
 		return err;
 	}
 
-	Util::TLVElm *edata = tlv.Search(0x5f48);
+	TLVElm *edata = tlv.Search(0x5f48);
 	if (!edata || edata->Length() == 0)
 		return Util::Error::StoredKeyError;
 
@@ -256,10 +258,10 @@ Util::Error KeyStorage::GetKeyPart(bstr dataIn, Util::tag_t keyPart,
 	size_t length = 0;
 	err = dol.Search(keyPart, offset, length);
 	if (offset + length > data.length() || length == 0)
-		return Util::Error::StoredKeyError;
+		return Error::StoredKeyError;
 
 	dataOut = data.substr(offset, length);
-	return Util::Error::NoError;
+	return Error::NoError;
 }
 
 Util::Error KeyStorage::GetPublicKey(AppID_t appID, KeyID_t keyID, uint8_t AlgoritmID,
@@ -329,7 +331,9 @@ Util::Error KeyStorage::GetPublicKey7F49(AppID_t appID, KeyID_t keyID,
 	printf("pubKey: %lu\n", pubKey.length());
 	dump_hex(pubKey);
 
-	Util::TLVTree tlv;
+	using namespace Util;
+
+	TLVTree tlv;
 	tlv.Init(tlvKey);
 	tlv.AddRoot(0x7f49);
 
@@ -349,7 +353,7 @@ Util::Error KeyStorage::GetPublicKey7F49(AppID_t appID, KeyID_t keyID,
 	}
 
 	tlvKey = tlv.GetDataLink();
-	return Util::Error::NoError;
+	return Error::NoError;
 }
 
 Util::Error KeyStorage::GetRSAKey(AppID_t appID, KeyID_t keyID, RSAKey& key) {
