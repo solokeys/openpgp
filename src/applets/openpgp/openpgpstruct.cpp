@@ -119,11 +119,7 @@ Util::Error DSCounter::Load(File::FileSystem& fs) {
 		dsdata[0] == 0x93 &&
 		dsdata[1] > 0 && dsdata[1] <= 4
 		) {
-		Counter = 0;
-		for(uint i = 0; i < dsdata[1]; i++) {
-			Counter = Counter << 8;
-			Counter += dsdata[2 + i];
-		}
+		Counter = dsdata.get_uint_be(2, dsdata[1]);
 	} else {
 		return Util::Error::InternalError;
 	}
@@ -132,10 +128,7 @@ Util::Error DSCounter::Load(File::FileSystem& fs) {
 }
 
 Util::Error DSCounter::Save(File::FileSystem& fs) {
-	for(uint i = 0; i < dsdata[1]; i++) {
-		dsdata.uint8Data()[2 + i] = (Counter >> ((dsdata[1] - i - 1) * 8)) & 0xff;
-	}
-
+	dsdata.set_uint_be(2, dsdata[1], Counter);
 	return fs.WriteFile(File::AppletID::OpenPGP, 0x7a, File::File, dsdata);
 }
 

@@ -43,6 +43,27 @@ namespace std {
 			return const_cast<uint8_t *>(this->data());
 		}
 
+		constexpr uint32_t get_uint_be(size_t indx, size_t size) {
+			if (indx + size > this->length())
+				return 0;
+
+			uint32_t res = 0;
+			for(uint8_t i = 0; i < size; i++) {
+				res = res << 8;
+				res += uint8Data()[indx + i];
+			}
+			return res;
+		}
+
+		constexpr void set_uint_be(size_t indx, size_t size, uint32_t value) {
+			if (indx + size > this->length())
+				return;
+
+			for(uint8_t i = 0; i < size; i++) {
+				uint8Data()[indx + i] = (value >> ((size - i - 1) * 8)) & 0xff;
+			}
+		}
+
 		constexpr void clear() {
 			this->remove_suffix(this->length());
 		}
