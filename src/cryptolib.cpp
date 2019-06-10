@@ -114,7 +114,6 @@ Util::Error CryptoLib::RSASign(RSAKey key, bstr data, bstr& signature) {
 		}
 
 		size_t keylen = mbedtls_mpi_size(&rsa.N);
-		printf("rsa key length: %lu bytes, data length: %lu\n", keylen, data.length());
 
 		// OpenPGP 3.3.1 page 54. PKCS#1
 		// command data field is not longer than 40% of the length of the modulus
@@ -129,18 +128,16 @@ Util::Error CryptoLib::RSASign(RSAKey key, bstr data, bstr& signature) {
 		vdata[1] = 0x01; // Block type
 		memset(&vdata[2], 0xff, keylen - data.length() - 3);
 		memcpy(&vdata[keylen - data.length()], data.uint8Data(), data.length());
-		dump_hex(data);
-		dump_hex(vdata, keylen, 0);
 
-		int res = mbedtls_rsa_public(&rsa, vdata, signature.uint8Data());
+		memset(signature.uint8Data(), 0x00, keylen);
+
+		int res = mbedtls_rsa_private(&rsa, nullptr, nullptr, vdata, signature.uint8Data());
 		if (res) {
 			printf("crypto oper error: %d\n", res);
 			ret = Util::Error::CryptoOperationError;
 			break;
 		}
 		signature.set_length(keylen);
-
-
 		break;
 	}
 
