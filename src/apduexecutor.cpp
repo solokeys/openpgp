@@ -54,7 +54,7 @@ void APDUExecutor::SetResultError(bstr& result, Util::Error error) {
 Util::Error APDUExecutor::Execute(bstr apdu, bstr& result) {
 	result.clear();
 
-	if (apdu.length() < 5) {
+	if (apdu.length() < 4) {
     	result.setAPDURes(APDUResponse::WrongLength);
 		return Util::Error::WrongAPDUStructure;
 	}
@@ -66,7 +66,9 @@ Util::Error APDUExecutor::Execute(bstr apdu, bstr& result) {
 	auto ins = apdu[1];
 	auto p1 = apdu[2];
 	auto p2 = apdu[3];
-	auto len = apdu[4];
+	auto len = 0;
+	if (apdu.length() > 4)
+		len = apdu[4];
 
 	// with Le and without data
 	uint8_t le = 0xff;
@@ -78,10 +80,12 @@ Util::Error APDUExecutor::Execute(bstr apdu, bstr& result) {
 	if (apdu.length() != len + 6U)
 		le = apdu[apdu.length() - 1];
 
-	auto data = bstr(apdu.substr(5, len));
+	bstr data(nullptr, 0, 0);
+	if (len > 0)
+		data = bstr(apdu.substr(5, len));
 
 	// apdu length check
-	if (apdu.length() != len + 5U && apdu.length() != len + 6U) {
+	if (apdu.length() != len + 4U && apdu.length() != len + 5U && apdu.length() != len + 6U) {
     	result.setAPDURes(APDUResponse::WrongLength);
 		return Util::Error::WrongAPDULength;
 	}
