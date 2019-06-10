@@ -56,6 +56,7 @@ enum KeyType {
 	Private
 };
 
+// OpenPGP 3.3.1 page 33
 enum KeyPartsRSA {
 	PublicExponent = 0x91, // key format: standard and crt
 	P              = 0x92, // standard and crt
@@ -69,6 +70,27 @@ enum KeyPartsRSA {
 enum KeyPartsECDSA {
 	PrivateKey     = 0x92, // mandatory
 	PublicKey      = 0x99  // optional
+};
+
+// OpenPGP 3.3.1 page 33
+struct RSAKey {
+	bstr Exp; // Public exponent: e  (key format: standard and crt)
+	bstr P;   // Prime1: p           (standard and crt)
+	bstr Q;   // Prime2: q           (standard and crt)
+	bstr PQ;  // PQ: 1/q mod p       (crt)
+	bstr DP1; // DP1: d mod (p - 1)  (crt)
+	bstr DQ1; // DQ1: d mod (q - 1)  (crt)
+	bstr N;   // Modulus: n          (optional for standard and crt)
+
+	void clear(){
+		Exp.set_length(0);
+		P.set_length(0);
+		Q.set_length(0);
+		PQ.set_length(0);
+		DP1.set_length(0);
+		DQ1.set_length(0);
+		N.set_length(0);
+	}
 };
 
 class CryptoEngine;
@@ -86,7 +108,7 @@ public:
 	Util::Error AESDecrypt(bstr key, bstr dataIn, bstr &dataOut);
 
 	Util::Error RSAGenKey(bstr &keyOut);
-	Util::Error RSAGetPublicKey(bstr strP, bstr strQ, bstr &strN);
+	Util::Error RSACalcPublicKey(bstr strP, bstr strQ, bstr &strN);
 	Util::Error RSASign(bstr key, bstr data, bstr &signature);
 	Util::Error RSAVerify(bstr key, bstr data, bstr signature);
 
@@ -107,7 +129,10 @@ public:
 	Util::Error GetKeyPart(bstr data, Util::tag_t keyPart, bstr &dataOut);
 	Util::Error GetPublicKey(AppID_t appID, KeyID_t keyID, uint8_t AlgoritmID, bstr &pubKey);
 	Util::Error GetPublicKey7F49(AppID_t appID, KeyID_t keyID, uint8_t AlgoritmID, bstr &tlvKey);
-	Util::Error GetKey(AppID_t appID, KeyID_t keyID, KeyType keyType, bstr &key);
+
+	Util::Error GetRSAKey(AppID_t appID, KeyID_t keyID, RSAKey &key);
+	Util::Error GetECDSAPrivateKey(AppID_t appID, KeyID_t keyID, bstr &key);
+
 	Util::Error SetKey(AppID_t appID, KeyID_t keyID, KeyType keyType, bstr key);
 	Util::Error SetKeyExtHeader(AppID_t appID, bstr keyData, bool MorePacketsFollow);
 };
@@ -120,8 +145,11 @@ public:
 	Util::Error AESEncrypt(AppID_t appID, KeyID_t keyID, bstr dataIn, bstr &dataOut);
 	Util::Error AESDecrypt(AppID_t appID, KeyID_t keyID, bstr dataIn, bstr &dataOut);
 
-	Util::Error Sign(AppID_t appID, KeyID_t keyID, bstr data, bstr &signature);
-	Util::Error Verify(AppID_t appID, KeyID_t keyID, bstr data, bstr signature);
+	Util::Error RSASign(AppID_t appID, KeyID_t keyID, bstr data, bstr &signature);
+	Util::Error RSAVerify(AppID_t appID, KeyID_t keyID, bstr data, bstr signature);
+
+	Util::Error ECDSASign(AppID_t appID, KeyID_t keyID, bstr data, bstr &signature);
+	Util::Error ECDSAVerify(AppID_t appID, KeyID_t keyID, bstr data, bstr signature);
 
 	CryptoLib &getCryptoLib() {
 		return cryptoLib;

@@ -21,6 +21,8 @@
 
 namespace Crypto {
 
+static const bstr RSADefaultExponent = "\x01\x00\x01"_bstr;
+
 Util::Error CryptoLib::GenerateRandom(size_t length, bstr& dataOut) {
 	if (length > dataOut.max_size())
 		return Util::Error::OutOfMemory;
@@ -50,6 +52,9 @@ Util::Error CryptoLib::RSAGenKey(bstr& keyOut) {
 }
 
 Util::Error CryptoLib::RSASign(bstr key, bstr data, bstr& signature) {
+
+
+
 	return Util::Error::InternalError;
 }
 
@@ -65,7 +70,7 @@ Util::Error CryptoLib::ECDSASign(bstr key, bstr data, bstr& signature) {
 	return Util::Error::InternalError;
 }
 
-Util::Error CryptoLib::RSAGetPublicKey(bstr strP, bstr strQ, bstr &strN) {
+Util::Error CryptoLib::RSACalcPublicKey(bstr strP, bstr strQ, bstr &strN) {
 	Util::Error ret = Util::Error::NoError;
 
 	mbedtls_rsa_context rsa;
@@ -114,8 +119,7 @@ Util::Error CryptoLib::ECDSAVerify(bstr key, bstr data,
 	return Util::Error::InternalError;
 }
 
-Util::Error KeyStorage::GetKey(AppID_t appID, KeyID_t keyID,
-		KeyType keyType, bstr& key) {
+Util::Error KeyStorage::GetECDSAPrivateKey(AppID_t appID, KeyID_t keyID, bstr& key) {
 	return Util::Error::InternalError;
 }
 
@@ -126,6 +130,8 @@ Util::Error KeyStorage::SetKey(AppID_t appID, KeyID_t keyID,
 
 Util::Error KeyStorage::GetKeyPart(bstr dataIn, Util::tag_t keyPart,
 		bstr& dataOut) {
+	dataOut.set_length(0);
+
 	Util::TLVTree tlv;
 	auto err = tlv.Init(dataIn);
 	if (err != Util::Error::NoError) {
@@ -152,8 +158,8 @@ Util::Error KeyStorage::GetKeyPart(bstr dataIn, Util::tag_t keyPart,
 
 	bstr data = edata->GetData();
 
-	printf("key %lu %lu\n ------------ dol --------------\n", header.length(), data.length());
-	dol.Print();
+	//printf("key %lu %lu\n ------------ dol --------------\n", header.length(), data.length());
+	//dol.Print();
 
 	size_t offset = 0;
 	size_t length = 0;
@@ -174,34 +180,32 @@ Util::Error KeyStorage::GetPublicKey(AppID_t appID, KeyID_t keyID, uint8_t Algor
 	File::FileSystem &filesystem = solo.GetFileSystem();
 	CryptoLib &crypto = cryptoEngine.getCryptoLib();
 
-	// clear key storage
-	prvStr.clear();
-	auto err = filesystem.ReadFile(appID, keyID, File::Secure, prvStr);
-	if (err != Util::Error::NoError)
-		return err;
-
-	printf("key %x [%lu] loaded.\n", keyID, prvStr.length());
+	printf("GetPublicKey key %x [%lu] loaded.\n", keyID, prvStr.length());
 
 	if (AlgoritmID == Crypto::AlgoritmID::RSA) {
-		err = GetKeyPart(prvStr, KeyPartsRSA::N, pubKey);
-		if (err != Util::Error::NoError || pubKey.length() == 0) {
-			bstr strP;
-			err = GetKeyPart(prvStr, KeyPartsRSA::P, strP);
+		RSAKey rsa_key;
+		auto err = GetRSAKey(appID, keyID, rsa_key);
+		if (err != Util::Error::NoError)
+			return err;
+
+		if (rsa_key.P.length() != 0 &&
+			rsa_key.Q.length() != 0 &&
+			rsa_key.N.length() == 0){
+			err = crypto.RSACalcPublicKey(rsa_key.P, rsa_key.Q, pubKey);
 			if (err != Util::Error::NoError)
 				return err;
-
-			bstr strQ;
-			err = GetKeyPart(prvStr, KeyPartsRSA::Q, strQ);
-			if (err != Util::Error::NoError)
-				return err;
-
-			printf("Plen: %lu Qlen: %lu\n", strP.length(), strQ.length());
-			dump_hex(strP);
-			dump_hex(strQ);
-
-			crypto.RSAGetPublicKey(strP, strQ, pubKey);
+		} else {
+			pubKey = rsa_key.N;
 		}
 	} else {
+		// TODO: move to GetECDSAKey
+
+		// clear key storage
+		prvStr.clear();
+		auto err = filesystem.ReadFile(appID, keyID, File::Secure, prvStr);
+		if (err != Util::Error::NoError)
+			return err;
+
 		err = GetKeyPart(prvStr, KeyPartsECDSA::PublicKey, pubKey);
 		if (err != Util::Error::NoError || pubKey.length() == 0) {
 			bstr privateKey;
@@ -254,6 +258,40 @@ Util::Error KeyStorage::GetPublicKey7F49(AppID_t appID, KeyID_t keyID,
 	}
 
 	tlvKey = tlv.GetDataLink();
+	return Util::Error::NoError;
+}
+
+Util::Error KeyStorage::GetRSAKey(AppID_t appID, KeyID_t keyID, RSAKey& key) {
+
+	key.clear();
+
+	Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
+	File::FileSystem &filesystem = solo.GetFileSystem();
+
+	// clear key storage
+	prvStr.clear();
+	auto err = filesystem.ReadFile(appID, keyID, File::Secure, prvStr);
+	if (err != Util::Error::NoError)
+		return err;
+
+	printf("key %x [%lu] loaded.\n", keyID, prvStr.length());
+
+	GetKeyPart(prvStr, KeyPartsRSA::PublicExponent, key.Exp);
+	GetKeyPart(prvStr, KeyPartsRSA::P, key.P);
+	GetKeyPart(prvStr, KeyPartsRSA::Q, key.Q);
+	GetKeyPart(prvStr, KeyPartsRSA::PQ, key.PQ);
+	GetKeyPart(prvStr, KeyPartsRSA::DP1, key.DP1);
+	GetKeyPart(prvStr, KeyPartsRSA::DQ1, key.DQ1);
+	GetKeyPart(prvStr, KeyPartsRSA::N, key.N);
+
+	if ((key.P.length() == 0 ||
+		 key.Q.length() == 0) &&
+		key.N.length() == 0)
+		return Util::Error::CryptoDataError;
+
+	if (key.Exp.length() == 0)
+		key.Exp = RSADefaultExponent;
+
 	return Util::Error::NoError;
 }
 
@@ -312,12 +350,40 @@ Util::Error CryptoEngine::AESDecrypt(AppID_t appID, KeyID_t keyID,
 	return Util::Error::InternalError;
 }
 
-Util::Error CryptoEngine::Sign(AppID_t appID, KeyID_t keyID,
+Util::Error CryptoEngine::RSASign(AppID_t appID, KeyID_t keyID,
 		bstr data, bstr& signature) {
+
+	//uint8_t _key[520] = {0};
+	//bstr key(_key, 0, sizeof(_key));
+	RSAKey key;
+	auto err = keyStorage.GetRSAKey(appID, keyID, key);
+	if (err != Util::Error::NoError)
+		return err;
+
+
+
+
+	return Util::Error::NoError;
+}
+
+Util::Error CryptoEngine::RSAVerify(AppID_t appID, KeyID_t keyID,
+		bstr data, bstr signature) {
 	return Util::Error::InternalError;
 }
 
-Util::Error CryptoEngine::Verify(AppID_t appID, KeyID_t keyID,
+Util::Error CryptoEngine::ECDSASign(AppID_t appID, KeyID_t keyID,
+		bstr data, bstr& signature) {
+
+	uint8_t _key[520] = {0};
+	bstr key(_key, 0, sizeof(_key));
+	auto err = keyStorage.GetPublicKey(appID, keyID, AlgoritmID::ECDSAforCDSandIntAuth, key);
+	if (err != Util::Error::NoError)
+		return err;
+
+	return Util::Error::InternalError;
+}
+
+Util::Error CryptoEngine::ECDSAVerify(AppID_t appID, KeyID_t keyID,
 		bstr data, bstr signature) {
 	return Util::Error::InternalError;
 }

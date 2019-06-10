@@ -150,12 +150,12 @@ Util::Error APDUPSO::Check(uint8_t cla, uint8_t ins, uint8_t p1,
 	if (ins != Applet::APDUcommands::PSO)
 		return Util::Error::WrongCommand;
 
-	if (cla != 0x00 && cla != 0x0c)
+	if (cla != 0x00)
 		return Util::Error::WrongAPDUCLA;
 
-	if ((p1 != 0x9e && p2 != 0x9a) || // compute digital signature
-		(p1 != 0x80 && p2 != 0x86) || // decipher
-		(p1 != 0x86 && p2 != 0x80))   // encipher
+	if (!((p1 == 0x9e && p2 == 0x9a) ||  // compute digital signature
+		  (p1 == 0x80 && p2 == 0x86) ||  // decipher
+		  (p1 == 0x86 && p2 == 0x80)))   // encipher
 		return Util::Error::WrongAPDUP1P2;
 
 	return Util::Error::NoError;
@@ -182,7 +182,15 @@ Util::Error APDUPSO::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 
 	//PSO:CDS OpenPGP 3.3.1 page 53. iso 7816-8:2004 page 6-8
 	if (p1 == 0x9e && p2 == 0x9a) {
-		auto err = crypto_e.Sign(File::AppletID::OpenPGP, OpenPGPKeyType::DigitalSignature, data, dataOut);
+		OpenPGP::AlgoritmAttr alg;
+		auto err = alg.Load(filesystem, 0xc1);
+		if (err != Util::Error::NoError || alg.AlgorithmID == 0)
+			return Util::Error::DataNotFound;
+
+		if (alg.AlgorithmID == Crypto::AlgoritmID::RSA)
+			err = crypto_e.RSASign(File::AppletID::OpenPGP, OpenPGPKeyType::DigitalSignature, data, dataOut);
+		else
+			err = crypto_e.ECDSASign(File::AppletID::OpenPGP, OpenPGPKeyType::DigitalSignature, data, dataOut);
 
 		if (!pwstatus.PW1ValidSeveralCDS)
 			applet.ClearPSOCDSAccess();
