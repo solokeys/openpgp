@@ -391,7 +391,9 @@ Util::Error KeyStorage::SetKeyExtHeader(AppID_t appID, bstr keyData) {
 	Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
 	File::FileSystem &filesystem = solo.GetFileSystem();
 
-	Util::TLVTree tlv;
+	using namespace Util;
+
+	TLVTree tlv;
 	auto err = tlv.Init(keyData);
 	if (err != Util::Error::NoError)
 		return err;
@@ -414,6 +416,12 @@ Util::Error KeyStorage::SetKeyExtHeader(AppID_t appID, bstr keyData) {
 
 	if (type == OpenPGPKeyType::Unknown)
 		return Util::Error::WrongData;
+
+	// Security support template
+	// 93 03 xx xx xx -- DS-Counter
+	// needs to set to 0 after import or generation
+	if (type == OpenPGPKeyType::DigitalSignature)
+		filesystem.DeleteFile(appID, 0x7a, File::File);
 
 	printf("save key data [%02x] len:%lu\n", type, keyData.length());
 	return filesystem.WriteFile(appID, type, File::Secure, keyData);

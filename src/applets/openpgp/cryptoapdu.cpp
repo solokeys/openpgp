@@ -108,6 +108,7 @@ Util::Error APDUGenerateAsymmetricKeyPair::Process(uint8_t cla,
 	// 0x80 - Generation of key pair
 	// 0x81 - Reading of actual public key template
 	if (p1 == 0x80) {
+		// TODO
 		(void)key_type;
 
 		return Util::Error::DataNotFound;
@@ -197,6 +198,30 @@ Util::Error APDUPSO::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 
 		if (!pwstatus.PW1ValidSeveralCDS)
 			applet.ClearPSOCDSAccess();
+
+		// DS-Counter
+		// TODO: move it!!!!
+		uint8_t _dsdata[20] = {0};
+		bstr dsdata(_dsdata, 0, sizeof(_dsdata));
+		filesystem.ReadFile(File::AppletID::OpenPGP, 0x7a, File::File, dsdata);
+		if (dsdata.length() > 2 &&
+			dsdata[0] == 0x93 &&
+			dsdata[1] > 0 && dsdata[1] <= 4
+			) {
+			uint32_t counter = 0;
+			for(uint i = 0; i < dsdata[1]; i++) {
+				counter = counter << 8;
+				counter += dsdata[2 + i];
+			}
+
+			counter++;
+
+			for(uint i = 0; i < dsdata[1]; i++) {
+				dsdata.uint8Data()[2 + i] = (counter >> ((dsdata[1] - i - 1) * 8)) & 0xff;
+			}
+
+			filesystem.WriteFile(File::AppletID::OpenPGP, 0x7a, File::File, dsdata);
+		}
 
 		// clear CDS flag if sign cant be done too
 		if (err != Util::Error::NoError)
