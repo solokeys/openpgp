@@ -26,20 +26,20 @@ public:
 	static const uint8_t PW1MinLength = 6U;
 	static const uint8_t PW3MinLength = 8U;
 	static constexpr uint8_t PWMinLength(Password pwd) {
-		if (pwd == Password::PW1)
-			return PW1MinLength;
-		else
+		if (pwd == Password::PW3)
 			return PW3MinLength;
+		else
+			return PW1MinLength;
 	}
 	// look DO`c4`
 	static const uint8_t RCMaxLength = 0x20U; // resetting code
 	static const uint8_t PW1MaxLength = 0x20U;
 	static const uint8_t PW3MaxLength = 0x20U;
 	static constexpr uint8_t PWMaxLength(Password pwd) {
-		if (pwd == Password::PW1)
-			return PW1MaxLength;
-		else
+		if (pwd == Password::PW3)
 			return PW3MaxLength;
+		else
+			return PW1MaxLength;
 	}
 	static const uint8_t DefaultPWResetCounter = 0x03U; // OpenPGP v 3.3.1 page 23
 };

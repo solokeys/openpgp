@@ -48,6 +48,7 @@ void PWStatusBytes::DecErrorCounter(Password passwdId) {
 
 bool PWStatusBytes::PasswdTryRemains(Password passwdId) {
 	switch (passwdId) {
+	case Password::PSOCDS:
 	case Password::PW1:
 		return ErrorCounterPW1;
 	case Password::RC:

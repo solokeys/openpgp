@@ -51,8 +51,9 @@ Util::Error APDUVerify::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 	PWStatusBytes pwstatus;
 	pwstatus.Load(filesystem);
 
-	// TODO: needs to add Password::PSOCDC and get rid of next if
-	Password passwd_id = Password::PW1;
+	Password passwd_id = Password::PSOCDS; // p2 == 0x81
+	if (p2 == 0x82)
+		passwd_id = Password::PW1;
 	if (p2 == 0x83)
 		passwd_id = Password::PW3;
 
@@ -79,21 +80,11 @@ Util::Error APDUVerify::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 	// check status
 	if (passwd_length == 0) {
 		// OpenPGP v3.3.1 page 44
-		// TODO: get rid of this if
-		if (p2 == 0x81){
-			if (security.GetAuth(Password::PSOCDS)) {
-				return Util::Error::NoError;
-			} else {
-				dataOut.appendAPDUres(0x6300 + pwstatus.PasswdTryRemains(passwd_id));
-				return Util::Error::ErrorPutInData;
-			}
+		if (security.GetAuth(passwd_id)) {
+			return Util::Error::NoError;
 		} else {
-			if (security.GetAuth(passwd_id)) {
-				return Util::Error::NoError;
-			} else {
-				dataOut.appendAPDUres(0x6300 + pwstatus.PasswdTryRemains(passwd_id));
-				return Util::Error::ErrorPutInData;
-			}
+			dataOut.appendAPDUres(0x6300 + pwstatus.PasswdTryRemains(passwd_id));
+			return Util::Error::ErrorPutInData;
 		}
 	}
 
