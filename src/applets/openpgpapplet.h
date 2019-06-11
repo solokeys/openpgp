@@ -33,14 +33,6 @@ public:
 
 	virtual Util::Error APDUExchange(bstr header, bstr data, uint8_t le, bstr &result);
 	virtual Util::Error Select(bstr &result);
-
-	void ClearAuth(OpenPGP::Password passwdId);
-	void SetAuth(OpenPGP::Password passwdId);
-	bool GetAuth(OpenPGP::Password passwdId);
-
-	void ClearPSOCDSAccess();
-	void SetPSOCDSAccess();
-	bool GetPSOCDSAccess();
 };
 
 } // namespace Applet

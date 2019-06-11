@@ -28,8 +28,8 @@ ResetProvider& OpenPGPFactory::GetResetProvider() {
 	return resetProvider;
 }
 
-APDUSecurityCheck& OpenPGPFactory::GetAPDUSecurityCheck() {
-	return apduSecurityCheck;
+Security& OpenPGPFactory::GetSecurity() {
+	return security;
 }
 
 } /* namespace OpenPGP */

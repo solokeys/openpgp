@@ -41,6 +41,8 @@ void PWStatusBytes::DecErrorCounter(Password passwdId) {
 		if (ErrorCounterPW3 > 0)
 			ErrorCounterPW3--;
 		break;
+	default:
+		break;
 	}
 }
 
@@ -52,6 +54,8 @@ bool PWStatusBytes::PasswdTryRemains(Password passwdId) {
 		return ErrorCounterRC;
 	case Password::PW3:
 		return ErrorCounterPW3;
+	default:
+		break;
 	}
 
 	return false;
@@ -67,6 +71,8 @@ void PWStatusBytes::PasswdSetRemains(Password passwdId, uint8_t rem) {
 		break;
 	case Password::PW3:
 		ErrorCounterPW3 = rem;
+		break;
+	default:
 		break;
 	}
 }

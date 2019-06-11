@@ -7,21 +7,38 @@
  copied, modified, or distributed except according to those terms.
  */
 
-#ifndef SRC_APPLETS_OPENPGP_APDUSECURITYCHECK_H_
-#define SRC_APPLETS_OPENPGP_APDUSECURITYCHECK_H_
+#ifndef SRC_APPLETS_OPENPGP_SECURITY_H_
+#define SRC_APPLETS_OPENPGP_SECURITY_H_
 
 #include <cstdint>
 
 #include "errors.h"
-//#include "applets/openpgpapplet.h"
+#include "util.h"
+#include "openpgpconst.h"
+#include "openpgpstruct.h"
 
 namespace OpenPGP {
 
 	// OpenPGP application v3.3.1 page 35
-	class APDUSecurityCheck {
+	class Security {
 	private:
-		//Applet::OpenPGPApplet &openPGPApplet;
+		AppletState appletState;
+		AppletConfig appletConfig;
+		PWStatusBytes pwstatus;
 	public:
+		void Init();
+
+		Util::Error SetPasswd(Password passwdId, bstr passwords);
+		bool VerifyPasswd(Password passwdId, bstr passwd);
+		Util::Error ResetPasswdTryRemains(Password passwdId);
+
+		void ClearAllAuth();
+
+		void ClearAuth(Password passwdId);
+		void SetAuth(Password passwdId);
+		bool GetAuth(Password passwdId);
+
+		Util::Error IncDSCounter();
 
 		Util::Error CommandAccessCheck(uint8_t cla, uint8_t ins, uint8_t p1, uint8_t p2);
 		Util::Error DataObjectAccessCheck(uint16_t dataObjectID, bool writeAccess);
@@ -29,4 +46,4 @@ namespace OpenPGP {
 
 } /* namespace OpenPGP */
 
-#endif /* SRC_APPLETS_OPENPGP_APDUSECURITYCHECK_H_ */
+#endif /* SRC_APPLETS_OPENPGP_SECURITY_H_ */

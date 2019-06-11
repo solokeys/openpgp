@@ -7,12 +7,12 @@
   copied, modified, or distributed except according to those terms.
  */
 
+#include <applets/openpgp/security.h>
 #include "cryptoapdu.h"
 #include "applets/apduconst.h"
 #include "solofactory.h"
 #include "applets/openpgp/openpgpfactory.h"
 #include "applets/openpgpapplet.h"
-#include "applets/openpgp/apdusecuritycheck.h"
 #include "applets/openpgp/openpgpconst.h"
 #include "applets/openpgp/openpgpstruct.h"
 
@@ -80,9 +80,10 @@ Util::Error APDUInternalAuthenticate::Process(uint8_t cla, uint8_t ins,
 	Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
 	File::FileSystem &filesystem = solo.GetFileSystem();
 	Crypto::CryptoEngine &crypto_e = solo.GetCryptoEngine();
-	Applet::OpenPGPApplet &applet = solo.GetAppletStorage().GetOpenPGPApplet();
+	OpenPGP::OpenPGPFactory &opgp_factory = solo.GetOpenPGPFactory();
+	OpenPGP::Security &security = opgp_factory.GetSecurity();
 
-	if (!applet.GetAuth(OpenPGP::Password::PW1))
+	if (!security.GetAuth(OpenPGP::Password::PW1))
 		return Util::Error::AccessDenied;
 
 	OpenPGP::AlgoritmAttr alg;
@@ -205,8 +206,9 @@ Util::Error APDUPSO::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 
 	Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
 	File::FileSystem &filesystem = solo.GetFileSystem();
-	Applet::OpenPGPApplet &applet = solo.GetAppletStorage().GetOpenPGPApplet();
 	Crypto::CryptoEngine &crypto_e = solo.GetCryptoEngine();
+	OpenPGP::OpenPGPFactory &opgp_factory = solo.GetOpenPGPFactory();
+	OpenPGP::Security &security = opgp_factory.GetSecurity();
 
 	auto err_check = Check(cla, ins, p1, p2);
 	if (err_check != Util::Error::NoError)
@@ -217,7 +219,7 @@ Util::Error APDUPSO::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 
 	//PSO:CDS OpenPGP 3.3.1 page 53. iso 7816-8:2004 page 6-8
 	if (p1 == 0x9e && p2 == 0x9a) {
-		if (!applet.GetPSOCDSAccess())
+		if (!security.GetAuth(OpenPGP::Password::PSOCDS))
 			return Util::Error::AccessDenied;
 
 		OpenPGP::AlgoritmAttr alg;
@@ -231,7 +233,7 @@ Util::Error APDUPSO::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 			err = crypto_e.ECDSASign(File::AppletID::OpenPGP, OpenPGPKeyType::DigitalSignature, data, dataOut);
 
 		if (!pwstatus.PW1ValidSeveralCDS)
-			applet.ClearPSOCDSAccess();
+			security.ClearAuth(OpenPGP::Password::PSOCDS);
 
 		// DS-Counter
 		DSCounter dscounter;
@@ -252,7 +254,7 @@ Util::Error APDUPSO::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 
 	// 	PSO:DECIPHER OpenPGP 3.3.1 page 57. iso 7816-8:2004 page 6-8
 	if (p1 == 0x80 && p2 == 0x86) {
-		if (!applet.GetAuth(OpenPGP::Password::PW1))
+		if (!security.GetAuth(OpenPGP::Password::PW1))
 			return Util::Error::AccessDenied;
 
 		OpenPGP::AlgoritmAttr alg;

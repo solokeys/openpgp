@@ -7,12 +7,12 @@
   copied, modified, or distributed except according to those terms.
  */
 
+#include <applets/openpgp/security.h>
 #include "userapdu.h"
 #include "applets/apduconst.h"
 #include "solofactory.h"
 #include "applets/openpgp/openpgpfactory.h"
 #include "applets/openpgpapplet.h"
-#include "applets/openpgp/apdusecuritycheck.h"
 #include "openpgpconst.h"
 #include "openpgpstruct.h"
 #include "filesystem.h"
@@ -44,8 +44,9 @@ Util::Error APDUVerify::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 		return Util::Error::WrongAPDULength;
 
 	Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
-	Applet::OpenPGPApplet &applet = solo.GetAppletStorage().GetOpenPGPApplet();
 	File::FileSystem &filesystem = solo.GetFileSystem();
+	OpenPGP::OpenPGPFactory &opgp_factory = solo.GetOpenPGPFactory();
+	OpenPGP::Security &security = opgp_factory.GetSecurity();
 
 	PWStatusBytes pwstatus;
 	pwstatus.Load(filesystem);
@@ -56,7 +57,7 @@ Util::Error APDUVerify::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 
 	// clear authentication status
 	if (p1 == 0xff){
-		applet.ClearAuth(passwd_id);
+		security.ClearAuth(passwd_id);
 		return Util::Error::NoError;
 	}
 
@@ -78,14 +79,14 @@ Util::Error APDUVerify::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 	if (passwd_length == 0) {
 		// OpenPGP v3.3.1 page 44
 		if (p2 == 0x81){
-			if (applet.GetPSOCDSAccess()) {
+			if (security.GetAuth(Password::PSOCDS)) {
 				return Util::Error::NoError;
 			} else {
 				dataOut.appendAPDUres(0x6300 + pwstatus.PasswdTryRemains(passwd_id));
 				return Util::Error::ErrorPutInData;
 			}
 		} else {
-			if (applet.GetAuth(passwd_id)) {
+			if (security.GetAuth(passwd_id)) {
 				return Util::Error::NoError;
 			} else {
 				dataOut.appendAPDUres(0x6300 + pwstatus.PasswdTryRemains(passwd_id));
@@ -110,12 +111,11 @@ Util::Error APDUVerify::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 
 	// OpenPGP v3.3.1 page 44
 	if (p2 == 0x81){
-		applet.SetPSOCDSAccess();
+		security.SetAuth(Password::PSOCDS);
 	} else {
-		applet.SetAuth(passwd_id);
+		security.SetAuth(passwd_id);
 	}
-	pwstatus.PasswdSetRemains(passwd_id, PGPConst::DefaultPWResetCounter);
-	pwstatus.Save(filesystem);
+	security.ResetPasswdTryRemains(Password::PW1);
 
 	return Util::Error::NoError;
 }
@@ -139,6 +139,8 @@ Util::Error APDUChangeReferenceData::Process(uint8_t cla, uint8_t ins,
 
 	Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
 	File::FileSystem &filesystem = solo.GetFileSystem();
+	OpenPGP::OpenPGPFactory &opgp_factory = solo.GetOpenPGPFactory();
+	OpenPGP::Security &security = opgp_factory.GetSecurity();
 
 	auto err_check = Check(cla, ins, p1, p2);
 	if (err_check != Util::Error::NoError)
@@ -187,10 +189,7 @@ Util::Error APDUChangeReferenceData::Process(uint8_t cla, uint8_t ins,
 		return err;
 
 	// clear pw1/pw3 access counter
-	PWStatusBytes pwstatus;
-	pwstatus.Load(filesystem);
-	pwstatus.PasswdSetRemains(passwd_id, PGPConst::DefaultPWResetCounter);
-	pwstatus.Save(filesystem);
+	security.ResetPasswdTryRemains(passwd_id);
 
 	return Util::Error::NoError;
 }
@@ -214,7 +213,8 @@ Util::Error APDUResetRetryCounter::Process(uint8_t cla, uint8_t ins,
 
 	Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
 	File::FileSystem &filesystem = solo.GetFileSystem();
-	Applet::OpenPGPApplet &applet = solo.GetAppletStorage().GetOpenPGPApplet();
+	OpenPGP::OpenPGPFactory &opgp_factory = solo.GetOpenPGPFactory();
+	OpenPGP::Security &security = opgp_factory.GetSecurity();
 
 	auto err = Check(cla, ins, p1, p2);
 	if (err != Util::Error::NoError)
@@ -235,7 +235,7 @@ Util::Error APDUResetRetryCounter::Process(uint8_t cla, uint8_t ins,
 			(data.length() > max_length))
 			return Util::Error::WrongAPDUDataLength;
 
-		if (!applet.GetAuth(Password::PW3))
+		if (!security.GetAuth(Password::PW3))
 			return Util::Error::AccessDenied;
 
 		passwd.append(data);
@@ -270,10 +270,7 @@ Util::Error APDUResetRetryCounter::Process(uint8_t cla, uint8_t ins,
 		return err;
 
 	// clear pw1 access counter
-	PWStatusBytes pwstatus;
-	pwstatus.Load(filesystem);
-	pwstatus.PasswdSetRemains(Password::PW1, PGPConst::DefaultPWResetCounter);
-	pwstatus.Save(filesystem);
+	security.ResetPasswdTryRemains(Password::PW1);
 
 	return Util::Error::NoError;
 }
@@ -293,8 +290,6 @@ Util::Error APDUGetData::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 		uint8_t p2, bstr data, uint8_t le, bstr &dataOut) {
 
 	Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
-	OpenPGP::OpenPGPFactory &opgp_factory = solo.GetOpenPGPFactory();
-	OpenPGP::APDUSecurityCheck &security = opgp_factory.GetAPDUSecurityCheck();
 	File::FileSystem &filesystem = solo.GetFileSystem();
 
 	auto err_check = Check(cla, ins, p1, p2);
@@ -302,10 +297,6 @@ Util::Error APDUGetData::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 		return err_check;
 
 	uint16_t object_id = (p1 << 8) + p2;
-	auto err = security.DataObjectAccessCheck(object_id, false);
-	if (err != Util::Error::NoError)
-		return err;
-
 	printf("read object id = 0x%04x\n", object_id);
 
 	filesystem.ReadFile(File::AppletID::OpenPGP, object_id, File::File, dataOut);
@@ -332,8 +323,6 @@ Util::Error APDUPutData::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 	dataOut.clear();
 
 	Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
-	OpenPGP::OpenPGPFactory &opgp_factory = solo.GetOpenPGPFactory();
-	OpenPGP::APDUSecurityCheck &security = opgp_factory.GetAPDUSecurityCheck();
 	File::FileSystem &filesystem = solo.GetFileSystem();
 	Crypto::KeyStorage &key_storage = solo.GetKeyStorage();
 
@@ -343,10 +332,6 @@ Util::Error APDUPutData::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 
 	if (ins == Applet::APDUcommands::PutData) {
 		uint16_t object_id = (p1 << 8) + p2;
-		auto err = security.DataObjectAccessCheck(object_id, true);
-		if (err != Util::Error::NoError)
-			return err;
-
 		printf("write object id = 0x%04x\n", object_id);
 
 		filesystem.WriteFile(File::AppletID::OpenPGP, object_id, File::File, data);

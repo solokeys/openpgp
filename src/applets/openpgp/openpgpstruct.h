@@ -20,17 +20,18 @@ namespace OpenPGP {
 
 struct AppletState {
 	bool pw1Authenticated;
+	bool cdsAuthenticated;
 	bool pw3Authenticated;
-	bool CDSAuthenticated;
 
-	Util::Error Load();
-	Util::Error Save();
+	void Clear() {
+		pw1Authenticated = false;
+		cdsAuthenticated = false;
+		pw3Authenticated = false;
+	}
 };
 
 struct AppletConfig {
 	LifeCycleState state;
-	bstr pw1;
-	bstr pw3;
 
 	Util::Error Load();
 	Util::Error Save();

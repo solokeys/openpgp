@@ -15,7 +15,8 @@ namespace OpenPGP {
 enum Password {
 	PW1,
 	PW3,
-	RC
+	RC,
+	PSOCDS
 };
 
 class PGPConst {

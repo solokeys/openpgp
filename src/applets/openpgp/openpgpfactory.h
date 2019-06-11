@@ -10,10 +10,10 @@
 #ifndef SRC_OPENPGP_OPENPGPFACTORY_H_
 #define SRC_OPENPGP_OPENPGPFACTORY_H_
 
+#include <applets/openpgp/security.h>
 #include <array>
 
 #include "applets/apducommand.h"
-#include "apdusecuritycheck.h"
 #include "resetprovider.h"
 #include "userapdu.h"
 #include "cryptoapdu.h"
@@ -49,11 +49,11 @@ namespace OpenPGP {
 		};
 
 		ResetProvider resetProvider;
-		APDUSecurityCheck apduSecurityCheck;
+		Security security;
 	public:
 		Applet::APDUCommand *GetAPDUCommand(uint8_t cla, uint8_t ins, uint8_t p1, uint8_t p2);
 
-		APDUSecurityCheck &GetAPDUSecurityCheck();
+		Security &GetSecurity();
 		ResetProvider &GetResetProvider();
 	};
 
