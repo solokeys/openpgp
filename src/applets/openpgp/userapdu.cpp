@@ -70,7 +70,7 @@ Util::Error APDUVerify::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 	}
 
 	// verify password
-	return security.VerifyPasswd(passwd_id, data);
+	return security.VerifyPasswd(passwd_id, data, false, nullptr);
 }
 
 Util::Error APDUChangeReferenceData::Check(uint8_t cla, uint8_t ins, uint8_t p1, uint8_t p2) {
@@ -193,7 +193,7 @@ Util::Error APDUResetRetryCounter::Process(uint8_t cla, uint8_t ins,
 
 		passwd.set(data);
 	} else {
-		auto err = filesystem.ReadFile(File::AppletID::OpenPGP,
+		/*auto err = filesystem.ReadFile(File::AppletID::OpenPGP,
 				0xd3,
 				File::File,
 				passwd);
@@ -209,8 +209,12 @@ Util::Error APDUResetRetryCounter::Process(uint8_t cla, uint8_t ins,
 		// check RC
 		if (data.find(passwd) != 0)
 			return Util::Error::WrongPassword;
+*/
+		size_t rc_length = 0;
+		auto err = security.VerifyPasswd(Password::RC, data, true, &rc_length);
+		if (err != Util::Error::NoError)
+			return err;
 
-		// set new password
 		passwd.set(data.substr(rc_length, data.length() - rc_length));
 	}
 
@@ -277,6 +281,8 @@ Util::Error APDUPutData::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 	Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
 	File::FileSystem &filesystem = solo.GetFileSystem();
 	Crypto::KeyStorage &key_storage = solo.GetKeyStorage();
+	OpenPGP::OpenPGPFactory &opgp_factory = solo.GetOpenPGPFactory();
+	OpenPGP::Security &security = opgp_factory.GetSecurity();
 
 	auto err_check = Check(cla, ins, p1, p2);
 	if (err_check != Util::Error::NoError)
@@ -286,7 +292,17 @@ Util::Error APDUPutData::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 		uint16_t object_id = (p1 << 8) + p2;
 		printf("write object id = 0x%04x\n", object_id);
 
-		filesystem.WriteFile(File::AppletID::OpenPGP, object_id, File::File, data);
+		auto err = filesystem.WriteFile(File::AppletID::OpenPGP, object_id, File::File, data);
+		if (err != Util::Error::NoError)
+			return err;
+
+		// here list of objects that need to refresh theirs state
+		if (object_id == 0xc4)
+			security.Reload();
+
+		// reset reseting password code try TODO: check in the datasheet if it correct!
+		if (object_id == 0xd3)
+			security.ResetPasswdTryRemains(Password::RC);
 	} else {
 		key_storage.SetKeyExtHeader(File::AppletID::OpenPGP, data);
 	}

@@ -27,9 +27,10 @@ namespace OpenPGP {
 		PWStatusBytes pwstatus;
 	public:
 		void Init();
+		void Reload();
 
 		Util::Error SetPasswd(Password passwdId, bstr passwords);
-		Util::Error VerifyPasswd(Password passwdId, bstr passwd);
+		Util::Error VerifyPasswd(Password passwdId, bstr passwd, bool passwdCheckFirstPart, size_t *passwdLen);
 		Util::Error ResetPasswdTryRemains(Password passwdId);
 		uint8_t PasswdTryRemains(Password passwdId);
 

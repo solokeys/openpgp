@@ -59,13 +59,23 @@ void Security::Init() {
 	pwstatus.Load(filesystem);
 }
 
+void Security::Reload() {
+	Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
+	File::FileSystem &filesystem = solo.GetFileSystem();
+
+	pwstatus.Load(filesystem);
+}
+
 Util::Error Security::SetPasswd(Password passwdId, bstr passwords) {
 	return Util::Error::NoError;
 }
 
-Util::Error Security::VerifyPasswd(Password passwdId, bstr data) {
+Util::Error Security::VerifyPasswd(Password passwdId, bstr data, bool passwdCheckFirstPart, size_t *passwdLen) {
 	Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
 	File::FileSystem &filesystem = solo.GetFileSystem();
+
+	if (passwdLen)
+		*passwdLen = 0;
 
 	size_t min_length = PGPConst::PWMinLength(passwdId);
 	size_t max_length = PGPConst::PWMaxLength(passwdId);
@@ -99,7 +109,12 @@ Util::Error Security::VerifyPasswd(Password passwdId, bstr data) {
 		return Util::Error::PasswordLocked;
 
 	// check password
-	if (data != passwd) {
+	bstr vdata = data;
+	if (passwdCheckFirstPart)
+		vdata = data.substr(0, passwd_length);
+
+	// check password (first part or all)
+	if (vdata != passwd) {
 		pwstatus.DecErrorCounter(passwdId);
 		pwstatus.Save(filesystem);
 		// TODO: maybe here need to add 0x6100 error
@@ -109,6 +124,9 @@ Util::Error Security::VerifyPasswd(Password passwdId, bstr data) {
 	// OpenPGP v3.3.1 page 44
 	SetAuth(passwdId);
 	ResetPasswdTryRemains(passwdId);
+
+	if (passwdLen)
+		*passwdLen = passwd_length;
 
 	return Util::Error::NoError;
 }
