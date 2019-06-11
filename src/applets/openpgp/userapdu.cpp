@@ -51,6 +51,7 @@ Util::Error APDUVerify::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 	PWStatusBytes pwstatus;
 	pwstatus.Load(filesystem);
 
+	// TODO: needs to add Password::PSOCDC and get rid of next if
 	Password passwd_id = Password::PW1;
 	if (p2 == 0x83)
 		passwd_id = Password::PW3;
@@ -67,7 +68,7 @@ Util::Error APDUVerify::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 	bstr passwd(_passwd, 0, max_length);
 
 	auto file_err = filesystem.ReadFile(File::AppletID::OpenPGP,
-			(passwd_id == Password::PW1) ? File::SecureFileID::PW1 : File::SecureFileID::PW3,
+			(passwd_id == Password::PW3) ? File::SecureFileID::PW3 : File::SecureFileID::PW1,
 			File::Secure,
 			passwd);
 	if (file_err != Util::Error::NoError)
@@ -78,6 +79,7 @@ Util::Error APDUVerify::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 	// check status
 	if (passwd_length == 0) {
 		// OpenPGP v3.3.1 page 44
+		// TODO: get rid of this if
 		if (p2 == 0x81){
 			if (security.GetAuth(Password::PSOCDS)) {
 				return Util::Error::NoError;

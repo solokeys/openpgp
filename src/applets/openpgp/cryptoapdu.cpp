@@ -236,14 +236,7 @@ Util::Error APDUPSO::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 			security.ClearAuth(OpenPGP::Password::PSOCDS);
 
 		// DS-Counter
-		DSCounter dscounter;
-		auto cntrerr = dscounter.Load(filesystem);
-		if (cntrerr != Util::Error::NoError)
-			return cntrerr;
-
-		dscounter.Counter++;
-
-		cntrerr = dscounter.Save(filesystem);
+		auto cntrerr = security.IncDSCounter();
 		if (cntrerr != Util::Error::NoError)
 			return cntrerr;
 

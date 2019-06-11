@@ -115,6 +115,20 @@ bool Security::GetAuth(Password passwdId) {
 }
 
 Util::Error Security::IncDSCounter() {
+	Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
+	File::FileSystem &filesystem = solo.GetFileSystem();
+
+	DSCounter dscounter;
+	auto cntrerr = dscounter.Load(filesystem);
+	if (cntrerr != Util::Error::NoError)
+		return cntrerr;
+
+	dscounter.Counter++;
+
+	cntrerr = dscounter.Save(filesystem);
+	if (cntrerr != Util::Error::NoError)
+		return cntrerr;
+
 	return Util::Error::NoError;
 }
 
