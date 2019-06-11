@@ -69,7 +69,7 @@ Util::Error APDUVerify::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 		}
 	}
 
-	// verify password
+	// verify password (strict check)
 	return security.VerifyPasswd(passwd_id, data, false, nullptr);
 }
 
@@ -193,23 +193,6 @@ Util::Error APDUResetRetryCounter::Process(uint8_t cla, uint8_t ins,
 
 		passwd.set(data);
 	} else {
-		/*auto err = filesystem.ReadFile(File::AppletID::OpenPGP,
-				0xd3,
-				File::File,
-				passwd);
-		if (err != Util::Error::NoError)
-			return err;
-
-		size_t rc_length = passwd.length();
-
-		if ((data.length() < rc_length + min_length) ||
-			(data.length() > rc_length + max_length))
-			return Util::Error::WrongAPDUDataLength;
-
-		// check RC
-		if (data.find(passwd) != 0)
-			return Util::Error::WrongPassword;
-*/
 		size_t rc_length = 0;
 		auto err = security.VerifyPasswd(Password::RC, data, true, &rc_length);
 		if (err != Util::Error::NoError)
