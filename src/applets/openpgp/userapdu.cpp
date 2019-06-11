@@ -176,10 +176,8 @@ Util::Error APDUResetRetryCounter::Process(uint8_t cla, uint8_t ins,
 	// TODO: move some values to PWStatusBytes
 	size_t min_length = PGPConst::PW1MinLength;
 	size_t max_length = PGPConst::PW1MaxLength;
-	size_t max_rc_length = PGPConst::RCMaxLength;
 
-	uint8_t _passwd[MAX(max_length, max_rc_length)] = {0};
-	bstr passwd(_passwd, 0, max_length);
+	bstr passwd;
 
 	// 0x02 - after correct verification of PW3
 	// 0x00 - resetting code (RC) in data
@@ -191,14 +189,14 @@ Util::Error APDUResetRetryCounter::Process(uint8_t cla, uint8_t ins,
 		if (!security.GetAuth(Password::PW3))
 			return Util::Error::AccessDenied;
 
-		passwd.set(data);
+		passwd = data;
 	} else {
 		size_t rc_length = 0;
 		auto err = security.VerifyPasswd(Password::RC, data, true, &rc_length);
 		if (err != Util::Error::NoError)
 			return err;
 
-		passwd.set(data.substr(rc_length, data.length() - rc_length));
+		passwd = data.substr(rc_length, data.length() - rc_length);
 	}
 
 	err = filesystem.WriteFile(File::AppletID::OpenPGP,
