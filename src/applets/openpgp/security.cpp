@@ -67,7 +67,7 @@ Util::Error Security::ResetPasswdTryRemains(Password passwdId) {
 	Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
 	File::FileSystem &filesystem = solo.GetFileSystem();
 
-	pwstatus.PasswdSetRemains(Password::PW1, PGPConst::DefaultPWResetCounter);
+	pwstatus.PasswdSetRemains(passwdId, PGPConst::DefaultPWResetCounter);
 	return pwstatus.Save(filesystem);
 }
 

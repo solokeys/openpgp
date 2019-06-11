@@ -29,6 +29,7 @@ Util::Error PWStatusBytes::Save(File::FileSystem &fs) {
 
 void PWStatusBytes::DecErrorCounter(Password passwdId) {
 	switch (passwdId) {
+	case Password::PSOCDS:
 	case Password::PW1:
 		if (ErrorCounterPW1 > 0)
 			ErrorCounterPW1--;
@@ -64,6 +65,7 @@ bool PWStatusBytes::PasswdTryRemains(Password passwdId) {
 
 void PWStatusBytes::PasswdSetRemains(Password passwdId, uint8_t rem) {
 	switch (passwdId) {
+	case Password::PSOCDS:
 	case Password::PW1:
 		ErrorCounterPW1 = rem;
 		break;

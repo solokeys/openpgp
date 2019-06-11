@@ -103,12 +103,8 @@ Util::Error APDUVerify::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 	}
 
 	// OpenPGP v3.3.1 page 44
-	if (p2 == 0x81){
-		security.SetAuth(Password::PSOCDS);
-	} else {
-		security.SetAuth(passwd_id);
-	}
-	security.ResetPasswdTryRemains(Password::PW1);
+	security.SetAuth(passwd_id);
+	security.ResetPasswdTryRemains(passwd_id);
 
 	return Util::Error::NoError;
 }
