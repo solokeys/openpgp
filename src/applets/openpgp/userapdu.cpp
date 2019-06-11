@@ -191,7 +191,7 @@ Util::Error APDUResetRetryCounter::Process(uint8_t cla, uint8_t ins,
 		if (!security.GetAuth(Password::PW3))
 			return Util::Error::AccessDenied;
 
-		passwd.append(data);
+		passwd.set(data);
 	} else {
 		auto err = filesystem.ReadFile(File::AppletID::OpenPGP,
 				0xd3,
@@ -211,8 +211,7 @@ Util::Error APDUResetRetryCounter::Process(uint8_t cla, uint8_t ins,
 			return Util::Error::WrongPassword;
 
 		// set new password
-		passwd.clear();
-		passwd.append(data.substr(rc_length, data.length() - rc_length));
+		passwd.set(data.substr(rc_length, data.length() - rc_length));
 	}
 
 	err = filesystem.WriteFile(File::AppletID::OpenPGP,
