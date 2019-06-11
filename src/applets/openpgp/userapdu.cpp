@@ -44,12 +44,8 @@ Util::Error APDUVerify::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 		return Util::Error::WrongAPDULength;
 
 	Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
-	File::FileSystem &filesystem = solo.GetFileSystem();
 	OpenPGP::OpenPGPFactory &opgp_factory = solo.GetOpenPGPFactory();
 	OpenPGP::Security &security = opgp_factory.GetSecurity();
-
-	PWStatusBytes pwstatus;
-	pwstatus.Load(filesystem);
 
 	Password passwd_id = Password::PSOCDS; // p2 == 0x81
 	if (p2 == 0x82)
@@ -63,50 +59,18 @@ Util::Error APDUVerify::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 		return Util::Error::NoError;
 	}
 
-	size_t min_length = PGPConst::PWMinLength(passwd_id);
-	size_t max_length = PGPConst::PWMaxLength(passwd_id);
-	uint8_t _passwd[max_length] = {0};
-	bstr passwd(_passwd, 0, max_length);
-
-	auto file_err = filesystem.ReadFile(File::AppletID::OpenPGP,
-			(passwd_id == Password::PW3) ? File::SecureFileID::PW3 : File::SecureFileID::PW1,
-			File::Secure,
-			passwd);
-	if (file_err != Util::Error::NoError)
-		return file_err;
-
-	size_t passwd_length = passwd.length();
-
-	// check status
-	if (passwd_length == 0) {
-		// OpenPGP v3.3.1 page 44
+	// check status. OpenPGP v3.3.1 page 44. if input data length == 0, return authentication status
+	if (data.length() == 0) {
 		if (security.GetAuth(passwd_id)) {
 			return Util::Error::NoError;
 		} else {
-			dataOut.appendAPDUres(0x6300 + pwstatus.PasswdTryRemains(passwd_id));
+			dataOut.appendAPDUres(0x6300 + security.PasswdTryRemains(passwd_id));
 			return Util::Error::ErrorPutInData;
 		}
 	}
 
-	if (passwd_length < min_length)
-		return Util::Error::InternalError;
-
-	// check allowing passwd check
-	if (pwstatus.PasswdTryRemains(passwd_id) == 0)
-		return Util::Error::PasswordLocked;
-
-	// check password
-	if (data != passwd) {
-		pwstatus.DecErrorCounter(passwd_id);
-		pwstatus.Save(filesystem);
-		return Util::Error::WrongPassword;
-	}
-
-	// OpenPGP v3.3.1 page 44
-	security.SetAuth(passwd_id);
-	security.ResetPasswdTryRemains(passwd_id);
-
-	return Util::Error::NoError;
+	// verify password
+	return security.VerifyPasswd(passwd_id, data);
 }
 
 Util::Error APDUChangeReferenceData::Check(uint8_t cla, uint8_t ins, uint8_t p1, uint8_t p2) {

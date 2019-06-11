@@ -29,8 +29,9 @@ namespace OpenPGP {
 		void Init();
 
 		Util::Error SetPasswd(Password passwdId, bstr passwords);
-		bool VerifyPasswd(Password passwdId, bstr passwd);
+		Util::Error VerifyPasswd(Password passwdId, bstr passwd);
 		Util::Error ResetPasswdTryRemains(Password passwdId);
+		uint8_t PasswdTryRemains(Password passwdId);
 
 		void ClearAllAuth();
 

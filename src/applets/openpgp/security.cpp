@@ -14,6 +14,10 @@
 
 namespace OpenPGP {
 
+uint8_t Security::PasswdTryRemains(Password passwdId) {
+	return pwstatus.PasswdTryRemains(passwdId);
+}
+
 Util::Error Security::DataObjectAccessCheck(
 		uint16_t dataObjectID, bool writeAccess) {
 
@@ -59,8 +63,45 @@ Util::Error Security::SetPasswd(Password passwdId, bstr passwords) {
 	return Util::Error::NoError;
 }
 
-bool Security::VerifyPasswd(Password passwdId, bstr passwd) {
-	return false;
+Util::Error Security::VerifyPasswd(Password passwdId, bstr data) {
+	Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
+	File::FileSystem &filesystem = solo.GetFileSystem();
+
+	size_t min_length = PGPConst::PWMinLength(passwdId);
+	size_t max_length = PGPConst::PWMaxLength(passwdId);
+
+	uint8_t _passwd[max_length] = {0};
+	bstr passwd(_passwd, 0, max_length);
+
+	auto file_err = filesystem.ReadFile(File::AppletID::OpenPGP,
+			(passwdId == Password::PW3) ? File::SecureFileID::PW3 : File::SecureFileID::PW1,
+			File::Secure,
+			passwd);
+	if (file_err != Util::Error::NoError)
+		return file_err;
+
+	size_t passwd_length = passwd.length();
+
+	if (passwd_length < min_length)
+		return Util::Error::InternalError;
+
+	// check allowing passwd check
+	if (pwstatus.PasswdTryRemains(passwdId) == 0)
+		return Util::Error::PasswordLocked;
+
+	// check password
+	if (data != passwd) {
+		pwstatus.DecErrorCounter(passwdId);
+		pwstatus.Save(filesystem);
+		// TODO: maybe here need to add 0x6100 error
+		return Util::Error::WrongPassword;
+	}
+
+	// OpenPGP v3.3.1 page 44
+	SetAuth(passwdId);
+	ResetPasswdTryRemains(passwdId);
+
+	return Util::Error::NoError;
 }
 
 Util::Error Security::ResetPasswdTryRemains(Password passwdId) {
