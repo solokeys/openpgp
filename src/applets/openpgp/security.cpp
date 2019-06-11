@@ -73,12 +73,21 @@ Util::Error Security::VerifyPasswd(Password passwdId, bstr data) {
 	uint8_t _passwd[max_length] = {0};
 	bstr passwd(_passwd, 0, max_length);
 
-	auto file_err = filesystem.ReadFile(File::AppletID::OpenPGP,
-			(passwdId == Password::PW3) ? File::SecureFileID::PW3 : File::SecureFileID::PW1,
-			File::Secure,
-			passwd);
-	if (file_err != Util::Error::NoError)
-		return file_err;
+	if (passwdId != Password::RC) {
+		auto file_err = filesystem.ReadFile(File::AppletID::OpenPGP,
+				(passwdId == Password::PW3) ? File::SecureFileID::PW3 : File::SecureFileID::PW1,
+				File::Secure,
+				passwd);
+		if (file_err != Util::Error::NoError)
+			return file_err;
+	} else {
+		auto file_err = filesystem.ReadFile(File::AppletID::OpenPGP,
+				0xd3,
+				File::File,
+				passwd);
+		if (file_err != Util::Error::NoError)
+			return file_err;
+	}
 
 	size_t passwd_length = passwd.length();
 
@@ -122,6 +131,7 @@ void Security::ClearAuth(Password passwdId) {
 		break;
 	case OpenPGP::Password::PSOCDS:
 		appletState.cdsAuthenticated = false;
+		break;
 	default:
 		break;
 	}
@@ -137,6 +147,7 @@ void Security::SetAuth(Password passwdId) {
 		break;
 	case OpenPGP::Password::PSOCDS:
 		appletState.cdsAuthenticated = true;
+		break;
 	default:
 		break;
 	}
