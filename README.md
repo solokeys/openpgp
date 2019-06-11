@@ -47,15 +47,7 @@ In another terminal, run the Gnuk test suite.
 cd gnuk/tests && py.test-3 -x
 ```
 
-# Progress
+# TODO
 
-Currently, no CCID or OpenPGP functionality is implemented.  If the application
-is run with tests, you will see the tests fail and the application output this.
+1. Change name from `Applet` to `Application`
 
-```
-Hello CCID/OpenPGP
-Init CCID
->> 6f 0b 00 00 00 00 00 00 00 00 00 a4 04 00 06 d2 76 00 01 24 01
-```
-
-These `6f 0b 00 00 00 00 00 00 00 00 00 a4 04 00 06 d2 76 00 01 24 01` bytes come from `card.cmd_select_openpgp()` in the tests.
