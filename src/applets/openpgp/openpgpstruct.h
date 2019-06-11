@@ -49,7 +49,7 @@ struct __attribute__ ((packed)) PWStatusBytes {
 	Util::Error Load(File::FileSystem &fs);
 	Util::Error Save(File::FileSystem &fs);
 	void DecErrorCounter(Password passwdId);
-	bool PasswdTryRemains(Password passwdId);
+	uint8_t PasswdTryRemains(Password passwdId);
 	void PasswdSetRemains(Password passwdId, uint8_t rem);
 	void Print();
 };
