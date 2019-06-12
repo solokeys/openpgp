@@ -8,11 +8,77 @@
  */
 
 #include <applets/openpgp/security.h>
+#include <array>
+
 #include "errors.h"
 #include "applets/apduconst.h"
 #include "solofactory.h"
 
 namespace OpenPGP {
+
+struct DOAccess_t {
+	uint16_t DO;
+	Password PasswdRead;
+	Password PasswdWrite;
+};
+
+// OpenPGP 3.3.1 page 36
+std::array<DOAccess_t, 44> DOAccess = {{
+		{0x0101, Password::Any,   Password::PW1},   // Private use
+		{0x0102, Password::Any,   Password::PW3},
+		{0x0103, Password::PW1,   Password::PW1},
+		{0x0104, Password::PW3,   Password::PW3},
+		{0x4f,   Password::Any,   Password::Never}, // AID
+		{0x5e,   Password::Any,   Password::PW3},   // Login data
+		{0x5b,   Password::Any,   Password::PW3},   // Name
+		{0x5f2d, Password::Any,   Password::PW3},   // Language preference
+		{0x5f35, Password::Any,   Password::PW3},   // Sex
+		{0x5f50, Password::Any,   Password::PW3},   // URL
+
+		// Relevant for all private keys in the application (signature, decryption, authentication)
+		{0x5f48, Password::Never, Password::PW3},   // Card holder private key.
+
+		{0x7f21, Password::Any,   Password::PW3},   // Cardholder certificates
+		{0x93,   Password::Any,   Password::Never}, // DS-Counter. Internal Reset during key generation
+
+		{0xc0,   Password::Any,   Password::Never}, // Extended Capabilities. Writing possible only during personalisation
+		{0xc1,   Password::Any,   Password::PW3},   // Algorithm attributes
+		{0xc2,   Password::Any,   Password::PW3},   // Algorithm attributes
+		{0xc3,   Password::Any,   Password::PW3},   // Algorithm attributes
+		{0xc4,   Password::Any,   Password::PW3},   // PW1 Status bytes. Only 1st byte can be changed, other bytes only during personalisation
+
+		{0xc5,   Password::Any,   Password::PW3},   // Fingerprints
+		{0xc6,   Password::Any,   Password::PW3},   // CA-Fingerprints
+		{0xc7,   Password::Any,   Password::PW3},   // Fingerprints
+		{0xc8,   Password::Any,   Password::PW3},   // Fingerprints
+		{0xc9,   Password::Any,   Password::PW3},   // Fingerprints
+		{0xca,   Password::Any,   Password::PW3},   // CA-Fingerprints
+		{0xcb,   Password::Any,   Password::PW3},   // CA-Fingerprints
+		{0xcc,   Password::Any,   Password::PW3},   // CA-Fingerprints
+
+		{0xcd,   Password::Any,   Password::PW3},   // Generation date/time of key pairs
+		{0xce,   Password::Any,   Password::PW3},   // Generation date/time of key pairs
+		{0xcf,   Password::Any,   Password::PW3},   // Generation date/time of key pairs
+		{0xd0,   Password::Any,   Password::PW3},   // Generation date/time of key pairs
+
+		{0xd1,   Password::Never, Password::PW3},   // SM-Key-ENC
+		{0xd2,   Password::Never, Password::PW3},   // SM-Key-MAC
+		{0xd3,   Password::Never, Password::PW3},   // Resetting Code
+		{0xd5,   Password::Never, Password::PW3},   // AES-Key for PSO:ENC/DE
+		{0xf4,   Password::Never, Password::PW3},   // SM-Key-Container
+
+		{0x7f74, Password::Any,   Password::Never}, // General feature management
+		{0x7f74, Password::Any,   Password::Never}, // Extended length information
+
+		{0xd6,   Password::Any,   Password::PW3},   // User Interaction Flag PSO:CDS
+		{0xd7,   Password::Any,   Password::PW3},   // User Interaction Flag PSO:DEC
+		{0xd8,   Password::Any,   Password::PW3},   // User Interaction Flag PSO:AUT
+
+		{0xf9,   Password::Any,   Password::PW3},   // KDF-DO
+
+		{0x00,   Password::Never, Password::Never}
+}};
+
 
 uint8_t Security::PasswdTryRemains(Password passwdId) {
 	return pwstatus.PasswdTryRemains(passwdId);
@@ -20,6 +86,23 @@ uint8_t Security::PasswdTryRemains(Password passwdId) {
 
 Util::Error Security::DataObjectAccessCheck(
 		uint16_t dataObjectID, bool writeAccess) {
+
+    for(const auto& d: DOAccess) {
+    	if (d.DO == dataObjectID) {
+    		if (writeAccess) {
+    			if (GetAuth(d.PasswdWrite))
+    				return Util::Error::NoError;
+    			else
+    				return Util::Error::AccessDenied;
+    		} else {
+    			if (GetAuth(d.PasswdRead))
+    				return Util::Error::NoError;
+    			else
+    				return Util::Error::AccessDenied;
+    		}
+
+    	}
+    }
 
 	return Util::Error::NoError;
 }
@@ -42,6 +125,33 @@ Util::Error Security::CommandAccessCheck(
 		if (err != Util::Error::NoError)
 			return err;
 	}
+
+	// Perform Security Operation
+	if (ins == Applet::APDUcommands::PSO)
+		switch (p1) {
+		// signature
+		case 0x9e:
+			if (GetAuth(Password::PSOCDS))
+				return Util::Error::NoError;
+			else
+				return Util::Error::AccessDenied;
+
+		// decipher
+		case 0x80:
+			if (GetAuth(Password::PW1))
+				return Util::Error::NoError;
+			else
+				return Util::Error::AccessDenied;
+
+		// encipher
+		case 0x86:
+			if (GetAuth(Password::PW1))
+				return Util::Error::NoError;
+			else
+				return Util::Error::AccessDenied;
+		default:
+			break;
+		};
 
 	return Util::Error::NoError;
 }
@@ -67,6 +177,9 @@ void Security::Reload() {
 }
 
 Util::Error Security::SetPasswd(Password passwdId, bstr password) {
+
+	if (passwdId == Password::Any || passwdId == Password::Never)
+		return Util::Error::NoError;
 
 	Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
 	File::FileSystem &filesystem = solo.GetFileSystem();
@@ -112,6 +225,11 @@ Util::Error Security::SetPasswd(Password passwdId, bstr password) {
 Util::Error Security::VerifyPasswd(Password passwdId, bstr data, bool passwdCheckFirstPart, size_t *passwdLen) {
 	Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
 	File::FileSystem &filesystem = solo.GetFileSystem();
+
+	if (passwdId == Password::Any)
+		return Util::Error::NoError;
+	if (passwdId == Password::Never)
+		return Util::Error::WrongPassword;
 
 	if (passwdLen)
 		*passwdLen = 0;
@@ -196,13 +314,13 @@ Util::Error Security::ResetPasswdTryRemains(Password passwdId) {
 
 void Security::ClearAuth(Password passwdId) {
 	switch (passwdId){
-	case OpenPGP::Password::PW1:
+	case Password::PW1:
 		appletState.pw1Authenticated = false;
 		break;
-	case OpenPGP::Password::PW3:
+	case Password::PW3:
 		appletState.pw3Authenticated = false;
 		break;
-	case OpenPGP::Password::PSOCDS:
+	case Password::PSOCDS:
 		appletState.cdsAuthenticated = false;
 		break;
 	default:
@@ -212,13 +330,13 @@ void Security::ClearAuth(Password passwdId) {
 
 void Security::SetAuth(Password passwdId) {
 	switch (passwdId){
-	case OpenPGP::Password::PW1:
+	case Password::PW1:
 		appletState.pw1Authenticated = true;
 		break;
-	case OpenPGP::Password::PW3:
+	case Password::PW3:
 		appletState.pw3Authenticated = true;
 		break;
-	case OpenPGP::Password::PSOCDS:
+	case Password::PSOCDS:
 		appletState.cdsAuthenticated = true;
 		break;
 	default:
@@ -228,12 +346,16 @@ void Security::SetAuth(Password passwdId) {
 
 bool Security::GetAuth(Password passwdId) {
 	switch (passwdId){
-	case OpenPGP::Password::PW1:
+	case Password::PW1:
 		return appletState.pw1Authenticated;
-	case OpenPGP::Password::PW3:
+	case Password::PW3:
 		return appletState.pw3Authenticated;
-	case OpenPGP::Password::PSOCDS:
+	case Password::PSOCDS:
 		return appletState.cdsAuthenticated;
+	case Password::Any:
+		return true;
+	case Password::Never:
+		return false;
 	default:
 		return false;
 	}

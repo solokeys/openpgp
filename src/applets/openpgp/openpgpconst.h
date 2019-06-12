@@ -16,7 +16,9 @@ enum Password {
 	PW1,
 	PW3,
 	RC,
-	PSOCDS
+	PSOCDS,
+	Any,
+	Never
 };
 
 class PGPConst {
