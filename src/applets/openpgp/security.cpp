@@ -73,10 +73,14 @@ Util::Error Security::SetPasswd(Password passwdId, bstr password) {
 
 	Util::Error err;
 
-	// TODO: add empty PW3 for GNUK
-	if (password.length() < pwstatus.GetMinLength(passwdId) ||
-		password.length() > pwstatus.GetMaxLength(passwdId) )
-		return Util::Error::WrongAPDUDataLength;
+	// password check
+	if (passwdId == Password::PW3 && password.length() == 0) {
+		// empty PW3 for GNUK
+	} else {
+		if (password.length() < pwstatus.GetMinLength(passwdId) ||
+			password.length() > pwstatus.GetMaxLength(passwdId) )
+			return Util::Error::WrongAPDUDataLength;
+	}
 
 	switch (passwdId) {
 	case Password::PSOCDS:
@@ -112,8 +116,8 @@ Util::Error Security::VerifyPasswd(Password passwdId, bstr data, bool passwdChec
 	if (passwdLen)
 		*passwdLen = 0;
 
-	size_t min_length = PGPConst::PWMinLength(passwdId);
-	size_t max_length = PGPConst::PWMaxLength(passwdId);
+	size_t min_length = pwstatus.GetMinLength(passwdId);
+	size_t max_length = pwstatus.GetMaxLength(passwdId);
 
 	uint8_t _passwd[max_length] = {0};
 	bstr passwd(_passwd, 0, max_length);
@@ -136,8 +140,12 @@ Util::Error Security::VerifyPasswd(Password passwdId, bstr data, bool passwdChec
 
 	size_t passwd_length = passwd.length();
 
-	if (passwd_length < min_length)
-		return Util::Error::InternalError;
+	if (passwdId == Password::PW3 && passwd_length == 0) {
+		// gnuk PW3 may be empty
+	} else {
+		if (passwd_length < min_length || passwd_length > max_length)
+			return Util::Error::InternalError;
+	}
 
 	// check allowing passwd check
 	if (pwstatus.PasswdTryRemains(passwdId) == 0)
