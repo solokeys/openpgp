@@ -101,7 +101,6 @@ Util::Error ConfigFileSystem::ReadFile(AppID_t AppId, KeyID_t FileID,
 			break;
 		}
 
-
 	// files
 	switch (FileID) {
 	// EF.DIR. OpenPGP v 3.3.1 page 12.
@@ -153,7 +152,7 @@ Util::Error ConfigFileSystem::ReadFile(AppID_t AppId, KeyID_t FileID,
 
 	// Security support template
 	case 0x7a:
-		data.set("\x93\x03\x00\x00\x00"_bstr); // 93 - Digital signature counter (counts usage of Compute	Digital Signature command), binary, ISO 7816-4
+		data.set("\x93\x03\x00\x00\x00"_bstr); // 93 - Digital signature counter (counts usage of Compute Digital Signature command), binary, ISO 7816-4
 
 		return Util::Error::NoError;
 

@@ -66,8 +66,43 @@ void Security::Reload() {
 	pwstatus.Load(filesystem);
 }
 
-Util::Error Security::SetPasswd(Password passwdId, bstr passwords) {
-	return Util::Error::NoError;
+Util::Error Security::SetPasswd(Password passwdId, bstr password) {
+
+	Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
+	File::FileSystem &filesystem = solo.GetFileSystem();
+
+	Util::Error err;
+
+	// TODO: add empty PW3 for GNUK
+	if (password.length() < pwstatus.GetMinLength(passwdId) ||
+		password.length() > pwstatus.GetMaxLength(passwdId) )
+		return Util::Error::WrongAPDUDataLength;
+
+	switch (passwdId) {
+	case Password::PSOCDS:
+	case Password::PW1:
+	case Password::PW3:
+		err = filesystem.WriteFile(File::AppletID::OpenPGP,
+				(passwdId == Password::PW3) ? File::SecureFileID::PW3 : File::SecureFileID::PW1,
+				File::Secure,
+				password);
+		if (err != Util::Error::NoError)
+			return err;
+		break;
+	case Password::RC:
+		err = filesystem.WriteFile(File::AppletID::OpenPGP,
+				0xd3,
+				File::File,
+				password);
+		if (err != Util::Error::NoError)
+			return err;
+		break;
+	default:
+		break;
+	}
+
+	// clear pw1/pw3/rc access counter
+	return ResetPasswdTryRemains(passwdId);
 }
 
 Util::Error Security::VerifyPasswd(Password passwdId, bstr data, bool passwdCheckFirstPart, size_t *passwdLen) {
