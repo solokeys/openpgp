@@ -296,6 +296,7 @@ Util::Error Security::VerifyPasswd(Password passwdId, bstr data, bool passwdChec
 		if (passwd == "123456"_bstr) {
 			passwd.set("12345678"_bstr);
 		}
+		passwd_length = passwd.length();
 	} else {
 		if (passwd_length < min_length || passwd_length > max_length)
 			return Util::Error::InternalError;
