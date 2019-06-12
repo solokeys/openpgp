@@ -23,12 +23,11 @@ struct DOAccess_t {
 };
 
 // OpenPGP 3.3.1 page 36
-std::array<DOAccess_t, 44> DOAccess = {{
+std::array<DOAccess_t, 49> DOAccess = {{
 		{0x0101, Password::Any,   Password::PW1},   // Private use
 		{0x0102, Password::Any,   Password::PW3},
 		{0x0103, Password::PW1,   Password::PW1},
 		{0x0104, Password::PW3,   Password::PW3},
-		{0x4f,   Password::Any,   Password::Never}, // AID
 		{0x5e,   Password::Any,   Password::PW3},   // Login data
 		{0x5b,   Password::Any,   Password::PW3},   // Name
 		{0x5f2d, Password::Any,   Password::PW3},   // Language preference
@@ -40,6 +39,7 @@ std::array<DOAccess_t, 44> DOAccess = {{
 
 		{0x7f21, Password::Any,   Password::PW3},   // Cardholder certificates
 		{0x93,   Password::Any,   Password::Never}, // DS-Counter. Internal Reset during key generation
+		{0x7a,   Password::Any,   Password::Never}, // DS-Counter container (contains 0x93)
 
 		{0xc0,   Password::Any,   Password::Never}, // Extended Capabilities. Writing possible only during personalisation
 		{0xc1,   Password::Any,   Password::PW3},   // Algorithm attributes
@@ -47,8 +47,6 @@ std::array<DOAccess_t, 44> DOAccess = {{
 		{0xc3,   Password::Any,   Password::PW3},   // Algorithm attributes
 		{0xc4,   Password::Any,   Password::PW3},   // PW1 Status bytes. Only 1st byte can be changed, other bytes only during personalisation
 
-		{0xc5,   Password::Any,   Password::PW3},   // Fingerprints
-		{0xc6,   Password::Any,   Password::PW3},   // CA-Fingerprints
 		{0xc7,   Password::Any,   Password::PW3},   // Fingerprints
 		{0xc8,   Password::Any,   Password::PW3},   // Fingerprints
 		{0xc9,   Password::Any,   Password::PW3},   // Fingerprints
@@ -56,7 +54,6 @@ std::array<DOAccess_t, 44> DOAccess = {{
 		{0xcb,   Password::Any,   Password::PW3},   // CA-Fingerprints
 		{0xcc,   Password::Any,   Password::PW3},   // CA-Fingerprints
 
-		{0xcd,   Password::Any,   Password::PW3},   // Generation date/time of key pairs
 		{0xce,   Password::Any,   Password::PW3},   // Generation date/time of key pairs
 		{0xcf,   Password::Any,   Password::PW3},   // Generation date/time of key pairs
 		{0xd0,   Password::Any,   Password::PW3},   // Generation date/time of key pairs
@@ -67,8 +64,7 @@ std::array<DOAccess_t, 44> DOAccess = {{
 		{0xd5,   Password::Never, Password::PW3},   // AES-Key for PSO:ENC/DE
 		{0xf4,   Password::Never, Password::PW3},   // SM-Key-Container
 
-		{0x7f74, Password::Any,   Password::Never}, // General feature management
-		{0x7f74, Password::Any,   Password::Never}, // Extended length information
+		{0x7f66, Password::Any,   Password::Never}, // Extended length information
 
 		{0xd6,   Password::Any,   Password::PW3},   // User Interaction Flag PSO:CDS
 		{0xd7,   Password::Any,   Password::PW3},   // User Interaction Flag PSO:DEC
@@ -76,7 +72,24 @@ std::array<DOAccess_t, 44> DOAccess = {{
 
 		{0xf9,   Password::Any,   Password::PW3},   // KDF-DO
 
-		{0x00,   Password::Never, Password::Never}
+		// read only
+		{0x2f00, Password::Any,   Password::Never}, // EF.DIR
+		{0x7f74, Password::Any,   Password::Never}, // General feature management
+		{0x5f52, Password::Any,   Password::Never}, // Historical bytes
+		{0x4f,   Password::Any,   Password::Never}, // AID
+
+		// composed data
+		{0x65,   Password::Any,   Password::PW3},   // 5b, 5f2d, 5f35
+		{0x6e,   Password::Any,   Password::Never}, // 4f, 5f52, 73
+		{0x73,   Password::Any,   Password::Never}, // c0-c7, cd
+		{0xc5,   Password::Any,   Password::PW3},   // c7-c9 (Fingerprints)
+		{0xc6,   Password::Any,   Password::PW3},   // ca-cc (CA-Fingerprints)
+		{0xcd,   Password::Any,   Password::PW3},   // ce-d0 (Generation date/time of key pairs)
+
+		// command's specific
+		{0x3fff, Password::Any,   Password::Any},
+
+		{0x00,   Password::Never, Password::Never}  // last record
 }};
 
 
@@ -104,7 +117,18 @@ Util::Error Security::DataObjectAccessCheck(
     	}
     }
 
-	return Util::Error::NoError;
+    if (PGPConst::ReadWriteOnlyAllowedFiles)
+    	return Util::Error::AccessDenied;
+    else
+    	return Util::Error::NoError;
+}
+
+Util::Error OpenPGP::Security::DataObjectInAllowedList(uint16_t dataObjectID) {
+    for(const auto& d: DOAccess) {
+    	if (d.DO == dataObjectID)
+    		return Util::Error::NoError;
+    }
+	return Util::Error::AccessDenied;
 }
 
 Util::Error Security::CommandAccessCheck(
@@ -380,4 +404,3 @@ Util::Error Security::IncDSCounter() {
 }
 
 } /* namespace OpenPGP */
-

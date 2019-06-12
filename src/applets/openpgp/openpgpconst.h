@@ -10,6 +10,8 @@
 #ifndef SRC_APPLETS_OPENPGP_OPENPGPCONST_H_
 #define SRC_APPLETS_OPENPGP_OPENPGPCONST_H_
 
+#include <cstdint>
+
 namespace OpenPGP {
 
 enum Password {
@@ -25,7 +27,8 @@ class PGPConst {
 private:
 	PGPConst(){};
 public:
-	static const uint8_t PWValidPSOCDSCommand = 0x00U; //  PW1 (no. 81) only valid for one PSO:CDS command by default
+	static const bool ReadWriteOnlyAllowedFiles = true; // read and write files with known DSO only (if true)
+	static const uint8_t PWValidPSOCDSCommand = 0x00U;  // PW1 (no. 81) only valid for one PSO:CDS command by default
 	static const uint8_t PW1MinLength = 6U;
 	static const uint8_t PW3MinLength = 8U;
 	static constexpr uint8_t PWMinLength(Password pwd) {

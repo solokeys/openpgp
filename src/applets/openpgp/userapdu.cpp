@@ -234,6 +234,12 @@ Util::Error APDUPutData::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 		uint16_t object_id = (p1 << 8) + p2;
 		printf("write object id = 0x%04x\n", object_id);
 
+		if (OpenPGP::PGPConst::ReadWriteOnlyAllowedFiles) {
+			err_check = security.DataObjectInAllowedList(object_id);
+			if (err_check != Util::Error::NoError)
+				return err_check;
+		}
+
 		auto err = filesystem.WriteFile(File::AppletID::OpenPGP, object_id, File::File, data);
 		if (err != Util::Error::NoError)
 			return err;

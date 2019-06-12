@@ -44,6 +44,7 @@ namespace OpenPGP {
 
 		Util::Error CommandAccessCheck(uint8_t cla, uint8_t ins, uint8_t p1, uint8_t p2);
 		Util::Error DataObjectAccessCheck(uint16_t dataObjectID, bool writeAccess);
+		Util::Error DataObjectInAllowedList(uint16_t dataObjectID);
 	};
 
 } /* namespace OpenPGP */
