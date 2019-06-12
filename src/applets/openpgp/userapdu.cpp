@@ -140,19 +140,11 @@ Util::Error APDUResetRetryCounter::Process(uint8_t cla, uint8_t ins,
 	if (err != Util::Error::NoError)
 		return err;
 
-	// TODO: move some values to PWStatusBytes
-	size_t min_length = PGPConst::PW1MinLength;
-	size_t max_length = PGPConst::PW1MaxLength;
-
 	bstr passwd;
 
 	// 0x02 - after correct verification of PW3
 	// 0x00 - resetting code (RC) in data
 	if (p1 == 0x02) {
-		if ((data.length() < min_length) ||
-			(data.length() > max_length))
-			return Util::Error::WrongAPDUDataLength;
-
 		if (!security.GetAuth(Password::PW3))
 			return Util::Error::AccessDenied;
 
