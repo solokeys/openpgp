@@ -23,6 +23,7 @@ class PGPConst {
 private:
 	PGPConst(){};
 public:
+	static const uint8_t PWValidPSOCDSCommand = 0x00U; //  PW1 (no. 81) only valid for one PSO:CDS command by default
 	static const uint8_t PW1MinLength = 6U;
 	static const uint8_t PW3MinLength = 8U;
 	static constexpr uint8_t PWMinLength(Password pwd) {
@@ -42,6 +43,7 @@ public:
 			return PW1MaxLength;
 	}
 	static const uint8_t DefaultPWResetCounter = 0x03U; // OpenPGP v 3.3.1 page 23
+	static const uint8_t DefaultRCResetCounter = 0x00U; // OpenPGP v 3.3.1 page 23
 };
 
 enum OpenPGPKeyType {

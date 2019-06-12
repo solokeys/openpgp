@@ -48,7 +48,7 @@ public:
 	SettingsFileSystem(FileSystem &_fs) : fs(_fs){};
 
 	Util::Error ReadFile(AppID_t AppId, KeyID_t FileID, FileType FileType, bstr &data);
-	Util::Error WriteFile(AppID_t AppId, KeyID_t FileID, FileType FileType, bstr &data);
+	Util::Error WriteFile(AppID_t AppId, KeyID_t FileID, FileType FileType, bstr &data, bool adminMode = false);
 };
 
 // Read only file system for system files. files lays in program flash.
@@ -77,7 +77,7 @@ private:
 
 public:
 	Util::Error ReadFile(AppID_t AppId, KeyID_t FileID, FileType FileType, bstr &data);
-	Util::Error WriteFile(AppID_t AppId, KeyID_t FileID, FileType FileType, bstr &data);
+	Util::Error WriteFile(AppID_t AppId, KeyID_t FileID, FileType FileType, bstr &data, bool adminMode = false);
 
 	Util::Error DeleteFile(AppID_t AppId, KeyID_t FileID, FileType FileType);
 	Util::Error DeleteFiles(AppID_t AppId);

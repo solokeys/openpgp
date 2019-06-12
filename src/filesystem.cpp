@@ -10,6 +10,7 @@
 #include "filesystem.h"
 #include <array>
 #include "device.h"
+#include "applets/openpgp/openpgpconst.h"
 
 namespace File {
 
@@ -84,6 +85,8 @@ std::array<CompositeTag_t, 24> CompositeTag = {{
  *	5B 00  5F 2D 02 65 6e  5F 35 01 39    5b name, 5f2d language = en, 5f35 sex = 9(n/a)
 */
 
+static uint8_t PWStatusBytesDefault[7] = {0};
+
 Util::Error ConfigFileSystem::ReadFile(AppID_t AppId, KeyID_t FileID,
 		FileType FileType, bstr& data) {
 
@@ -137,7 +140,15 @@ Util::Error ConfigFileSystem::ReadFile(AppID_t AppId, KeyID_t FileID,
 
 	// PW Status Bytes (binary)
 	case 0xc4:
-		data.set("\x00\x20\x20\x20\x03\x00\x03"_bstr); // from 0x6e
+		//data.set("\x00\x20\x20\x20\x03\x00\x03"_bstr);
+		PWStatusBytesDefault[0] = OpenPGP::PGPConst::PWValidPSOCDSCommand;
+		PWStatusBytesDefault[1] = OpenPGP::PGPConst::PW1MaxLength;
+		PWStatusBytesDefault[2] = OpenPGP::PGPConst::RCMaxLength;
+		PWStatusBytesDefault[3] = OpenPGP::PGPConst::PW3MaxLength;
+		PWStatusBytesDefault[4] = OpenPGP::PGPConst::DefaultPWResetCounter;
+		PWStatusBytesDefault[5] = OpenPGP::PGPConst::DefaultRCResetCounter;
+		PWStatusBytesDefault[6] = OpenPGP::PGPConst::DefaultPWResetCounter;
+		data.set(bstr(PWStatusBytesDefault, sizeof(PWStatusBytesDefault)));
 		return Util::Error::NoError;
 
 	// Security support template
@@ -289,10 +300,10 @@ Util::Error FileSystem::ReadFile(AppID_t AppId, KeyID_t FileID,
 }
 
 Util::Error FileSystem::WriteFile(AppID_t AppId, KeyID_t FileID,
-		FileType FileType, bstr& data) {
+		FileType FileType, bstr& data, bool adminMode) {
 
 	// to settings file system
-	auto err = settingsFiles.WriteFile(AppId, FileID, FileType, data);
+	auto err = settingsFiles.WriteFile(AppId, FileID, FileType, data, adminMode);
 	if (err != Util::Error::FileNotFound)
 		return err;
 
@@ -313,7 +324,7 @@ Util::Error FileSystem::DeleteFile(AppID_t AppId, KeyID_t FileID,
 
 	deletefile(file_name);
 
-	return Util::Error::FileNotFound;
+	return Util::Error::NoError;
 }
 
 Util::Error FileSystem::DeleteFiles(AppID_t AppId) {
@@ -332,10 +343,10 @@ Util::Error SettingsFileSystem::ReadFile(AppID_t AppId, KeyID_t FileID,
 }
 
 Util::Error SettingsFileSystem::WriteFile(AppID_t AppId, KeyID_t FileID,
-		FileType FileType, bstr& data) {
+		FileType FileType, bstr& data, bool adminMode) {
 
 	// PW status Bytes
-	if (FileID == 0xc4) {
+	if (FileID == 0xc4 && !(adminMode && data.length() == 7)) {
 		if ((data.length() != 1) && (data.length() != 4))
 			return Util::Error::WrongAPDUDataLength;
 
