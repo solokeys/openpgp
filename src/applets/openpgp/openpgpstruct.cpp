@@ -24,7 +24,39 @@ Util::Error PWStatusBytes::Load(File::FileSystem &fs) {
 }
 Util::Error PWStatusBytes::Save(File::FileSystem &fs) {
 	bstr data(reinterpret_cast<uint8_t *>(this), 7, 7);
-	return fs.WriteFile(File::AppletID::OpenPGP, 0xc4, File::FileType::File, data);
+	return fs.WriteFile(File::AppletID::OpenPGP, 0xc4, File::FileType::File, data, true);
+}
+
+uint8_t PWStatusBytes::GetMinLength(Password passwdId) {
+	return PGPConst::PWMinLength(passwdId);
+}
+
+uint8_t OpenPGP::PWStatusBytes::GetMaxLength(Password passwdId) {
+	switch (passwdId) {
+	case Password::PSOCDS:
+	case Password::PW1:
+		return MaxLengthAndFormatPW1 & 0x7f;
+	case Password::RC:
+		return MaxLengthRCforPW1;
+	case Password::PW3:
+		return MaxLengthAndFormatPW3 & 0x7f;
+	default:
+		break;
+	}
+	return 0;
+}
+
+bool OpenPGP::PWStatusBytes::IsPINBlockFormat2(Password passwdId) {
+	switch (passwdId) {
+	case Password::PSOCDS:
+	case Password::PW1:
+		return MaxLengthAndFormatPW1 & 0x80;
+	case Password::PW3:
+		return MaxLengthAndFormatPW1 & 0x80;
+	default:
+		break;
+	}
+	return false;
 }
 
 void PWStatusBytes::DecErrorCounter(Password passwdId) {
