@@ -177,6 +177,23 @@ Util::Error Security::CommandAccessCheck(
 			break;
 		};
 
+	if (ins == Applet::APDUcommands::GenerateAsymmKeyPair)
+		switch (p1) {
+		// 0x80 - Generation of key pair
+		case 0x80:
+			if (GetAuth(Password::PW3))
+				return Util::Error::NoError;
+			else
+				return Util::Error::AccessDenied;
+
+		// 0x81 - Reading of actual public key template
+		case 0x81:
+			return Util::Error::NoError;
+
+		default:
+			break;
+		};
+
 	return Util::Error::NoError;
 }
 
