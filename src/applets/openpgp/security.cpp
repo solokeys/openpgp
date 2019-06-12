@@ -141,7 +141,19 @@ Util::Error Security::VerifyPasswd(Password passwdId, bstr data, bool passwdChec
 	size_t passwd_length = passwd.length();
 
 	if (passwdId == Password::PW3 && passwd_length == 0) {
-		// gnuk PW3 may be empty
+		// gnuk PW3 may be empty.
+		// If PW3 is null and PW1 = OK >> check with pw1
+		// If PW3 is null and PW1 = default >> check with default pw3
+		auto file_err = filesystem.ReadFile(File::AppletID::OpenPGP,
+				File::SecureFileID::PW1,
+				File::Secure,
+				passwd);
+		if (file_err != Util::Error::NoError)
+			return file_err;
+
+		if (passwd == "123456"_bstr) {
+			passwd.set("12345678"_bstr);
+		}
 	} else {
 		if (passwd_length < min_length || passwd_length > max_length)
 			return Util::Error::InternalError;
