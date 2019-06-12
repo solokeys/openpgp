@@ -46,11 +46,16 @@ struct __attribute__ ((packed)) PWStatusBytes {
 	uint8_t ErrorCounterRC;
 	uint8_t ErrorCounterPW3;
 
-	Util::Error Load(File::FileSystem &fs);
-	Util::Error Save(File::FileSystem &fs);
 	void DecErrorCounter(Password passwdId);
 	uint8_t PasswdTryRemains(Password passwdId);
 	void PasswdSetRemains(Password passwdId, uint8_t rem);
+
+	uint8_t GetMaxLength(Password passwdId);
+	uint8_t GetMinLength(Password passwdId);
+	bool IsPINBlockFormat2(Password passwdId);
+
+	Util::Error Load(File::FileSystem &fs);
+	Util::Error Save(File::FileSystem &fs);
 	void Print();
 };
 
