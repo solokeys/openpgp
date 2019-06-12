@@ -42,6 +42,7 @@ void APDUExecutor::SetResultError(bstr& result, Util::Error error) {
     	result.setAPDURes(APDUResponse::ReferencedDataNotFound);
 		break;
 	case Error::AccessDenied:
+	case Error::WrongPassword:
     	result.setAPDURes(APDUResponse::SecurityStatusNotSatisfied);
 		break;
 
