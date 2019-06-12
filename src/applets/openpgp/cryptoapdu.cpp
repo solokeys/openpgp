@@ -139,6 +139,28 @@ Util::Error APDUGenerateAsymmetricKeyPair::Process(uint8_t cla,
 		)
 		key_type = static_cast<OpenPGPKeyType>(data[0]);
 
+	KeyID_t file_id = 0;
+	switch (key_type) {
+	case OpenPGPKeyType::DigitalSignature:
+		file_id = 0xc1;
+		break;
+	case OpenPGPKeyType::Confidentiality:
+		file_id = 0xc2;
+		break;
+	case OpenPGPKeyType::Authentication:
+		file_id = 0xc3;
+		break;
+	default:
+		break;
+	};
+	if (file_id == 0)
+		return Util::Error::DataNotFound;
+
+	OpenPGP::AlgoritmAttr alg;
+	auto err = alg.Load(filesystem, file_id);
+	if (err != Util::Error::NoError || alg.AlgorithmID == 0)
+		return Util::Error::DataNotFound;
+
 	// OpenPGP v3.3.1 page 64
 	// 0x80 - Generation of key pair
 	// 0x81 - Reading of actual public key template
@@ -148,28 +170,6 @@ Util::Error APDUGenerateAsymmetricKeyPair::Process(uint8_t cla,
 
 		return Util::Error::DataNotFound;
 	} else {
-		OpenPGP::AlgoritmAttr alg;
-		KeyID_t file_id = 0;
-		switch (key_type) {
-		case OpenPGPKeyType::DigitalSignature:
-			file_id = 0xc1;
-			break;
-		case OpenPGPKeyType::Confidentiality:
-			file_id = 0xc2;
-			break;
-		case OpenPGPKeyType::Authentication:
-			file_id = 0xc3;
-			break;
-		default:
-			break;
-		};
-		if (file_id == 0)
-			return Util::Error::DataNotFound;
-
-		auto err = alg.Load(filesystem, file_id);
-		if (err != Util::Error::NoError || alg.AlgorithmID == 0)
-			return Util::Error::DataNotFound;
-
 		err = key_storage.GetPublicKey7F49(
 				File::AppletID::OpenPGP,
 				key_type,
