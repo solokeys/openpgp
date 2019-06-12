@@ -85,8 +85,6 @@ std::array<CompositeTag_t, 24> CompositeTag = {{
  *	5B 00  5F 2D 02 65 6e  5F 35 01 39    5b name, 5f2d language = en, 5f35 sex = 9(n/a)
 */
 
-static uint8_t PWStatusBytesDefault[7] = {0};
-
 Util::Error ConfigFileSystem::ReadFile(AppID_t AppId, KeyID_t FileID,
 		FileType FileType, bstr& data) {
 
@@ -140,7 +138,8 @@ Util::Error ConfigFileSystem::ReadFile(AppID_t AppId, KeyID_t FileID,
 
 	// PW Status Bytes (binary)
 	case 0xc4:
-		//data.set("\x00\x20\x20\x20\x03\x00\x03"_bstr);
+		uint8_t PWStatusBytesDefault[7];
+
 		PWStatusBytesDefault[0] = OpenPGP::PGPConst::PWValidPSOCDSCommand;
 		PWStatusBytesDefault[1] = OpenPGP::PGPConst::PW1MaxLength;
 		PWStatusBytesDefault[2] = OpenPGP::PGPConst::RCMaxLength;
@@ -148,6 +147,7 @@ Util::Error ConfigFileSystem::ReadFile(AppID_t AppId, KeyID_t FileID,
 		PWStatusBytesDefault[4] = OpenPGP::PGPConst::DefaultPWResetCounter;
 		PWStatusBytesDefault[5] = OpenPGP::PGPConst::DefaultRCResetCounter;
 		PWStatusBytesDefault[6] = OpenPGP::PGPConst::DefaultPWResetCounter;
+
 		data.set(bstr(PWStatusBytesDefault, sizeof(PWStatusBytesDefault)));
 		return Util::Error::NoError;
 
