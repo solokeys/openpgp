@@ -41,6 +41,9 @@ void APDUExecutor::SetResultError(bstr& result, Util::Error error) {
 	case Error::DataNotFound:
     	result.setAPDURes(APDUResponse::ReferencedDataNotFound);
 		break;
+	case Error::AccessDenied:
+    	result.setAPDURes(APDUResponse::SecurityStatusNotSatisfied);
+		break;
 
 
 	case Error::ErrorPutInData:

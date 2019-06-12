@@ -162,6 +162,12 @@ Util::Error APDUResetRetryCounter::Process(uint8_t cla, uint8_t ins,
 	if (err != Util::Error::NoError)
 		return err;
 
+	security.ClearAuth(Password::PW1);
+
+	// GNUK clear PW3 password if pw3 is empty
+	if (security.PWIsEmpty(Password::PW3))
+		security.ClearAuth(Password::PW3);
+
 	return Util::Error::NoError;
 }
 

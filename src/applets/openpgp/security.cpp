@@ -328,6 +328,25 @@ Util::Error Security::VerifyPasswd(Password passwdId, bstr data, bool passwdChec
 	return Util::Error::NoError;
 }
 
+bool Security::PWIsEmpty(Password passwdId) {
+	Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
+	File::FileSystem &filesystem = solo.GetFileSystem();
+
+	size_t max_length = pwstatus.GetMaxLength(passwdId);
+
+	uint8_t _passwd[max_length] = {0};
+	bstr passwd(_passwd, 0, max_length);
+
+	auto file_err = filesystem.ReadFile(File::AppletID::OpenPGP,
+			(passwdId == Password::PW3) ? File::SecureFileID::PW3 : File::SecureFileID::PW1,
+			File::Secure,
+			passwd);
+	if (file_err != Util::Error::NoError)
+		return false;
+
+	return passwd.length() == 0;
+}
+
 Util::Error Security::ResetPasswdTryRemains(Password passwdId) {
 	Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
 	File::FileSystem &filesystem = solo.GetFileSystem();
