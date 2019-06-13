@@ -608,6 +608,21 @@ public:
 		}
 
 	}
+
+	constexpr void AddNext(tag_t tag, tag_t len = 0) {
+		size_t size = 0;
+		EncodeTag(_data, size, tag);
+		EncodeLength(_data, size, len);
+	}
+	constexpr void AddNextWithData(tag_t tag, tag_t len) {
+		if (len > 0)
+			AddNext(tag, len);
+	}
+
+	constexpr bstr GetData() {
+		return _data;
+	}
+
 };
 
 } /* namespace Util */
