@@ -131,6 +131,7 @@ Util::Error APDUGenerateAsymmetricKeyPair::Process(uint8_t cla,
 	Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
 	File::FileSystem &filesystem = solo.GetFileSystem();
 	Crypto::KeyStorage &key_storage = solo.GetKeyStorage();
+	Crypto::CryptoLib &cryptolib = solo.GetCryptoLib();
 
 	OpenPGPKeyType key_type = OpenPGPKeyType::Unknown;
 	if (data[0] == OpenPGPKeyType::DigitalSignature ||
@@ -165,8 +166,31 @@ Util::Error APDUGenerateAsymmetricKeyPair::Process(uint8_t cla,
 	// 0x80 - Generation of key pair
 	// 0x81 - Reading of actual public key template
 	if (p1 == 0x80) {
-		// TODO
-		(void)key_type;
+		if (alg.AlgorithmID == Crypto::AlgoritmID::RSA) {
+			Crypto::RSAKey rsa_key;
+			err = cryptolib.RSAGenKey(rsa_key, alg.RSAa.NLen);
+			if (err != Util::Error::NoError)
+				return err;
+
+			err = key_storage.PutRSAFullKey(File::AppletID::OpenPGP, key_type, rsa_key);
+			if (err != Util::Error::NoError)
+				return err;
+
+			return Util::Error::NoError;
+		}
+
+		if (alg.AlgorithmID == Crypto::AlgoritmID::ECDSAforCDSandIntAuth) {
+			Crypto::ECDSAKey ecdsa_key;
+			err = cryptolib.ECDSAGenKey(ecdsa_key);
+			if (err != Util::Error::NoError)
+				return err;
+
+			err = key_storage.PutECDSAFullKey(File::AppletID::OpenPGP, key_type, ecdsa_key);
+			if (err != Util::Error::NoError)
+				return err;
+
+			return Util::Error::NoError;
+		}
 
 		return Util::Error::DataNotFound;
 	} else {
