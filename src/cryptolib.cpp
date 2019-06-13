@@ -111,13 +111,9 @@ Util::Error CryptoLib::RSAGenKey(RSAKey& keyOut, size_t keySize) {
 	    KeyBuffer.clear();
 
 	    AppendKeyPart(KeyBuffer, keyOut.Exp, &E);
-	    printf("--E %lu %lu\n", KeyBuffer.length(), keyOut.Exp.length());
 	    AppendKeyPart(KeyBuffer, keyOut.P, &P);
-	    printf("--P %lu %lu\n", KeyBuffer.length(), keyOut.P.length());
 	    AppendKeyPart(KeyBuffer, keyOut.Q, &Q);
-	    printf("--Q %lu %lu\n", KeyBuffer.length(), keyOut.Q.length());
 	    AppendKeyPart(KeyBuffer, keyOut.N, &N);
-	    printf("--N %lu %lu\n", KeyBuffer.length(), keyOut.N.length());
 
 		// check
 		if (keyOut.P.length() == 0 || keyOut.Q.length() == 0 || keyOut.Exp.length() == 0) {
