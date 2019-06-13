@@ -13,6 +13,8 @@
 #include <mbedtls/rsa.h>
 #include <mbedtls/aes.h>
 #include <mbedtls/havege.h>
+#include <mbedtls/entropy.h>
+#include <mbedtls/ctr_drbg.h>
 
 #include <string.h>
 
@@ -24,6 +26,12 @@
 namespace Crypto {
 
 static const bstr RSADefaultExponent = "\x01\x00\x01"_bstr;
+
+void CryptoLib::ClearKeyBuffer() {
+	memset(_KeyBuffer, 0x00, sizeof(_KeyBuffer));
+	KeyBuffer.clear();
+}
+
 
 Util::Error CryptoLib::GenerateRandom(size_t length, bstr& dataOut) {
 	if (length > dataOut.max_size())
@@ -49,8 +57,87 @@ Util::Error CryptoLib::AESDecrypt(bstr key, bstr dataIn,
 	return Util::Error::InternalError;
 }
 
-Util::Error CryptoLib::RSAGenKey(bstr& keyOut) {
-	return Util::Error::InternalError;
+Util::Error CryptoLib::AppendKeyPart(bstr &buffer, bstr &keypart, mbedtls_mpi *mpi) {
+	size_t mpi_len = mbedtls_mpi_size(mpi);
+	if (mpi_len > 0) {
+		if (mbedtls_mpi_write_binary(mpi, buffer.uint8Data() + buffer.length(), mpi_len))
+			return Util::Error::CryptoDataError;
+
+		keypart = bstr(buffer.uint8Data() + buffer.length(), mpi_len);
+		buffer.set_length(buffer.length() + mpi_len);
+	}
+	return Util::Error::NoError;
+}
+
+Util::Error CryptoLib::RSAGenKey(RSAKey& keyOut, size_t keySize) {
+
+	Util::Error ret = Util::Error::NoError;
+	ClearKeyBuffer();
+
+	mbedtls_rsa_context rsa;
+    mbedtls_entropy_context entropy;
+    mbedtls_ctr_drbg_context ctr_drbg;
+	mbedtls_mpi N, P, Q, D, E;
+
+	mbedtls_rsa_init(&rsa, MBEDTLS_RSA_PKCS_V15, 0);
+    mbedtls_ctr_drbg_init(&ctr_drbg);
+    mbedtls_entropy_init(&entropy);
+    mbedtls_mpi_init(&N);
+    mbedtls_mpi_init(&P);
+    mbedtls_mpi_init(&Q);
+    mbedtls_mpi_init(&D);
+    mbedtls_mpi_init(&E);
+
+	while (true) {
+	    const char *pers = "solokey_openpgp";
+	    if (mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy,
+	    		(const unsigned char *)pers, strlen(pers))) {
+			ret = Util::Error::CryptoOperationError;
+			break;
+	    }
+
+		// OpenPGP 3.3.1 pages 33,34
+		if (mbedtls_rsa_gen_key(&rsa, mbedtls_ctr_drbg_random, &ctr_drbg, keySize, 0x010001)) {
+			ret = Util::Error::CryptoOperationError;
+			break;
+		}
+
+        // crt: mbedtls_rsa_export_crt(&rsa, &DP, &DQ, &QP)
+	    if (mbedtls_rsa_export(&rsa, &N, &P, &Q, &D, &E)) {
+			ret = Util::Error::CryptoOperationError;
+			break;
+	    }
+
+	    KeyBuffer.clear();
+
+	    AppendKeyPart(KeyBuffer, keyOut.Exp, &E);
+	    printf("--E %lu %lu\n", KeyBuffer.length(), keyOut.Exp.length());
+	    AppendKeyPart(KeyBuffer, keyOut.P, &P);
+	    printf("--P %lu %lu\n", KeyBuffer.length(), keyOut.P.length());
+	    AppendKeyPart(KeyBuffer, keyOut.Q, &Q);
+	    printf("--Q %lu %lu\n", KeyBuffer.length(), keyOut.Q.length());
+	    AppendKeyPart(KeyBuffer, keyOut.N, &N);
+	    printf("--N %lu %lu\n", KeyBuffer.length(), keyOut.N.length());
+
+		// check
+		if (keyOut.P.length() == 0 || keyOut.Q.length() == 0 || keyOut.Exp.length() == 0) {
+			ret = Util::Error::CryptoDataError;
+			break;
+		}
+
+		break;
+	}
+
+    mbedtls_mpi_free(&N);
+    mbedtls_mpi_free(&P);
+    mbedtls_mpi_free(&Q);
+    mbedtls_mpi_free(&D);
+    mbedtls_mpi_free(&E);
+    mbedtls_ctr_drbg_free(&ctr_drbg);
+    mbedtls_entropy_free(&entropy);
+	mbedtls_rsa_free(&rsa);
+
+	return ret;
 }
 
 Util::Error CryptoLib::RSAFillPrivateKey(mbedtls_rsa_context *context,
@@ -234,7 +321,9 @@ Util::Error CryptoLib::RSAVerify(bstr publicKey, bstr data, bstr signature) {
 	return Util::Error::InternalError;
 }
 
-Util::Error CryptoLib::ECDSAGenKey(bstr& keyOut) {
+Util::Error CryptoLib::ECDSAGenKey(ECDSAKey& keyOut) {
+	ClearKeyBuffer();
+
 	return Util::Error::InternalError;
 }
 
@@ -291,13 +380,64 @@ Util::Error CryptoLib::ECDSAVerify(bstr key, bstr data,
 	return Util::Error::InternalError;
 }
 
-Util::Error KeyStorage::GetECDSAPrivateKey(AppID_t appID, KeyID_t keyID, bstr& key) {
+Util::Error KeyStorage::GetECDSAPrivateKey(AppID_t appID, KeyID_t keyID, ECDSAKey& key) {
 	return Util::Error::InternalError;
 }
 
 Util::Error KeyStorage::SetKey(AppID_t appID, KeyID_t keyID,
 		KeyType keyType, bstr key) {
 	return Util::Error::InternalError;
+}
+
+Util::Error KeyStorage::PutRSAFullKey(AppID_t appID, KeyID_t keyID, RSAKey key) {
+
+	Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
+	File::FileSystem &filesystem = solo.GetFileSystem();
+	using namespace Util;
+
+	prvStr.clear();
+
+	TLVTree tlv;
+	tlv.Init(prvStr);
+	tlv.AddRoot(0x7f49);
+	tlv.AddChild(keyID);
+
+	uint8_t _dol[100] = {0};
+	bstr sdol(_dol, 0, sizeof(_dol));
+	DOL dol;
+	dol.Init(sdol);
+
+	dol.AddNextWithData(KeyPartsRSA::PublicExponent, key.Exp.length());
+	dol.AddNextWithData(KeyPartsRSA::P, key.P.length());
+	dol.AddNextWithData(KeyPartsRSA::Q, key.Q.length());
+	dol.AddNextWithData(KeyPartsRSA::PQ, key.PQ.length());
+	dol.AddNextWithData(KeyPartsRSA::DP1, key.DP1.length());
+	dol.AddNextWithData(KeyPartsRSA::DQ1, key.DQ1.length());
+	dol.AddNextWithData(KeyPartsRSA::N, key.N.length());
+
+	// insert dol
+	sdol = dol.GetData();
+	tlv.AddNext(0x7f48, &sdol);
+
+	// make data
+	tlv.AddNext(0x5f48);
+
+	printf("---------- key ------------\n");
+	tlv.PrintTree();
+
+
+	auto err = filesystem.WriteFile(appID, keyID, File::Secure, prvStr);
+	if (err != Util::Error::NoError)
+		return err;
+
+	printf("key %x [%lu] saved.\n", keyID, prvStr.length());
+
+	return Util::Error::NoError;
+}
+
+Util::Error KeyStorage::PutECDSAFullKey(AppID_t appID, KeyID_t keyID, ECDSAKey key) {
+
+	return Util::Error::NoError;
 }
 
 Util::Error KeyStorage::GetKeyPart(bstr dataIn, Util::tag_t keyPart,

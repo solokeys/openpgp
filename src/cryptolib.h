@@ -11,6 +11,8 @@
 #define SRC_CRYPTOLIB_H_
 
 #include <util.h>
+#include <cstddef>
+#include <cstdint>
 #include <errors.h>
 #include "tlv.h"
 
@@ -98,28 +100,46 @@ struct RSAKey {
 	}
 };
 
+struct ECDSAKey {
+	bstr Private;
+	bstr Public;
+
+	void clear(){
+		Private.set_length(0);
+		Public.set_length(0);
+	}
+};
+
 class CryptoEngine;
 
 class CryptoLib {
 private:
 	CryptoEngine &cryptoEngine;
 
+	uint8_t _KeyBuffer[2049];
+	bstr KeyBuffer{_KeyBuffer, 0, sizeof(_KeyBuffer)};
+
 	Util::Error RSAFillPrivateKey(mbedtls_rsa_context *context, RSAKey key);
+	Util::Error AppendKeyPart(bstr &buffer, bstr &keypart, mbedtls_mpi *mpi);
 public:
-	CryptoLib(CryptoEngine &_cryptoEngine): cryptoEngine(_cryptoEngine) {};
+	CryptoLib(CryptoEngine &_cryptoEngine): cryptoEngine(_cryptoEngine) {
+		ClearKeyBuffer();
+	};
+
+	void ClearKeyBuffer();
 
 	Util::Error GenerateRandom(size_t length, bstr &dataOut);
 
 	Util::Error AESEncrypt(bstr key, bstr dataIn, bstr &dataOut);
 	Util::Error AESDecrypt(bstr key, bstr dataIn, bstr &dataOut);
 
-	Util::Error RSAGenKey(bstr &keyOut);
+	Util::Error RSAGenKey(RSAKey &keyOut, size_t keySize);
 	Util::Error RSACalcPublicKey(bstr strP, bstr strQ, bstr &strN);
 	Util::Error RSASign(RSAKey key, bstr data, bstr &signature);
 	Util::Error RSADecipher(RSAKey key, bstr data, bstr &dataOut);
 	Util::Error RSAVerify(bstr publicKey, bstr data, bstr signature);
 
-	Util::Error ECDSAGenKey(bstr &keyOut);
+	Util::Error ECDSAGenKey(ECDSAKey &keyOut);
 	Util::Error ECDSASign(bstr key, bstr data, bstr &signature);
 	Util::Error ECDSAVerify(bstr key, bstr data, bstr signature);
 };
@@ -137,8 +157,10 @@ public:
 	Util::Error GetPublicKey(AppID_t appID, KeyID_t keyID, uint8_t AlgoritmID, bstr &pubKey);
 	Util::Error GetPublicKey7F49(AppID_t appID, KeyID_t keyID, uint8_t AlgoritmID, bstr &tlvKey);
 
-	Util::Error GetRSAKey(AppID_t appID, KeyID_t keyID, RSAKey &key);
-	Util::Error GetECDSAPrivateKey(AppID_t appID, KeyID_t keyID, bstr &key);
+	Util::Error GetRSAKey(AppID_t appID, KeyID_t keyID, RSAKey &key);         // TODO: rename to GetRSAFullKey
+	Util::Error GetECDSAPrivateKey(AppID_t appID, KeyID_t keyID, ECDSAKey &key);  // TODO: rename to GetECDSAFullKey ???
+	Util::Error PutRSAFullKey(AppID_t appID, KeyID_t keyID, RSAKey key);
+	Util::Error PutECDSAFullKey(AppID_t appID, KeyID_t keyID, ECDSAKey key);
 
 	Util::Error SetKey(AppID_t appID, KeyID_t keyID, KeyType keyType, bstr key);
 	Util::Error SetKeyExtHeader(AppID_t appID, bstr keyData);
