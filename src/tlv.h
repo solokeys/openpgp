@@ -467,6 +467,14 @@ public:
 		Init(_data);
 	}
 
+	constexpr void ClearCurrentData() {
+
+	}
+
+	constexpr void AppendCurrentData(bstr data) {
+
+	}
+
 	constexpr void PrintTree() {
 		GoFirst();
 		while (true) {

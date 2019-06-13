@@ -116,7 +116,7 @@ class CryptoLib {
 private:
 	CryptoEngine &cryptoEngine;
 
-	uint8_t _KeyBuffer[2049];
+	uint8_t _KeyBuffer[2049]; // needs for placing RSA 4096 key
 	bstr KeyBuffer{_KeyBuffer, 0, sizeof(_KeyBuffer)};
 
 	Util::Error RSAFillPrivateKey(mbedtls_rsa_context *context, RSAKey key);
@@ -148,7 +148,7 @@ class KeyStorage {
 private:
 	CryptoEngine &cryptoEngine;
 
-	uint8_t prvData[1024] = {0};
+	uint8_t prvData[2049] = {0}; // needs for placing RSA 4096 key
 	bstr prvStr{prvData};
 public:
 	KeyStorage(CryptoEngine &_cryptoEngine): cryptoEngine(_cryptoEngine) {prvStr.clear();};

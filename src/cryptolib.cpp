@@ -415,8 +415,18 @@ Util::Error KeyStorage::PutRSAFullKey(AppID_t appID, KeyID_t keyID, RSAKey key) 
 	sdol = dol.GetData();
 	tlv.AddNext(0x7f48, &sdol);
 
-	// make data
+	// make tlv data element
 	tlv.AddNext(0x5f48);
+
+	// insert data
+	tlv.Search(0x5f48);
+	tlv.AppendCurrentData(key.Exp);
+	tlv.AppendCurrentData(key.P);
+	tlv.AppendCurrentData(key.Q);
+	tlv.AppendCurrentData(key.PQ);
+	tlv.AppendCurrentData(key.DP1);
+	tlv.AppendCurrentData(key.DQ1);
+	tlv.AppendCurrentData(key.N);
 
 	printf("---------- key ------------\n");
 	tlv.PrintTree();
