@@ -43,6 +43,10 @@ namespace std {
 			return const_cast<uint8_t *>(this->data());
 		}
 
+		constexpr size_t max_length() {
+			return _max_length;
+		}
+
 		constexpr uint32_t get_uint_be(size_t indx, size_t size) {
 			if (indx + size > this->length())
 				return 0;
@@ -108,12 +112,25 @@ namespace std {
 		}
 
 		constexpr void del(size_t begin, size_t len) {
-			if (begin + len > this->length())
+			if (len > this->length())
+				len = this->length();
+
+			moveTail(begin + len, -len);
+		}
+
+		constexpr void moveTail(size_t begin, int delta) {
+			if (delta == 0) // || (this->length() + delta > _max_length))
 				return;
 
+			if (this->length() + delta < 0)
+				delta = -this->length();
+
+			if (begin + delta < 0)
+				begin = -delta;
+
 			uint8_t *data = const_cast<uint8_t*>(this->data());
-			memmove(data + begin, data + begin + len, this->length() - len);
-			set_length(this->length() - len);
+			memmove(data + begin + delta, data + begin, this->length() - begin);
+			set_length(this->length() + delta);
 		}
    };
 }
