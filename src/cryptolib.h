@@ -89,7 +89,7 @@ struct RSAKey {
 	bstr DQ1; // DQ1: d mod (q - 1)  (crt)
 	bstr N;   // Modulus: n          (optional for standard and crt)
 
-	void clear(){
+	constexpr void clear(){
 		Exp.set_length(0);
 		P.set_length(0);
 		Q.set_length(0);
@@ -97,6 +97,16 @@ struct RSAKey {
 		DP1.set_length(0);
 		DQ1.set_length(0);
 		N.set_length(0);
+	}
+
+	constexpr void Print() {
+		printf("Exp [%lu] ", Exp.length()); dump_hex(Exp, 32);
+		printf("P [%lu] ",   P.length());   dump_hex(P, 32);
+		printf("Q [%lu] ",   Q.length());   dump_hex(Q, 32);
+		printf("PQ [%lu] ",  PQ.length());  dump_hex(PQ, 32);
+		printf("DP1 [%lu] ", DP1.length()); dump_hex(DP1, 32);
+		printf("DQ1 [%lu] ", DQ1.length()); dump_hex(DQ1, 32);
+		printf("N [%lu] ",   N.length());   dump_hex(N, 32);
 	}
 };
 
