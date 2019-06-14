@@ -149,7 +149,7 @@ private:
 	CryptoEngine &cryptoEngine;
 
 	uint8_t prvData[2049] = {0}; // needs for placing RSA 4096 key
-	bstr prvStr{prvData};
+	bstr prvStr{prvData, 0, sizeof(prvData)};
 public:
 	KeyStorage(CryptoEngine &_cryptoEngine): cryptoEngine(_cryptoEngine) {prvStr.clear();};
 

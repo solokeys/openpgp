@@ -428,15 +428,15 @@ Util::Error KeyStorage::PutRSAFullKey(AppID_t appID, KeyID_t keyID, RSAKey key) 
 	tlv.AppendCurrentData(key.DQ1);
 	tlv.AppendCurrentData(key.N);
 
-	printf("---------- key ------------\n");
-	tlv.PrintTree();
+	//printf("---------- key ------------\n");
+	//tlv.PrintTree();
 
 
-	auto err = filesystem.WriteFile(appID, keyID, File::Secure, prvStr);
+	auto err = filesystem.WriteFile(appID, keyID, File::Secure, tlv.GetDataLink());
 	if (err != Util::Error::NoError)
 		return err;
 
-	printf("key %x [%lu] saved.\n", keyID, prvStr.length());
+	printf("key %x [%lu] saved.\n", keyID, tlv.GetDataLink().length());
 
 	return Util::Error::NoError;
 }
