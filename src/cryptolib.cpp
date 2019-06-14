@@ -97,7 +97,7 @@ Util::Error CryptoLib::RSAGenKey(RSAKey& keyOut, size_t keySize) {
 	    }
 
 		// OpenPGP 3.3.1 pages 33,34
-		if (mbedtls_rsa_gen_key(&rsa, mbedtls_ctr_drbg_random, &ctr_drbg, keySize, 0x010001)) {
+		if (mbedtls_rsa_gen_key(&rsa, mbedtls_ctr_drbg_random, &ctr_drbg, keySize, 65537)) {
 			ret = Util::Error::CryptoOperationError;
 			break;
 		}
@@ -161,25 +161,24 @@ Util::Error CryptoLib::RSAFillPrivateKey(mbedtls_rsa_context *context,
 			ret = Util::Error::CryptoDataError;
 			break;
 		}
+		if (mbedtls_rsa_import(context, NULL, &P, &Q, NULL, &E)) {
+			ret = Util::Error::CryptoDataError;
+			break;
+		}
 		if (key.N.length()) {
 			if (mbedtls_mpi_read_binary(&N, key.N.uint8Data(), key.N.length())) {
 				ret = Util::Error::CryptoDataError;
 				break;
 			}
 
-			if (mbedtls_rsa_import(context, &N, &P, &Q, NULL, &E)) {
-				ret = Util::Error::CryptoDataError;
-				break;
-			}
-		} else {
-			if (mbedtls_rsa_import(context, NULL, &P, &Q, NULL, &E)) {
+			if (mbedtls_rsa_import(context, &N, NULL, NULL, NULL, NULL)) {
 				ret = Util::Error::CryptoDataError;
 				break;
 			}
 		}
 
-		if (mbedtls_rsa_complete(context)) {
-			printf("error: cant complete key\n");
+		if (int res=mbedtls_rsa_complete(context)) {
+			printf("error: cant complete key %d %x\n",res,-res);
 			ret = Util::Error::CryptoDataError;
 			break;
 		}
