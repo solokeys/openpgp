@@ -343,7 +343,7 @@ public:
 				size_t elm_end_offset = _elm[lvl].GetPtr() - _data.uint8Data();
 				size_t move_data_len = _data.length() - elm_end_offset;
 				int delta_size = new_len - header_length;
-				printf("elm_length %lu, new_len %lu, delta_size %d, move_data_len %lu\n",header_length, new_len, delta_size, move_data_len);
+				//printf("elm_length %lu, new_len %lu, delta_size %d, move_data_len %lu\n",header_length, new_len, delta_size, move_data_len);
 				_data.set_length(_data.length() + delta_size);
 				memmove(elm_end + delta_size, elm_end, move_data_len);
 			};
@@ -468,11 +468,62 @@ public:
 	}
 
 	constexpr void ClearCurrentData() {
+		if (CurrentElm().Length() == 0)
+			return;
 
+		uint8_t *start_ptr = _data.uint8Data();
+		uint8_t *current_ptr = CurrentElm().GetPtr();
+		size_t cur_elm_offset = current_ptr - start_ptr;
+		size_t cur_elm_data_len = CurrentElm().Length();
+		size_t cur_elm_header_len = CurrentElm().HeaderLength();
+
+		size_t size = 0;
+		bstr elm_place(current_ptr, 0, 8);
+		EncodeTag(elm_place, size, CurrentElm().Tag());
+		EncodeLength(elm_place, size, 0); // zero length
+
+		size_t delta_len = cur_elm_header_len - size;
+		_data.del(cur_elm_offset + size, delta_len + cur_elm_data_len);
+
+		NormalizeParents(-(delta_len + cur_elm_data_len));
+
+		Init(_data);
+		Search(CurrentElm().Tag());
 	}
 
-	constexpr void AppendCurrentData(bstr data) {
+	constexpr void AppendCurrentData(bstr cdata) {
+		if (cdata.length() == 0)
+			return;
 
+		uint8_t *start_ptr = _data.uint8Data();
+		uint8_t *current_ptr = CurrentElm().GetPtr();
+		size_t cur_elm_offset = current_ptr - start_ptr;
+		tag_t cur_elm_tag = CurrentElm().Tag();
+		size_t cur_elm_len = CurrentElm().ElmLength();
+		size_t cur_elm_header_len = CurrentElm().HeaderLength();
+		size_t cur_elm_end_offset = cur_elm_offset + cur_elm_len;
+
+		// encode new tag
+		size_t new_header_len = 0;
+		uint8_t _header[8] = {0};
+		bstr header(_header, 0, sizeof(_header));
+		EncodeTag(header, new_header_len, cur_elm_tag);
+		size_t new_elm_data_len = CurrentElm().Length() + cdata.length();
+		EncodeLength(header, new_header_len, new_elm_data_len);
+
+		// place new header
+		int delta_header_len = new_header_len - cur_elm_header_len;
+		_data.moveTail(cur_elm_offset + cur_elm_header_len, delta_header_len);
+		memmove(current_ptr, _header, new_header_len);
+
+		// place new data
+		_data.moveTail(cur_elm_end_offset, cdata.length());
+		memmove(start_ptr + cur_elm_end_offset + 1, cdata.uint8Data(), cdata.length());
+
+		NormalizeParents(delta_header_len + cdata.length());
+
+		Init(_data);
+		Search(cur_elm_tag);
 	}
 
 	constexpr void PrintTree() {
