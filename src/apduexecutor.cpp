@@ -195,7 +195,7 @@ Util::Error APDUExecutor::Execute(bstr apdu, bstr& result) {
 		sapdu.clear();
 
 		// some apdu commands (PSO) needs to have 6100 response!!!  tests bug!!!!!
-      	if (sresult.length() > 0xfe || ins == 0x2a) {
+      	if (sresult.length() > 0xfe || (ins == 0x2a && sresult.length() > 2)) {
       		if (sresult.length() > 0xff)
       			result.setAPDURes(0x6100);
       		else
