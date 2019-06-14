@@ -517,8 +517,8 @@ public:
 		memmove(current_ptr, _header, new_header_len);
 
 		// place new data
-		_data.moveTail(cur_elm_end_offset, cdata.length());
-		memmove(start_ptr + cur_elm_end_offset + 1, cdata.uint8Data(), cdata.length());
+		_data.moveTail(cur_elm_end_offset + delta_header_len, cdata.length());
+		memmove(start_ptr + cur_elm_end_offset + delta_header_len, cdata.uint8Data(), cdata.length());
 
 		NormalizeParents(delta_header_len + cdata.length());
 
