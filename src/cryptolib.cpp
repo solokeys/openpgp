@@ -179,11 +179,13 @@ Util::Error CryptoLib::RSAFillPrivateKey(mbedtls_rsa_context *context,
 		}
 
 		if (mbedtls_rsa_complete(context)) {
+			printf("error: cant complete key\n");
 			ret = Util::Error::CryptoDataError;
 			break;
 		}
 
 		if (mbedtls_rsa_check_privkey(context)) {
+			printf("error: cant check key\n");
 			ret = Util::Error::CryptoDataError;
 			break;
 		}
@@ -674,6 +676,9 @@ Util::Error CryptoEngine::RSASign(AppID_t appID, KeyID_t keyID,
 	auto err = keyStorage.GetRSAKey(appID, keyID, key);
 	if (err != Util::Error::NoError)
 		return err;
+
+	printf("------------ key ------------\n");
+	key.Print();
 
 	return cryptoLib.RSASign(key, data, signature);
 }
