@@ -477,6 +477,7 @@ public:
 		size_t cur_elm_data_len = CurrentElm().Length();
 		size_t cur_elm_header_len = CurrentElm().HeaderLength();
 
+		// length of `length` will be the same length or less. so it is safe to encode direct to tag's place
 		size_t size = 0;
 		bstr elm_place(current_ptr, 0, 8);
 		EncodeTag(elm_place, size, CurrentElm().Tag());
