@@ -69,7 +69,7 @@ namespace std {
 		}
 
 		constexpr void clear() {
-			this->remove_suffix(this->length());
+			set_length(0);
 		}
 
 		constexpr void set_length(const size_t len) {
@@ -78,11 +78,7 @@ namespace std {
 		}
 
 		constexpr void append(const uint8_t *data, const size_t len) {
-			uint8_t *dst = const_cast<uint8_t*>(this->data()) + this->length();
-
-			for (size_t i = 0; i < len; i++)
-			  *dst++ = *data++;
-
+			memmove(uint8Data() + this->length(), data, len);
 			set_length(this->length() + len);
 		}
 
@@ -91,9 +87,9 @@ namespace std {
 		}
 
 		constexpr void appendAPDUres(const uint16_t w) {
-			uint8_t b[2];
-			b[0] = (w >> 8) & 0xff;
-			b[1] = w & 0xff;
+			uint8_t b[2] = {
+					static_cast<uint8_t>((w >> 8) & 0xff),
+					static_cast<uint8_t>(w & 0xff)};
 			append(b, 2);
 		}
 
@@ -113,7 +109,7 @@ namespace std {
 
 		constexpr void del(const size_t begin, const size_t len) {
 			if (len > this->length()) {
-				set_length(0);
+				clear();
 			} else {
 				moveTail(begin + len, -len);
 			}
