@@ -29,11 +29,11 @@ namespace std {
     public:
 		using basic_string_view<_CharT, _Traits>::basic_string_view;
 
-		constexpr w_basic_string_view(std::basic_string_view<_CharT, _Traits> sv, size_t maxLength = 0)
+		constexpr w_basic_string_view(std::basic_string_view<_CharT, _Traits> sv, const size_t maxLength = 0)
 							:basic_string_view<_CharT, _Traits>(sv) {
 			_max_length = MAX(sv.length(), maxLength);
 		}
-		constexpr w_basic_string_view(const _CharT* __str, size_t __len, size_t maxLength = 0)
+		constexpr w_basic_string_view(const _CharT* __str, size_t __len, const size_t maxLength = 0)
 							:basic_string_view<_CharT, _Traits>(__str, __len) {
 			_max_length = MAX(__len, maxLength);
 		}
@@ -47,7 +47,7 @@ namespace std {
 			return _max_length;
 		}
 
-		constexpr uint32_t get_uint_be(size_t indx, size_t size) {
+		constexpr uint32_t get_uint_be(const size_t indx, const size_t size) {
 			if (indx + size > this->length())
 				return 0;
 
@@ -59,7 +59,7 @@ namespace std {
 			return res;
 		}
 
-		constexpr void set_uint_be(size_t indx, size_t size, uint32_t value) {
+		constexpr void set_uint_be(const size_t indx, const size_t size, const uint32_t value) {
 			if (indx + size > this->length())
 				return;
 
@@ -72,12 +72,12 @@ namespace std {
 			this->remove_suffix(this->length());
 		}
 
-		constexpr void set_length(size_t len) {
+		constexpr void set_length(const size_t len) {
 			w_basic_string_view<_CharT, _Traits> newsv(this->data(), len);
 			*this = newsv;
 		}
 
-		constexpr void append(const uint8_t *data, size_t len) {
+		constexpr void append(const uint8_t *data, const size_t len) {
 			uint8_t *dst = const_cast<uint8_t*>(this->data()) + this->length();
 
 			for (size_t i = 0; i < len; i++)
@@ -86,22 +86,22 @@ namespace std {
 			set_length(this->length() + len);
 		}
 
-		constexpr void append(uint8_t b) {
+		constexpr void append(const uint8_t b) {
 			append(&b, 1);
 		}
 
-		constexpr void appendAPDUres(uint16_t w) {
+		constexpr void appendAPDUres(const uint16_t w) {
 			uint8_t b[2];
 			b[0] = (w >> 8) & 0xff;
 			b[1] = w & 0xff;
 			append(b, 2);
 		}
 
-		constexpr void append(std::basic_string_view<_CharT, _Traits> sv) {
+		constexpr void append(const std::basic_string_view<_CharT, _Traits> sv) {
 			append(sv.data(), sv.length());
 		}
 
-		constexpr void set(std::basic_string_view<_CharT, _Traits> sv) {
+		constexpr void set(const std::basic_string_view<_CharT, _Traits> sv) {
 			clear();
 			append(sv.data(), sv.length());
 		}
@@ -112,10 +112,11 @@ namespace std {
 		}
 
 		constexpr void del(size_t begin, size_t len) {
-			if (len > this->length())
-				len = this->length();
-
-			moveTail(begin + len, -len);
+			if (len > this->length()) {
+				set_length(0);
+			} else {
+				moveTail(begin + len, -len);
+			}
 		}
 
 		constexpr void moveTail(size_t begin, int delta) {
