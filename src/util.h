@@ -73,7 +73,7 @@ namespace std {
 		}
 
 		constexpr void set_length(const size_t len) {
-			w_basic_string_view<_CharT, _Traits> newsv(this->data(), len);
+			w_basic_string_view<_CharT, _Traits> newsv(this->data(), len, this->max_length());
 			*this = newsv;
 		}
 
