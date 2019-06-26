@@ -106,12 +106,12 @@ namespace std {
 			append(sv.data(), sv.length());
 		}
 
-		constexpr void setAPDURes(uint16_t w) {
+		constexpr void setAPDURes(const uint16_t w) {
 			clear();
 			appendAPDUres(w);
 		}
 
-		constexpr void del(size_t begin, size_t len) {
+		constexpr void del(const size_t begin, const size_t len) {
 			if (len > this->length()) {
 				set_length(0);
 			} else {
