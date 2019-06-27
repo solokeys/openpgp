@@ -202,12 +202,10 @@ void Security::ClearAllAuth() {
 }
 
 void Security::Init() {
-	Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
-	File::FileSystem &filesystem = solo.GetFileSystem();
-
 	ClearAllAuth();
 	appletConfig.state = LifeCycleState::Init; // TODO: load
-	pwstatus.Load(filesystem);
+
+	Reload();
 }
 
 void Security::Reload() {
@@ -215,6 +213,7 @@ void Security::Reload() {
 	File::FileSystem &filesystem = solo.GetFileSystem();
 
 	pwstatus.Load(filesystem);
+	kdfDO.LoadHeader(filesystem);
 }
 
 Util::Error Security::SetPasswd(Password passwdId, bstr password) {
@@ -232,7 +231,7 @@ Util::Error Security::SetPasswd(Password passwdId, bstr password) {
 		// empty PW3 for GNUK
 	} else {
 		if (password.length() < pwstatus.GetMinLength(passwdId) ||
-			password.length() > pwstatus.GetMaxLength(passwdId) )
+			password.length() > GetMaxPWLength(passwdId) )
 			return Util::Error::WrongAPDUDataLength;
 	}
 
@@ -276,7 +275,7 @@ Util::Error Security::VerifyPasswd(Password passwdId, bstr data, bool passwdChec
 		*passwdLen = 0;
 
 	size_t min_length = pwstatus.GetMinLength(passwdId);
-	size_t max_length = pwstatus.GetMaxLength(passwdId);
+	size_t max_length = GetMaxPWLength(passwdId);
 
 	uint8_t _passwd[max_length] = {0};
 	bstr passwd(_passwd, 0, max_length);
@@ -350,7 +349,7 @@ bool Security::PWIsEmpty(Password passwdId) {
 	Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
 	File::FileSystem &filesystem = solo.GetFileSystem();
 
-	size_t max_length = pwstatus.GetMaxLength(passwdId);
+	size_t max_length = GetMaxPWLength(passwdId);
 
 	uint8_t _passwd[max_length] = {0};
 	bstr passwd(_passwd, 0, max_length);
@@ -364,6 +363,11 @@ bool Security::PWIsEmpty(Password passwdId) {
 
 	return passwd.length() == 0;
 }
+
+size_t Security::GetMaxPWLength(Password passwdId) {
+	return MAX(pwstatus.GetMaxLength(passwdId), kdfDO.GetPWLength());
+}
+
 
 Util::Error Security::ResetPasswdTryRemains(Password passwdId) {
 	Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();

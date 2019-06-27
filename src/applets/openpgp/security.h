@@ -25,6 +25,7 @@ namespace OpenPGP {
 		AppletState appletState;
 		AppletConfig appletConfig;
 		PWStatusBytes pwstatus;
+		KDFDO kdfDO;
 	public:
 		void Init();
 		void Reload();
@@ -32,6 +33,7 @@ namespace OpenPGP {
 		Util::Error SetPasswd(Password passwdId, bstr passwords);
 		Util::Error VerifyPasswd(Password passwdId, bstr passwd, bool passwdCheckFirstPart, size_t *passwdLen);
 		bool PWIsEmpty(Password passwdId);
+		size_t GetMaxPWLength(Password passwdId);
 		Util::Error ResetPasswdTryRemains(Password passwdId);
 		uint8_t PasswdTryRemains(Password passwdId);
 
