@@ -276,11 +276,17 @@ Util::Error KDFDO::Load(File::FileSystem& fs, bstr data) {
 }
 
 Util::Error KDFDO::SaveInitPasswordsToPWFiles(File::FileSystem& fs) {
-	if (InitialPW1.length() > 0)
-		return fs.WriteFile(File::AppletID::OpenPGP, File::SecureFileID::PW1, File::Secure, InitialPW1);
+	if (InitialPW1.length() > 0) {
+		auto err = fs.WriteFile(File::AppletID::OpenPGP, File::SecureFileID::PW1, File::Secure, InitialPW1);
+		if (err != Util::Error::NoError)
+			return err;
+	}
 
-	if (InitialPW3.length() > 0)
-		return fs.WriteFile(File::AppletID::OpenPGP, File::SecureFileID::PW3, File::Secure, InitialPW3);
+	if (InitialPW3.length() > 0) {
+		auto err = fs.WriteFile(File::AppletID::OpenPGP, File::SecureFileID::PW3, File::Secure, InitialPW3);
+		if (err != Util::Error::NoError)
+			return err;
+	}
 
 	return Util::Error::NoError;
 }

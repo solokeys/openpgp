@@ -29,7 +29,7 @@ namespace OpenPGP {
 	public:
 		void Init();
 		void Reload();
-		void AfterSaveFileLogic(uint16_t objectID);
+		Util::Error AfterSaveFileLogic(uint16_t objectID);
 
 		Util::Error SetPasswd(Password passwdId, bstr passwords);
 		Util::Error VerifyPasswd(Password passwdId, bstr passwd, bool passwdCheckFirstPart, size_t *passwdLen);

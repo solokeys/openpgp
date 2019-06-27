@@ -244,7 +244,9 @@ Util::Error APDUPutData::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 			return err;
 
 		// refresh objects and some logic after saving data to filesystem
-		security.AfterSaveFileLogic(object_id);
+		err = security.AfterSaveFileLogic(object_id);
+		if (err != Util::Error::NoError)
+			return err;
 	} else {
 		key_storage.SetKeyExtHeader(File::AppletID::OpenPGP, data);
 	}
