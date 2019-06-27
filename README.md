@@ -52,15 +52,15 @@ cd gnuk/tests && py.test-3 -x
 1. Change name from `Applet` to `Application`
 2. test via virtual USB in linux
 3. Add tests for:
-3.1. access rights to commands and DO
-3.2. refactor some tests and change some "magic" values in them
-3.3. test RSA4096 generation and increase interface timeouts
+  - access rights to commands and DO
+  - refactor some tests and change some "magic" values in them
+  - test RSA4096 generation and increase interface timeouts
 4. Add tests and functionality for:
-4.1. ECDSA
-4.2. reset card 
-4.3. user DO (0101-0104) and check access rights
-4.4. PSO:ENCIPHER and DECIPHER with AES
-4.5. Secure messaging????
-4.6. ECDH???
+  - ECDSA
+  - reset card 
+  - user DO (0101-0104) and check access rights
+  - PSO:ENCIPHER and DECIPHER with AES
+  - Secure messaging????
+  - ECDH???
 
 
