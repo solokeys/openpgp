@@ -329,7 +329,7 @@ Util::Error Security::VerifyPasswd(Password passwdId, bstr data, bool passwdChec
 	if (passwdId == Password::PW3 && passwd_length == 0) {
 		// gnuk PW3 may be empty.
 		// If PW3 is null and PW1 = OK >> check with pw1
-		// If PW3 is null and PW1 = default >> check with default pw3
+		// If PW3 is null and PW1 = default >> check with default pw3. Here may be default KDF-DO password if set!
 		auto file_err = filesystem.ReadFile(File::AppletID::OpenPGP,
 				File::SecureFileID::PW1,
 				File::Secure,
@@ -337,8 +337,14 @@ Util::Error Security::VerifyPasswd(Password passwdId, bstr data, bool passwdChec
 		if (file_err != Util::Error::NoError)
 			return file_err;
 
+		// PW3 is null and PW1 = default
 		if (passwd == PGPConst::DefaultPW1) {
 			passwd.set(PGPConst::DefaultPW3);
+		}
+
+		// PW3 is null and PW1 = default. if KDF-DO set
+		if (kdfDO.HaveInitPassword(Password::Any) && passwd == kdfDO.InitialPW1) {
+			passwd.set(kdfDO.InitialPW3);
 		}
 		passwd_length = passwd.length();
 	} else {
