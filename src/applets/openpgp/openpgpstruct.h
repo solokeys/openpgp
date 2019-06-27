@@ -98,6 +98,39 @@ public:
 	Util::Error DeleteFile(File::FileSystem &fs);
 };
 
+// KDF-DO
+// OpenPGP 3.3.1 pages 18-20, 29
+enum class KDFAlgorithm {
+	None = 0x00,
+	KDF_ITERSALTED_S2K = 0x03
+};
+
+enum class HashAlgorithm {
+	None   = 0x00,
+	SHA256 = 0x08,
+	SHA512 = 0x0a
+};
+
+struct KDFDO {
+	uint8_t bKDFAlgorithm;
+	uint8_t bHashAlgorithm;
+	uint32_t IterationCount;
+
+	bstr SaltPW1;
+	bstr SaltRC;
+	bstr SaltPW3;
+	bstr InitialPW1;
+	bstr InitialPW3;
+
+	void Clear();
+	size_t GetPWLength();
+
+	Util::Error LoadHeader(File::FileSystem &fs);
+	Util::Error Load(File::FileSystem &fs, bstr data);
+	Util::Error SaveInitPasswordsToPWFiles(File::FileSystem &fs);
+};
+
+
 } // namespace OpenPGP
 
 #endif /* SRC_OPENPGP_OPENPGPSTRUCT_H_ */

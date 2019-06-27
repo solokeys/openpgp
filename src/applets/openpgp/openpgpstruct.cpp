@@ -177,4 +177,97 @@ Util::Error DSCounter::DeleteFile(File::FileSystem& fs) {
 	return fs.DeleteFile(File::AppletID::OpenPGP, 0x7a, File::File);
 }
 
+void KDFDO::Clear() {
+	bKDFAlgorithm = 0;
+	bHashAlgorithm = 0;
+	IterationCount = 0;
+
+	SaltPW1.clear();
+	SaltRC.clear();
+	SaltPW3.clear();
+	InitialPW1.clear();
+	InitialPW3.clear();
+};
+
+size_t KDFDO::GetPWLength() {
+	if (bKDFAlgorithm == static_cast<uint8_t>(KDFAlgorithm::KDF_ITERSALTED_S2K)) {
+		if (bHashAlgorithm == static_cast<uint8_t>(HashAlgorithm::SHA256))
+			return 0x20;
+
+		if (bHashAlgorithm == static_cast<uint8_t>(HashAlgorithm::SHA512))
+			return 0x40;
+	}
+
+	return 0;
+}
+
+Util::Error KDFDO::LoadHeader(File::FileSystem& fs) {
+
+	return Util::Error::NoError;
+}
+
+Util::Error KDFDO::Load(File::FileSystem& fs, bstr data) {
+
+	Clear();
+
+	auto err = fs.ReadFile(File::AppletID::OpenPGP, 0xf9, File::File, data);
+	if (err != Util::Error::NoError)
+		return err;
+
+
+	Util::TLVTree tlv;
+	tlv.Init(data);
+
+	if (!tlv.Search(0xf9))
+		return Util::Error::CryptoDataError;
+
+/*	// KDFAlgorithm
+	if (tlv.Search(0x81) && tlv.CurrentElm().Length() == 1)
+		bKDFAlgorithm = tlv.CurrentElm().Data()[0];
+
+	// no KDF-DO found
+	if (bKDFAlgorithm != static_cast<uint8_t>(KDFAlgorithm::KDF_ITERSALTED_S2K)) {
+		bKDFAlgorithm = static_cast<uint8_t>(KDFAlgorithm::None);
+
+		return Util::Error::NoError;
+	}
+
+	// KDFAlgorithm
+	if (tlv.Search(0x82) && tlv.CurrentElm().Length() == 1)
+		bHashAlgorithm = tlv.CurrentElm().Data()[0];
+
+	// IterationCount
+	if (tlv.Search(0x83) && tlv.CurrentElm().Length() <= 4)
+		IterationCount = tlv.CurrentElm().Data().get_uint_be(0, 4);
+
+	// SaltPW1
+	if (tlv.Search(0x84) && tlv.CurrentElm().Length() > 0)
+		SaltPW1 = tlv.CurrentElm().Data();
+
+	// SaltRC;
+	if (tlv.Search(0x85) && tlv.CurrentElm().Length() > 0)
+
+	// SaltPW3;
+	if (tlv.Search(0x86) && tlv.CurrentElm().Length() > 0)
+
+	// InitialPW1;
+	if (tlv.Search(0x87) && tlv.CurrentElm().Length() > 0)
+
+	// InitialPW3;
+	if (tlv.Search(0x88) && tlv.CurrentElm().Length() > 0)
+*/
+
+	return Util::Error::NoError;
+}
+
+Util::Error KDFDO::SaveInitPasswordsToPWFiles(File::FileSystem& fs) {
+	if (InitialPW1.length() > 0)
+		return fs.WriteFile(File::AppletID::OpenPGP, File::SecureFileID::PW1, File::Secure, InitialPW1);
+
+	if (InitialPW3.length() > 0)
+		return fs.WriteFile(File::AppletID::OpenPGP, File::SecureFileID::PW3, File::Secure, InitialPW3);
+
+	return Util::Error::NoError;
+}
+
 } // namespace OpenPGP
