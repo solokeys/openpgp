@@ -59,6 +59,17 @@ namespace std {
 			return res;
 		}
 
+		constexpr uint32_t get_uint_le(const size_t indx, const size_t size) {
+			if (indx + size > this->length())
+				return 0;
+
+			uint32_t res = 0;
+			for(uint8_t i = 0; i < size; i++) {
+				res += (uint8Data()[indx + i]) << (i * 8);
+			}
+			return res;
+		}
+
 		constexpr void set_uint_be(const size_t indx, const size_t size, const uint32_t value) {
 			if (indx + size > this->length())
 				return;

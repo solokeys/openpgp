@@ -243,13 +243,8 @@ Util::Error APDUPutData::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 		if (err != Util::Error::NoError)
 			return err;
 
-		// here list of objects that need to refresh theirs state
-		if (object_id == 0xc4 || object_id == 0xf9)
-			security.Reload();
-
-		// reset reseting password code try TODO: check in the datasheet if it correct!
-		if (object_id == 0xd3)
-			security.ResetPasswdTryRemains(Password::RC);
+		// refresh objects and some logic after saving data to filesystem
+		security.AfterSaveFileLogic(object_id);
 	} else {
 		key_storage.SetKeyExtHeader(File::AppletID::OpenPGP, data);
 	}

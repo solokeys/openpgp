@@ -216,6 +216,33 @@ void Security::Reload() {
 	kdfDO.LoadHeader(filesystem);
 }
 
+void Security::AfterSaveFileLogic(uint16_t objectID) {
+	Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
+	File::FileSystem &filesystem = solo.GetFileSystem();
+
+	// list of objects that need to refresh theirs state
+	if (objectID == 0xc4 || objectID == 0xf9)
+		Reload();
+
+	// reset reseting password code try TODO: check in the datasheet if it correct!
+	if (objectID == 0xd3)
+		ResetPasswdTryRemains(Password::RC);
+
+	// if KDF-DO contains default passwords - needs to save them
+	if (objectID == 0xf9) {
+		KDFDO _kdfDO;
+		uint8_t _data[500] = {0};
+		auto data = bstr(_data, 0, sizeof(_data));
+
+		auto err = _kdfDO.Load(filesystem, data);
+		_kdfDO.Print();
+		if (err == Util::Error::NoError &&
+			(_kdfDO.InitialPW1.length() > 0 || _kdfDO.InitialPW3.length() > 0)
+		   )
+			_kdfDO.SaveInitPasswordsToPWFiles(filesystem);
+	}
+}
+
 Util::Error Security::SetPasswd(Password passwdId, bstr password) {
 
 	if (passwdId == Password::Any || passwdId == Password::Never)

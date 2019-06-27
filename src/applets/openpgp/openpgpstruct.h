@@ -128,6 +128,8 @@ struct KDFDO {
 	Util::Error LoadHeader(File::FileSystem &fs);
 	Util::Error Load(File::FileSystem &fs, bstr data);
 	Util::Error SaveInitPasswordsToPWFiles(File::FileSystem &fs);
+
+	void Print();
 };
 
 

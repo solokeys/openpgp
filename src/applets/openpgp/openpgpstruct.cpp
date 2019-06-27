@@ -203,6 +203,20 @@ size_t KDFDO::GetPWLength() {
 
 Util::Error KDFDO::LoadHeader(File::FileSystem& fs) {
 
+	uint8_t _data[500] = {0};
+	auto data = bstr(_data, 0, sizeof(_data));
+
+	auto err = Load(fs, data);
+	if (err != Util::Error::NoError)
+		return err;
+
+	// strings points to local variables
+	SaltPW1.clear();
+	SaltRC.clear();
+	SaltPW3.clear();
+	InitialPW1.clear();
+	InitialPW3.clear();
+
 	return Util::Error::NoError;
 }
 
@@ -214,16 +228,14 @@ Util::Error KDFDO::Load(File::FileSystem& fs, bstr data) {
 	if (err != Util::Error::NoError)
 		return err;
 
-
 	Util::TLVTree tlv;
-	tlv.Init(data);
-
-	if (!tlv.Search(0xf9))
+	err = tlv.Init(data);
+	if (err != Util::Error::NoError)
 		return Util::Error::CryptoDataError;
 
-/*	// KDFAlgorithm
+	// KDFAlgorithm
 	if (tlv.Search(0x81) && tlv.CurrentElm().Length() == 1)
-		bKDFAlgorithm = tlv.CurrentElm().Data()[0];
+		bKDFAlgorithm = tlv.CurrentElm().GetData()[0];
 
 	// no KDF-DO found
 	if (bKDFAlgorithm != static_cast<uint8_t>(KDFAlgorithm::KDF_ITERSALTED_S2K)) {
@@ -232,30 +244,33 @@ Util::Error KDFDO::Load(File::FileSystem& fs, bstr data) {
 		return Util::Error::NoError;
 	}
 
-	// KDFAlgorithm
+	// HashAlgorithm
 	if (tlv.Search(0x82) && tlv.CurrentElm().Length() == 1)
-		bHashAlgorithm = tlv.CurrentElm().Data()[0];
+		bHashAlgorithm = tlv.CurrentElm().GetData()[0];
 
 	// IterationCount
 	if (tlv.Search(0x83) && tlv.CurrentElm().Length() <= 4)
-		IterationCount = tlv.CurrentElm().Data().get_uint_be(0, 4);
+		IterationCount = tlv.CurrentElm().GetData().get_uint_le(0, 4);
 
 	// SaltPW1
 	if (tlv.Search(0x84) && tlv.CurrentElm().Length() > 0)
-		SaltPW1 = tlv.CurrentElm().Data();
+		SaltPW1 = tlv.CurrentElm().GetData();
 
 	// SaltRC;
 	if (tlv.Search(0x85) && tlv.CurrentElm().Length() > 0)
+		SaltRC = tlv.CurrentElm().GetData();
 
 	// SaltPW3;
 	if (tlv.Search(0x86) && tlv.CurrentElm().Length() > 0)
+		SaltPW3 = tlv.CurrentElm().GetData();
 
 	// InitialPW1;
 	if (tlv.Search(0x87) && tlv.CurrentElm().Length() > 0)
+		InitialPW1 = tlv.CurrentElm().GetData();
 
 	// InitialPW3;
 	if (tlv.Search(0x88) && tlv.CurrentElm().Length() > 0)
-*/
+		InitialPW3 = tlv.CurrentElm().GetData();
 
 	return Util::Error::NoError;
 }
@@ -269,5 +284,21 @@ Util::Error KDFDO::SaveInitPasswordsToPWFiles(File::FileSystem& fs) {
 
 	return Util::Error::NoError;
 }
+
+void KDFDO::Print() {
+	printf("-------------- KDF-DO --------------\n");
+	printf("Algorithm:        0x%02x\n", bKDFAlgorithm);
+	if (bKDFAlgorithm != 0x03)
+		return;
+
+	printf("Hash alg:         0x%02x\n", bHashAlgorithm);
+	printf("Iteration count:  %d\n", IterationCount);
+	printf("SaltPW1:    "); dump_hex(SaltPW1, 16);
+	printf("SaltRC:     "); dump_hex(SaltRC, 16);
+	printf("SaltPW3:    "); dump_hex(SaltPW3, 16);
+	printf("InitialPW1: "); dump_hex(InitialPW1, 16);
+	printf("InitialPW3: "); dump_hex(InitialPW3, 16);
+}
+
 
 } // namespace OpenPGP
