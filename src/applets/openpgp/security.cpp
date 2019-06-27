@@ -234,7 +234,7 @@ Util::Error Security::AfterSaveFileLogic(uint16_t objectID) {
 	// if KDF-DO contains default passwords - needs to save them
 	if (objectID == 0xf9) {
 		kdfDO.Print();
-		if (kdfDO.InitialPW1.length() > 0 || kdfDO.InitialPW3.length() > 0) {
+		if (kdfDO.HaveInitPassword(Password::Any)) {
 			auto err = kdfDO.SaveInitPasswordsToPWFiles(filesystem);
 			if (err != Util::Error::NoError)
 				return err;

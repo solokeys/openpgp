@@ -203,6 +203,22 @@ size_t KDFDO::GetPWLength() {
 	return 0;
 }
 
+bool KDFDO::HaveInitPassword(Password passwdId) {
+	switch (passwdId) {
+	case Password::Any:
+		return InitialPW1.length() > 0 || InitialPW3.length() > 0;
+	case Password::PSOCDS:
+	case Password::PW1:
+		return InitialPW1.length() > 0;
+	case Password::PW3:
+		return InitialPW3.length() > 0;
+	default:
+		break;
+	}
+
+	return false;
+}
+
 Util::Error KDFDO::Load(File::FileSystem& fs) {
 
 	Clear();

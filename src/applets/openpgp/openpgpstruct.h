@@ -128,6 +128,7 @@ public:
 
 	void Clear();
 	size_t GetPWLength();
+	bool HaveInitPassword(Password passwdId);
 
 	Util::Error Load(File::FileSystem &fs);
 	Util::Error SaveInitPasswordsToPWFiles(File::FileSystem &fs);
