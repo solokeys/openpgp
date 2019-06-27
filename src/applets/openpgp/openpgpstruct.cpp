@@ -178,6 +178,8 @@ Util::Error DSCounter::DeleteFile(File::FileSystem& fs) {
 }
 
 void KDFDO::Clear() {
+	memset(_kdfdata, 0, sizeof(_kdfdata));
+
 	bKDFAlgorithm = 0;
 	bHashAlgorithm = 0;
 	IterationCount = 0;
@@ -201,35 +203,16 @@ size_t KDFDO::GetPWLength() {
 	return 0;
 }
 
-Util::Error KDFDO::LoadHeader(File::FileSystem& fs) {
-
-	uint8_t _data[PGPConst::KDFDOMaxFileSize] = {0};
-	auto data = bstr(_data, 0, sizeof(_data));
-
-	auto err = Load(fs, data);
-	if (err != Util::Error::NoError)
-		return err;
-
-	// strings points to local variables
-	SaltPW1.clear();
-	SaltRC.clear();
-	SaltPW3.clear();
-	InitialPW1.clear();
-	InitialPW3.clear();
-
-	return Util::Error::NoError;
-}
-
-Util::Error KDFDO::Load(File::FileSystem& fs, bstr data) {
+Util::Error KDFDO::Load(File::FileSystem& fs) {
 
 	Clear();
 
-	auto err = fs.ReadFile(File::AppletID::OpenPGP, 0xf9, File::File, data);
+	auto err = fs.ReadFile(File::AppletID::OpenPGP, 0xf9, File::File, kdfdata);
 	if (err != Util::Error::NoError)
 		return err;
 
 	Util::TLVTree tlv;
-	err = tlv.Init(data);
+	err = tlv.Init(kdfdata);
 	if (err != Util::Error::NoError)
 		return Util::Error::CryptoDataError;
 

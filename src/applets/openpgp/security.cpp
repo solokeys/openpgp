@@ -213,7 +213,7 @@ void Security::Reload() {
 	File::FileSystem &filesystem = solo.GetFileSystem();
 
 	pwstatus.Load(filesystem);
-	kdfDO.LoadHeader(filesystem);
+	kdfDO.Load(filesystem);
 }
 
 Util::Error Security::AfterSaveFileLogic(uint16_t objectID) {
@@ -233,16 +233,9 @@ Util::Error Security::AfterSaveFileLogic(uint16_t objectID) {
 
 	// if KDF-DO contains default passwords - needs to save them
 	if (objectID == 0xf9) {
-		KDFDO _kdfDO;
-		uint8_t _data[500] = {0};
-		auto data = bstr(_data, 0, sizeof(_data));
-
-		auto err = _kdfDO.Load(filesystem, data);
-		_kdfDO.Print();
-		if (err == Util::Error::NoError &&
-			(_kdfDO.InitialPW1.length() > 0 || _kdfDO.InitialPW3.length() > 0)
-		   ) {
-			err = _kdfDO.SaveInitPasswordsToPWFiles(filesystem);
+		kdfDO.Print();
+		if (kdfDO.InitialPW1.length() > 0 || kdfDO.InitialPW3.length() > 0) {
+			auto err = kdfDO.SaveInitPasswordsToPWFiles(filesystem);
 			if (err != Util::Error::NoError)
 				return err;
 		}

@@ -112,6 +112,10 @@ enum class HashAlgorithm {
 };
 
 struct KDFDO {
+private:
+	uint8_t _kdfdata[PGPConst::KDFDOMaxFileSize] = {0};
+	bstr kdfdata{_kdfdata, 0, sizeof(_kdfdata)};
+public:
 	uint8_t bKDFAlgorithm;
 	uint8_t bHashAlgorithm;
 	uint32_t IterationCount;
@@ -125,8 +129,7 @@ struct KDFDO {
 	void Clear();
 	size_t GetPWLength();
 
-	Util::Error LoadHeader(File::FileSystem &fs);
-	Util::Error Load(File::FileSystem &fs, bstr data);
+	Util::Error Load(File::FileSystem &fs);
 	Util::Error SaveInitPasswordsToPWFiles(File::FileSystem &fs);
 
 	void Print();
