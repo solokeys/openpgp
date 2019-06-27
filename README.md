@@ -61,7 +61,6 @@ cd gnuk/tests && py.test-3 -x
   - user DO (0101-0104) and check access rights
   - PSO:ENCIPHER and DECIPHER with AES
   - Secure messaging????
-  - ECDH???
-  - ALGO_ED25519, ALGO_CURVE25519???
+  - ALGO_ED25519 (EdDSA), ALGO_CURVE25519(ECDH)???
 
 
