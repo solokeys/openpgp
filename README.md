@@ -62,6 +62,6 @@ cd gnuk/tests && py.test-3 -x
   - PSO:ENCIPHER and DECIPHER with AES
   - Secure messaging????
   - ECDH???
-  - ALGO_ED25519???
+  - ALGO_ED25519, ALGO_CURVE25519???
 
 
