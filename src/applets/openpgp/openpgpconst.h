@@ -11,6 +11,7 @@
 #define SRC_APPLETS_OPENPGP_OPENPGPCONST_H_
 
 #include <cstdint>
+#include "util.h"
 
 namespace OpenPGP {
 
@@ -49,6 +50,9 @@ public:
 	}
 	static const uint8_t DefaultPWResetCounter = 0x03U; // OpenPGP v 3.3.1 page 23
 	static const uint8_t DefaultRCResetCounter = 0x00U; // OpenPGP v 3.3.1 page 23
+
+	static const bstr DefaultPW1;
+	static const bstr DefaultPW3;
 };
 
 enum OpenPGPKeyType {

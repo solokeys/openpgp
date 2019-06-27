@@ -344,8 +344,8 @@ Util::Error Security::VerifyPasswd(Password passwdId, bstr data, bool passwdChec
 		if (file_err != Util::Error::NoError)
 			return file_err;
 
-		if (passwd == "123456"_bstr) {
-			passwd.set("12345678"_bstr);
+		if (passwd == PGPConst::DefaultPW1) {
+			passwd.set(PGPConst::DefaultPW3);
 		}
 		passwd_length = passwd.length();
 	} else {

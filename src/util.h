@@ -29,15 +29,12 @@ namespace std {
     public:
 		using basic_string_view<_CharT, _Traits>::basic_string_view;
 
-		constexpr w_basic_string_view(std::basic_string_view<_CharT, _Traits> sv, const size_t maxLength = 0)
+		constexpr w_basic_string_view(const std::basic_string_view<_CharT, _Traits> sv, const size_t maxLength = 0)
 							:basic_string_view<_CharT, _Traits>(sv) {
 			_max_length = MAX(sv.length(), maxLength);
 		}
-		constexpr w_basic_string_view(const _CharT* __str, size_t __len, const size_t maxLength = 0)
-							:basic_string_view<_CharT, _Traits>(__str, __len) {
-			_max_length = MAX(__len, maxLength);
-		}
-
+		constexpr w_basic_string_view(const _CharT* __str, const size_t __len, const size_t maxLength = 0)
+							:basic_string_view<_CharT, _Traits>(__str, __len), _max_length(MAX(__len, maxLength)) {}
 
 		constexpr uint8_t *uint8Data() {
 			return const_cast<uint8_t *>(this->data());
@@ -144,8 +141,8 @@ namespace std {
 }
 
 using bstr = std::w_basic_string_view<uint8_t>;
-constexpr bstr operator "" _bstr(const char* data, size_t len){
-	return bstr(reinterpret_cast<const uint8_t *>(data), len);
+constexpr bstr operator "" _bstr(const char* data, const size_t len){
+	return bstr(static_cast<const uint8_t *>(static_cast<const void*>(data)), len);
 };
 
 using KeyID_t = uint16_t;
