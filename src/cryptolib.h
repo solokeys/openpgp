@@ -163,6 +163,8 @@ private:
 public:
 	KeyStorage(CryptoEngine &_cryptoEngine): cryptoEngine(_cryptoEngine) {prvStr.clear();};
 
+	bool KeyExists(AppID_t appID, KeyID_t keyID);
+
 	Util::Error GetKeyPart(bstr data, Util::tag_t keyPart, bstr &dataOut);
 	Util::Error GetPublicKey(AppID_t appID, KeyID_t keyID, uint8_t AlgoritmID, bstr &pubKey);
 	Util::Error GetPublicKey7F49(AppID_t appID, KeyID_t keyID, uint8_t AlgoritmID, bstr &tlvKey);

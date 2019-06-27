@@ -377,6 +377,15 @@ Util::Error CryptoLib::ECDSAVerify(bstr key, bstr data,
 	return Util::Error::InternalError;
 }
 
+bool KeyStorage::KeyExists(AppID_t appID, KeyID_t keyID) {
+	Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
+	File::FileSystem &filesystem = solo.GetFileSystem();
+	File::GenericFileSystem &gf = filesystem.getGenFiles();
+
+	return gf.FileExist(appID, keyID, File::FileType::Secure);
+}
+
+
 Util::Error KeyStorage::GetECDSAPrivateKey(AppID_t appID, KeyID_t keyID, ECDSAKey& key) {
 	return Util::Error::InternalError;
 }
