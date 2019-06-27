@@ -117,6 +117,19 @@ Util::Error Security::DataObjectAccessCheck(
     	}
     }
 
+    // KDF DO can be changed only when no keys are registered.
+    // from gnuk
+    if (dataObjectID == 0xf9) {
+    	Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
+    	Crypto::KeyStorage &key_storage = solo.GetKeyStorage();
+
+    	if (key_storage.KeyExists(File::AppletID::OpenPGP, OpenPGPKeyType::DigitalSignature) ||
+    		key_storage.KeyExists(File::AppletID::OpenPGP, OpenPGPKeyType::Confidentiality) ||
+			key_storage.KeyExists(File::AppletID::OpenPGP, OpenPGPKeyType::Authentication)
+    		)
+        	return Util::Error::AccessDenied;
+    }
+
     if (PGPConst::ReadWriteOnlyAllowedFiles)
     	return Util::Error::AccessDenied;
     else
