@@ -203,7 +203,7 @@ size_t KDFDO::GetPWLength() {
 
 Util::Error KDFDO::LoadHeader(File::FileSystem& fs) {
 
-	uint8_t _data[500] = {0};
+	uint8_t _data[PGPConst::KDFDOMaxFileSize] = {0};
 	auto data = bstr(_data, 0, sizeof(_data));
 
 	auto err = Load(fs, data);

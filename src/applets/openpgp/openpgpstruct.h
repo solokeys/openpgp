@@ -68,14 +68,14 @@ struct  RSAAlgorithmAttr {
 
 // Open PGP 3.3.1 page 31
 struct  ECDSAAlgorithmAttr {
-	uint8_t bOID[10];
+	uint8_t bOID[PGPConst::AlgoritmAttrMaxOIDSize];
 	bstr OID{bOID, sizeof(bOID)};
 	uint8_t KeyFormat; // Import-Format of private key, optional. if Format byte is not present `FF` = standard with public key
 };
 
 // Open PGP 3.3.1 page 31
 struct  AlgoritmAttr {
-	uint8_t _data[50];
+	uint8_t _data[PGPConst::AlgoritmAttrMaxFileSize];
 	bstr data{_data, sizeof(_data)};
 
 	uint8_t AlgorithmID; // Crypto::AlgoritmID
@@ -88,7 +88,7 @@ struct  AlgoritmAttr {
 // DS-Counter
 struct DSCounter {
 private:
-	uint8_t _dsdata[20] = {0};
+	uint8_t _dsdata[PGPConst::DSCounterMaxFileSize] = {0};
 	bstr dsdata{_dsdata, 0, sizeof(_dsdata)};
 public:
 	uint32_t Counter;

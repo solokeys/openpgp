@@ -53,6 +53,12 @@ public:
 
 	static const bstr DefaultPW1; // default password PW1 (123456)
 	static const bstr DefaultPW3; // default password PW3 (12345678)
+
+	// maximum file sizes for structures in bytes
+	static const size_t AlgoritmAttrMaxFileSize = 50U;
+	static const size_t AlgoritmAttrMaxOIDSize = 10U;
+	static const size_t DSCounterMaxFileSize = 20U;
+	static const size_t KDFDOMaxFileSize = 240U;
 };
 
 enum OpenPGPKeyType {
