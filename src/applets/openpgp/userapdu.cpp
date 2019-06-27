@@ -244,7 +244,7 @@ Util::Error APDUPutData::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 			return err;
 
 		// here list of objects that need to refresh theirs state
-		if (object_id == 0xc4)
+		if (object_id == 0xc4 || object_id == 0xf9)
 			security.Reload();
 
 		// reset reseting password code try TODO: check in the datasheet if it correct!
