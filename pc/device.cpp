@@ -114,6 +114,23 @@ void make_work_directory(char* dir) {
 	}
 }
 
+bool fileexist(char* name) {
+
+	char fname[100] = {0};
+	char dir[] = "./data/";
+	make_work_directory(dir);
+
+	strcpy(fname, dir);
+	strcat(fname, name);
+
+	printf("is exist: %s\n", fname);
+	// check if it exist and have read permission
+	if (access(fname, R_OK) != 0)
+		return false;
+
+	return true;
+}
+
 int readfile(char* name, uint8_t * buf, size_t max_size, size_t *size) {
 
 	char fname[100] = {0};

@@ -63,6 +63,7 @@ private:
 public:
 	Util::Error SetFileName(AppID_t AppId, KeyID_t FileID, FileType FileType, char *name);
 
+	bool FileExist(AppID_t AppId, KeyID_t FileID, FileType FileType);
 	Util::Error ReadFile(AppID_t AppId, KeyID_t FileID, FileType FileType, bstr &data);
 	Util::Error WriteFile(AppID_t AppId, KeyID_t FileID, FileType FileType, bstr &data);
 };

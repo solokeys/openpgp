@@ -188,7 +188,6 @@ Util::Error ConfigFileSystem::ReadFile(AppID_t AppId, KeyID_t FileID,
 		break;
 	}
 
-
 	return Util::Error::FileNotFound;
 }
 
@@ -199,6 +198,13 @@ Util::Error GenericFileSystem::SetFileName(AppID_t AppId, KeyID_t FileID,
 	sprintf(name, "%d_%d_%d", AppId, FileID, FileType);
 
 	return Util::Error::NoError;
+}
+
+bool GenericFileSystem::FileExist(AppID_t AppId, KeyID_t FileID, FileType FileType) {
+	char file_name[100] = {0};
+	SetFileName(AppId, FileID, FileType, file_name);
+
+	return fileexist(file_name);
 }
 
 Util::Error GenericFileSystem::ReadFile(AppID_t AppId, KeyID_t FileID,
