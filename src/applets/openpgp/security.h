@@ -37,6 +37,7 @@ namespace OpenPGP {
 		size_t GetMaxPWLength(Password passwdId);
 		Util::Error ResetPasswdTryRemains(Password passwdId);
 		uint8_t PasswdTryRemains(Password passwdId);
+		Util::Error ClearAllPasswd();
 
 		void ClearAllAuth();
 

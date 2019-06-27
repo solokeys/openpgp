@@ -231,8 +231,12 @@ Util::Error Security::AfterSaveFileLogic(uint16_t objectID) {
 			return err;
 	}
 
+	// clear all the authentications and passwords
 	// if KDF-DO contains default passwords - needs to save them
 	if (objectID == 0xf9) {
+		ClearAllAuth();
+		ClearAllPasswd();
+
 		kdfDO.Print();
 		if (kdfDO.HaveInitPassword(Password::Any)) {
 			auto err = kdfDO.SaveInitPasswordsToPWFiles(filesystem);
@@ -409,6 +413,33 @@ Util::Error Security::ResetPasswdTryRemains(Password passwdId) {
 
 	pwstatus.PasswdSetRemains(passwdId, PGPConst::DefaultPWResetCounter);
 	return pwstatus.Save(filesystem);
+}
+
+// from gnuk source
+Util::Error Security::ClearAllPasswd() {
+	Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
+	File::FileSystem &filesystem = solo.GetFileSystem();
+
+	auto file_err = filesystem.DeleteFile(File::AppletID::OpenPGP,
+			File::SecureFileID::PW1,
+			File::Secure);
+	if (file_err != Util::Error::NoError)
+		return file_err;
+
+	file_err = filesystem.DeleteFile(File::AppletID::OpenPGP,
+			File::SecureFileID::PW3,
+			File::Secure);
+	if (file_err != Util::Error::NoError)
+		return file_err;
+
+	// RC
+	file_err = filesystem.DeleteFile(File::AppletID::OpenPGP,
+			0xd3,
+			File::File);
+	if (file_err != Util::Error::NoError)
+		return file_err;
+
+	return Util::Error::NoError;
 }
 
 void Security::ClearAuth(Password passwdId) {
