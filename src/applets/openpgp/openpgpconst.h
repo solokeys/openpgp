@@ -51,8 +51,8 @@ public:
 	static const uint8_t DefaultPWResetCounter = 0x03U; // OpenPGP v 3.3.1 page 23
 	static const uint8_t DefaultRCResetCounter = 0x00U; // OpenPGP v 3.3.1 page 23
 
-	static const bstr DefaultPW1;
-	static const bstr DefaultPW3;
+	static const bstr DefaultPW1; // default password PW1 (123456)
+	static const bstr DefaultPW3; // default password PW3 (12345678)
 };
 
 enum OpenPGPKeyType {
