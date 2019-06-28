@@ -1,5 +1,5 @@
  #include <gtest/gtest.h>
-
+ 
 #include "../src/util.h"
 #include <string>
 
@@ -110,4 +110,17 @@ TEST(bstrTest, Del) {
     EXPECT_EQ(teststring.length(), 0);
 }
 
+TEST(bstrTest, MoveTail) {
+    uint8_t data[15] = {0};
+    bstr teststring = bstr(data, 0, sizeof(data));
+    
+    teststring.set("123456789"_bstr);
+    teststring.moveTail(5, -3);
+    EXPECT_TRUE(teststring == "126789"_bstr);
 
+    teststring.set("123456789"_bstr);
+    teststring.moveTail(3, 2);
+    teststring.uint8Data()[3] = 0x30; // correct undefined behavior
+    teststring.uint8Data()[4] = 0x30;
+    EXPECT_TRUE(teststring == "12300456789"_bstr);
+}
