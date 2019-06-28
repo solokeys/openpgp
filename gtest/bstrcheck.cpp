@@ -123,4 +123,16 @@ TEST(bstrTest, MoveTail) {
     teststring.uint8Data()[3] = 0x30; // correct undefined behavior
     teststring.uint8Data()[4] = 0x30;
     EXPECT_TRUE(teststring == "12300456789"_bstr);
+
+    teststring.set("123456789"_bstr);
+    teststring.moveTail(0, 2);
+    teststring.uint8Data()[0] = 0x30; // correct undefined behavior
+    teststring.uint8Data()[1] = 0x30;
+    EXPECT_TRUE(teststring == "00123456789"_bstr);
+
+    teststring.set("123456789"_bstr);
+    teststring.moveTail(8, 2);
+    teststring.uint8Data()[8] = 0x30; // correct undefined behavior
+    teststring.uint8Data()[9] = 0x30;
+    EXPECT_TRUE(teststring == "12345678009"_bstr);
 }
