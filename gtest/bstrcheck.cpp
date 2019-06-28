@@ -39,11 +39,23 @@ TEST(bstrTest, GetUintLe) {
 }
 
 TEST(bstrTest, SetUintBe) {
-    bstr teststring = "\x00\x00\x00\x00\x00\x00"_bstr;
-    teststring.set_uint_be(0, 4, 01020304);
+    bstr teststring = "\x00\x00\x00\x00\x00\x00\x00"_bstr;
+    
+    teststring.set_uint_be(0, 4, 0x01020304);
     EXPECT_EQ(teststring.get_uint_be(0, 4), 0x01020304);
-    teststring.set_uint_be(2, 4, 01020304);
+    
+    teststring.set_uint_be(2, 4, 0x01020304);
     EXPECT_EQ(teststring.get_uint_be(2, 4), 0x01020304);
+    
     teststring.set_uint_be(3, 2, 0xbabb);
-    EXPECT_EQ(teststring.get_uint_be(0, 2), 0xbabb);
+    EXPECT_EQ(teststring.get_uint_be(3, 2), 0xbabb);
+}
+
+TEST(bstrTest, SetLength) {
+    bstr teststring = "12345678"_bstr;
+    EXPECT_EQ(teststring.length(), 8);
+    
+    teststring.set_length(2);
+    EXPECT_EQ(teststring.length(), 2);
+    EXPECT_TRUE(teststring == "12"_bstr);
 }
