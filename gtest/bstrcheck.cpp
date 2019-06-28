@@ -84,3 +84,30 @@ TEST(bstrTest, Set) {
     teststring.set("1234567"_bstr);
     EXPECT_TRUE(teststring == "1234567"_bstr);
 }
+
+TEST(bstrTest, Del) {
+    uint8_t data[15] = {0};
+    bstr teststring = bstr(data, 0, sizeof(data));
+    
+    teststring.set("123456789"_bstr);
+    teststring.del(0, 2);
+    EXPECT_TRUE(teststring == "3456789"_bstr);
+    
+    teststring.set("123456789"_bstr);
+    teststring.del(3, 4);
+    EXPECT_TRUE(teststring == "12389"_bstr);
+
+    teststring.set("123456789"_bstr);
+    teststring.del(7, 2);
+    EXPECT_TRUE(teststring == "1234567"_bstr);
+    
+    //teststring.set("123456789"_bstr);
+    //teststring.del(7, 20);
+    //EXPECT_TRUE(teststring == "1234567"_bstr);
+
+    teststring.set("123456789"_bstr);
+    teststring.del(0, 20);
+    EXPECT_EQ(teststring.length(), 0);
+}
+
+
