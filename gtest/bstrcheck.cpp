@@ -39,7 +39,8 @@ TEST(bstrTest, GetUintLe) {
 }
 
 TEST(bstrTest, SetUintBe) {
-    bstr teststring = "\x00\x00\x00\x00\x00\x00\x00"_bstr;
+    uint8_t data[10] = {0};
+    bstr teststring = bstr(data, 6, sizeof(data));
     
     teststring.set_uint_be(0, 4, 0x01020304);
     EXPECT_EQ(teststring.get_uint_be(0, 4), 0x01020304);
@@ -58,4 +59,28 @@ TEST(bstrTest, SetLength) {
     teststring.set_length(2);
     EXPECT_EQ(teststring.length(), 2);
     EXPECT_TRUE(teststring == "12"_bstr);
+}
+
+TEST(bstrTest, Append) {
+    uint8_t data[15] = {0};
+    bstr teststring = bstr(data, 0, sizeof(data));
+    
+    teststring.append(0x01);
+    teststring.appendAPDUres(0x0203);
+    uint8_t cn[] = {0x04, 0x05, 0x06};
+    teststring.append(cn, sizeof(cn));
+    teststring.append("\x07\x08\x09"_bstr);
+    EXPECT_TRUE(teststring == "\x01\x02\x03\x04\x05\x06\x07\x08\x09"_bstr);
+}
+
+TEST(bstrTest, Set) {
+    uint8_t data[15] = {0};
+    bstr teststring = bstr(data, 0, sizeof(data));
+    
+    teststring.setAPDURes(0x9101);
+    EXPECT_TRUE(teststring == "\x91\x01"_bstr);
+
+    
+    teststring.set("1234567"_bstr);
+    EXPECT_TRUE(teststring == "1234567"_bstr);
 }
