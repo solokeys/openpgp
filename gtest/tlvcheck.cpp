@@ -277,5 +277,11 @@ TEST(tlvTest, ClearAppendCurrentData) {
     EXPECT_EQ(tlv.CurrentElm().Tag(), 0x81);
     
     EXPECT_TRUE(tlv.GetDataLink() == "\xf4\x21\x81\x03\x37\x38\x39\x82\x02\x03\x04\x7f\x49\x0d\x85\x03\x31\x32\x36\x86\x00\x87\x04\x07\x33\x34\x35\x83\x00\x84\x04\x31\x32\x33\x34"_bstr);
+    
+    tlv.GoFirst();
+    tlv.ClearCurrentData();
+    EXPECT_EQ(tlv.CurrentElm().Tag(), 0xf4);
+    
+    EXPECT_TRUE(tlv.GetDataLink() == "\xf4\x00"_bstr);
 }
 
