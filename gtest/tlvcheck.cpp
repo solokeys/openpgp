@@ -139,6 +139,28 @@ TEST(tlvTest, TreeSearch) {
     EXPECT_EQ(tlv.CurrentElm().Tag(), 0xf4);
 }
 
+TEST(tlvTest, ElmFields) {
+    TLVTree tlv;
+    auto err = tlv.Init(sampletree);
+    EXPECT_TRUE(err == Error::NoError);
+    
+    ASSERT_NE(tlv.Search(0x85), nullptr);
+    EXPECT_EQ(tlv.CurrentElm().Tag(), 0x85);
+    EXPECT_EQ(tlv.CurrentElm().Length(), 2);
+    EXPECT_EQ(tlv.CurrentElm().ElmLength(), 4);
+    EXPECT_EQ(tlv.CurrentElm().HeaderLength(), 2);
+    EXPECT_TRUE(tlv.CurrentElm().GetData() == "\x04\x05"_bstr);
+    EXPECT_FALSE(tlv.CurrentElm().IsConstructed());
+    
+    ASSERT_NE(tlv.Search(0x7f49), nullptr);
+    EXPECT_EQ(tlv.CurrentElm().Tag(), 0x7f49);
+    EXPECT_EQ(tlv.CurrentElm().Length(), 10);
+    EXPECT_EQ(tlv.CurrentElm().ElmLength(), 13);
+    EXPECT_EQ(tlv.CurrentElm().HeaderLength(), 3);
+    EXPECT_TRUE(tlv.CurrentElm().GetData() == "\x85\x02\x04\x05\x86\x01\x06\x87\x01\x07"_bstr);
+    EXPECT_TRUE(tlv.CurrentElm().IsConstructed());
+}
+
 TEST(tlvTest, AddRoot) {
     uint8_t _data[50] = {0};
     auto data = bstr(_data, 0, sizeof(_data));
