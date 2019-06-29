@@ -116,8 +116,8 @@ namespace std {
 		}
 
 		constexpr void del(const size_t begin, const size_t len) {
-			if (len > this->length()) {
-				clear();
+			if (begin + len > this->length()) {
+				set_length(begin);
 			} else {
 				moveTail(begin + len, -len);
 			}

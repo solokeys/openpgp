@@ -101,16 +101,16 @@ TEST(bstrTest, Del) {
     teststring.del(7, 2);
     EXPECT_TRUE(teststring == "1234567"_bstr);
     
-    //teststring.set("123456789"_bstr);
-    //teststring.del(7, 20);
-    //EXPECT_TRUE(teststring == "1234567"_bstr);
+    teststring.set("123456789"_bstr);
+    teststring.del(7, 20);
+    EXPECT_TRUE(teststring == "1234567"_bstr);
 
     teststring.set("123456789"_bstr);
     teststring.del(0, 20);
     EXPECT_EQ(teststring.length(), 0);
 }
 
-TEST(bstrTest, MoveTail) {
+TEST(bstrTest, MoveTaiNegativel) {
     uint8_t data[15] = {0};
     bstr teststring = bstr(data, 0, sizeof(data));
     
@@ -118,6 +118,19 @@ TEST(bstrTest, MoveTail) {
     teststring.moveTail(5, -3);
     EXPECT_TRUE(teststring == "126789"_bstr);
 
+    teststring.set("123456789"_bstr);
+    teststring.moveTail(2, -5);
+    EXPECT_TRUE(teststring == "6789"_bstr);
+    
+    teststring.set("123456789"_bstr);
+    teststring.moveTail(8, -8);
+    EXPECT_TRUE(teststring == "9"_bstr);
+}
+
+TEST(bstrTest, MoveTailPositive) {
+    uint8_t data[15] = {0};
+    bstr teststring = bstr(data, 0, sizeof(data));
+    
     teststring.set("123456789"_bstr);
     teststring.moveTail(3, 2);
     teststring.uint8Data()[3] = 0x30; // correct undefined behavior
