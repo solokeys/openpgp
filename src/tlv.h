@@ -196,6 +196,10 @@ public:
 		return tag;
 	}
 
+	constexpr bool IsConstructed() {
+		return isTagConstructed(tag);
+	}
+
 	constexpr tag_t Length() {
 		return length;
 	}
@@ -250,7 +254,7 @@ public:
 	}
 
 	constexpr bool GoChild() {
-		if (!isTagConstructed(_elm[currLevel].Tag()) || currLevel >= MaxTreeLevel - 1)
+		if (!_elm[currLevel].IsConstructed() || currLevel >= MaxTreeLevel - 1)
 			return false;
 
 		bstr data = _elm[currLevel].GetData();
@@ -269,6 +273,9 @@ public:
 	}
 
 	constexpr bool GoNextTreeElm() {
+		if(CurrentElmIsLast())
+			return false;
+
 		if (GoChild())
 			return true;
 
@@ -291,6 +298,15 @@ public:
 		}
 	}
 
+	constexpr bool CurrentElmIsLast() {
+		if (!CurrentElm().IsConstructed() && (CurrentElm().GetPtr() - _data.uint8Data() >= 0)) {
+			size_t offset = CurrentElm().GetPtr() - _data.uint8Data();
+			return _data.length() <= (offset + CurrentElm().ElmLength());
+		} else {
+			return false;
+		}
+	}
+
 	constexpr TLVElm *Search(tag_t tag) {
 		GoFirst();
 		while (true) {
@@ -298,9 +314,10 @@ public:
 				return &CurrentElm();
 
 			if (!GoNextTreeElm())
-				return nullptr;
+				break;
 		}
 
+		GoFirst();
 		return nullptr;
 	}
 
