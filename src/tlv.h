@@ -493,6 +493,7 @@ public:
 		size_t cur_elm_offset = current_ptr - start_ptr;
 		size_t cur_elm_data_len = CurrentElm().Length();
 		size_t cur_elm_header_len = CurrentElm().HeaderLength();
+		tag_t cur_elm_tag = CurrentElm().Tag();
 
 		// length of `length` will be the same length or less. so it is safe to encode direct to tag's place
 		size_t size = 0;
@@ -506,7 +507,7 @@ public:
 		NormalizeParents(-(delta_len + cur_elm_data_len));
 
 		Init(_data);
-		Search(CurrentElm().Tag());
+		Search(cur_elm_tag);
 	}
 
 	constexpr void AppendCurrentData(bstr cdata) {
