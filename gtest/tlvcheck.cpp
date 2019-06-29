@@ -156,3 +156,39 @@ TEST(tlvTest, AddRoot) {
     EXPECT_EQ(tlv.CurrentElm().Tag(), 0x7f49);
     EXPECT_TRUE(tlv.GetDataLink() == "\x7f\x49\x02sd"_bstr);
 }
+
+TEST(tlvTest, AddChildAddNextDel) {
+    uint8_t _data[50] = {0};
+    auto data = bstr(_data, 0, sizeof(_data));
+    
+    TLVTree tlv;
+    auto err = tlv.Init(data);
+    EXPECT_TRUE(err != Error::NoError);
+    
+    tlv.AddRoot(0x7f49);
+    EXPECT_EQ(tlv.CurrentElm().Tag(), 0x7f49);
+
+    bstr test = "1234"_bstr;
+    bstr test2 = "98"_bstr;
+    tlv.AddChild(0xf4, &test);
+    tlv.AddNext(0x82, &test2);
+    
+    tlv.Search(0xf4);
+    EXPECT_EQ(tlv.CurrentElm().Tag(), 0xf4);
+    EXPECT_TRUE(tlv.GetDataLink() == "\x7f\x49\x0a\xf4\x04\x31\x32\x33\x34\x82\x02\x39\x38"_bstr);
+    
+    tlv.AddChild(0x83);
+    tlv.AddNext(0x84, &test);
+    tlv.AddNext(0x85, &test2);
+    
+    tlv.Search(0x84);
+    EXPECT_EQ(tlv.CurrentElm().Tag(), 0x84);
+    
+    tlv.Search(0x85);
+    EXPECT_EQ(tlv.CurrentElm().Tag(), 0x85);
+    EXPECT_TRUE(tlv.GetDataLink() == "\x7f\x49\x12\xf4\x0c\x83\x00\x84\x04\x31\x32\x33\x34\x85\x02\x39\x38\x82\x02\x39\x38"_bstr);
+
+    tlv.DeleteCurrent();
+    EXPECT_EQ(tlv.CurrentElm().Tag(), 0x7f49);
+    EXPECT_TRUE(tlv.GetDataLink() == "\x7f\x49\x0e\xf4\x08\x83\x00\x84\x04\x31\x32\x33\x34\x82\x02\x39\x38"_bstr);
+}
