@@ -44,9 +44,74 @@ TEST(tlvTest, TreeMove) {
     
     EXPECT_EQ(tlv.CurrentElm().Tag(), 0xf4);
     
-    bool berr = tlv.GoNext(); // no next
-    EXPECT_FALSE(berr);
+    EXPECT_FALSE(tlv.GoNext()); // no next
     EXPECT_EQ(tlv.CurrentElm().Tag(), 0xf4);
+    
+    EXPECT_FALSE(tlv.GoParent()); // no parent
+    EXPECT_EQ(tlv.CurrentElm().Tag(), 0xf4);
+    
+    EXPECT_TRUE(tlv.GoChild());
+    EXPECT_EQ(tlv.CurrentElm().Tag(), 0x81);
+    
+    EXPECT_FALSE(tlv.GoChild()); // cant
+    EXPECT_EQ(tlv.CurrentElm().Tag(), 0x81);
+    
+    EXPECT_TRUE(tlv.GoNext()); 
+    EXPECT_EQ(tlv.CurrentElm().Tag(), 0x82);
+    
+    EXPECT_TRUE(tlv.GoNext()); 
+    EXPECT_EQ(tlv.CurrentElm().Tag(), 0x7f49);
+    
+    EXPECT_TRUE(tlv.GoChild());
+    EXPECT_EQ(tlv.CurrentElm().Tag(), 0x85);
+    
+    EXPECT_TRUE(tlv.GoParent());
+    EXPECT_EQ(tlv.CurrentElm().Tag(), 0x7f49);
+    
+    EXPECT_TRUE(tlv.GoChild());
+    EXPECT_EQ(tlv.CurrentElm().Tag(), 0x85);
+    
+    EXPECT_TRUE(tlv.GoNext()); 
+    EXPECT_EQ(tlv.CurrentElm().Tag(), 0x86);
+    
+    EXPECT_TRUE(tlv.GoNext()); 
+    EXPECT_EQ(tlv.CurrentElm().Tag(), 0x87);
+    
+    EXPECT_TRUE(tlv.GoParent());
+    EXPECT_EQ(tlv.CurrentElm().Tag(), 0x7f49);
+    
+    EXPECT_TRUE(tlv.GoFirst());
+    EXPECT_EQ(tlv.CurrentElm().Tag(), 0xf4);
+}
+
+TEST(tlvTest, TreeMoveNextTreeElm) {
+    TLVTree tlv;
+    auto err = tlv.Init(sampletree);
+    EXPECT_TRUE(err == Error::NoError);
+    
+    EXPECT_TRUE(tlv.GoNextTreeElm()); 
+    EXPECT_EQ(tlv.CurrentElm().Tag(), 0x81);
+    
+    EXPECT_TRUE(tlv.GoNextTreeElm()); 
+    EXPECT_EQ(tlv.CurrentElm().Tag(), 0x82);
+    
+    EXPECT_TRUE(tlv.GoNextTreeElm()); 
+    EXPECT_EQ(tlv.CurrentElm().Tag(), 0x7f49);
+    
+    EXPECT_TRUE(tlv.GoNextTreeElm()); 
+    EXPECT_EQ(tlv.CurrentElm().Tag(), 0x85);
+
+    EXPECT_TRUE(tlv.GoParent());
+    EXPECT_EQ(tlv.CurrentElm().Tag(), 0x7f49);
+
+    EXPECT_TRUE(tlv.GoNext()); 
+    EXPECT_EQ(tlv.CurrentElm().Tag(), 0x83);
+
+    EXPECT_TRUE(tlv.GoNextTreeElm()); 
+    EXPECT_EQ(tlv.CurrentElm().Tag(), 0x84);
+
+    //EXPECT_FALSE(tlv.GoNextTreeElm()); // end of tree 
+    //EXPECT_EQ(tlv.CurrentElm().Tag(), 0x84);
 }
 
 TEST(tlvTest, TreeSearch) {

@@ -234,8 +234,8 @@ public:
 		return _elm[0].Init(_data);
 	};
 
-	constexpr void GoFirst() {
-		Init(_data);
+	constexpr bool GoFirst() {
+		return Init(_data) == Error::NoError;
 	}
 
 	constexpr TLVElm &CurrentElm() {
