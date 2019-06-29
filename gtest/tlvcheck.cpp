@@ -138,3 +138,21 @@ TEST(tlvTest, TreeSearch) {
     ASSERT_EQ(elm, nullptr);
     EXPECT_EQ(tlv.CurrentElm().Tag(), 0xf4);
 }
+
+TEST(tlvTest, AddRoot) {
+    uint8_t _data[50] = {0};
+    auto data = bstr(_data, 0, sizeof(_data));
+    
+    TLVTree tlv;
+    auto err = tlv.Init(data);
+    EXPECT_TRUE(err != Error::NoError);
+    
+    tlv.AddRoot(0x7f49);
+    EXPECT_EQ(tlv.CurrentElm().Tag(), 0x7f49);
+    EXPECT_TRUE(tlv.GetDataLink() == "\x7f\x49\x00"_bstr);
+    
+    auto elm = "sd"_bstr;
+    tlv.AddRoot(0x7f49, &elm);
+    EXPECT_EQ(tlv.CurrentElm().Tag(), 0x7f49);
+    EXPECT_TRUE(tlv.GetDataLink() == "\x7f\x49\x02sd"_bstr);
+}
