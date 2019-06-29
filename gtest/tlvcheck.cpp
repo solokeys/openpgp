@@ -252,5 +252,30 @@ TEST(tlvTest, ClearAppendCurrentData) {
     EXPECT_EQ(tlv.CurrentElm().Tag(), 0x84);
     
     EXPECT_TRUE(tlv.GetDataLink() == "\xf4\x14\x81\x00\x82\x02\x03\x04\x7f\x49\x07\x85\x00\x86\x00\x87\x01\x07\x83\x00\x84\x00"_bstr);
+    
+    tlv.Search(0x84);
+    tlv.AppendCurrentData("12"_bstr);
+    tlv.AppendCurrentData("34"_bstr);
+    EXPECT_EQ(tlv.CurrentElm().Tag(), 0x84);
+    
+    EXPECT_TRUE(tlv.GetDataLink() == "\xf4\x18\x81\x00\x82\x02\x03\x04\x7f\x49\x07\x85\x00\x86\x00\x87\x01\x07\x83\x00\x84\x04\x31\x32\x33\x34"_bstr);
+    
+    tlv.Search(0x85);
+    tlv.AppendCurrentData("12"_bstr);
+    EXPECT_EQ(tlv.CurrentElm().Tag(), 0x85);
+   
+    tlv.Search(0x87);
+    tlv.AppendCurrentData("345"_bstr);
+    EXPECT_EQ(tlv.CurrentElm().Tag(), 0x87);
+    
+    tlv.Search(0x85);
+    tlv.AppendCurrentData("6"_bstr);
+    EXPECT_EQ(tlv.CurrentElm().Tag(), 0x85);
+    
+    tlv.Search(0x81);
+    tlv.AppendCurrentData("789"_bstr);
+    EXPECT_EQ(tlv.CurrentElm().Tag(), 0x81);
+    
+    EXPECT_TRUE(tlv.GetDataLink() == "\xf4\x21\x81\x03\x37\x38\x39\x82\x02\x03\x04\x7f\x49\x0d\x85\x03\x31\x32\x36\x86\x00\x87\x04\x07\x33\x34\x35\x83\x00\x84\x04\x31\x32\x33\x34"_bstr);
 }
 
