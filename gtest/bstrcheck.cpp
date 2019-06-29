@@ -61,6 +61,26 @@ TEST(bstrTest, SetLength) {
     EXPECT_TRUE(teststring == "12"_bstr);
 }
 
+TEST(bstrTest, MaxLengthConstructors) {
+    uint8_t data[15] = {0};
+    
+    bstr teststring = bstr(data, 0, sizeof(data));    
+    EXPECT_EQ(teststring.max_length(), sizeof(data));
+
+    bstr teststring1 = bstr(data, sizeof(data));    
+    EXPECT_EQ(teststring1.max_length(), sizeof(data));
+    
+    bstr teststring2 = bstr("123"_bstr);    
+    EXPECT_EQ(teststring2.max_length(), 3);
+
+    bstr teststring3 = bstr("123"_bstr, 4);    
+    EXPECT_EQ(teststring3.max_length(), 4);
+
+    auto teststring4 = bstr(data, 0, sizeof(data));
+    auto teststring5 = teststring4;    
+    EXPECT_EQ(teststring5.max_length(), sizeof(data));
+}
+
 TEST(bstrTest, Append) {
     uint8_t data[15] = {0};
     bstr teststring = bstr(data, 0, sizeof(data));
@@ -149,3 +169,15 @@ TEST(bstrTest, MoveTailPositive) {
     teststring.uint8Data()[9] = 0x30;
     EXPECT_TRUE(teststring == "12345678009"_bstr);
 }
+
+TEST(bstrTest, MaxLengthMoving) {
+    uint8_t data[15] = {0};
+    
+    bstr teststring = bstr(data, 0, sizeof(data));
+    teststring.set_length(2);    
+    EXPECT_EQ(teststring.max_length(), sizeof(data));
+
+    // TODO: add MaxLength move between strings like get subsring and etc
+}
+
+// TODO: add MaxLength checks in append, movetail, etc (not implemented in code now!) 
