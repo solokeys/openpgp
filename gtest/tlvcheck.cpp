@@ -151,6 +151,7 @@ TEST(tlvTest, ElmFields) {
     EXPECT_EQ(tlv.CurrentElm().HeaderLength(), 2);
     EXPECT_TRUE(tlv.CurrentElm().GetData() == "\x04\x05"_bstr);
     EXPECT_FALSE(tlv.CurrentElm().IsConstructed());
+    EXPECT_FALSE(tlv.CurrentElmIsLast());
     
     ASSERT_NE(tlv.Search(0x7f49), nullptr);
     EXPECT_EQ(tlv.CurrentElm().Tag(), 0x7f49);
@@ -159,6 +160,7 @@ TEST(tlvTest, ElmFields) {
     EXPECT_EQ(tlv.CurrentElm().HeaderLength(), 3);
     EXPECT_TRUE(tlv.CurrentElm().GetData() == "\x85\x02\x04\x05\x86\x01\x06\x87\x01\x07"_bstr);
     EXPECT_TRUE(tlv.CurrentElm().IsConstructed());
+    EXPECT_FALSE(tlv.CurrentElmIsLast());
 }
 
 TEST(tlvTest, AddRoot) {
