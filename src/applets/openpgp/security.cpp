@@ -233,6 +233,7 @@ Util::Error Security::AfterSaveFileLogic(uint16_t objectID) {
 	Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
 	File::FileSystem &filesystem = solo.GetFileSystem();
 
+	// PW status and KDF-DO
 	// list of objects that need to refresh theirs state
 	if (objectID == 0xc4 || objectID == 0xf9)
 		Reload();
@@ -244,7 +245,7 @@ Util::Error Security::AfterSaveFileLogic(uint16_t objectID) {
 			return err;
 	}
 
-	// clear all the authentications and passwords
+	// KDF-DO. clear all the authentications and passwords
 	// if KDF-DO contains default passwords - needs to save them
 	if (objectID == 0xf9) {
 		ClearAllAuth();

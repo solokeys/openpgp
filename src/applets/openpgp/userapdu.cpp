@@ -248,6 +248,7 @@ Util::Error APDUPutData::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 		if (err != Util::Error::NoError)
 			return err;
 	} else {
+		printf("write KeyExtHeader\n");
 		key_storage.SetKeyExtHeader(File::AppletID::OpenPGP, data);
 	}
 
