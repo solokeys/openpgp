@@ -77,7 +77,11 @@ constexpr Error ExtractLength(bstr &str, size_t &pos, tag_t &length) {
 		length = (str[pos] << 8) + str[pos + 1];
 		pos++; if (pos >= str.length()) return Error::TLVDecodeLengthError;
 	}
-	if (len1 > 0x82)
+	if (len1 == 0x83) {
+		pos += 3; if (pos >= str.length()) return Error::TLVDecodeLengthError;
+		length = (str[pos - 2] << 16) + (str[pos - 1] << 8) + str[pos];
+	}
+	if (len1 > 0x83)
 		return Error::TLVDecodeLengthError;
 
 	return Error::NoError;
@@ -687,10 +691,18 @@ public:
 
 	}
 
+	constexpr void AddRoot(tag_t tag, tag_t len = 0) {
+		_data.clear();
+
+		size_t size = 0;
+		EncodeTag(_data, size, tag);
+		EncodeLength(_data, size, len);
+	}
 	constexpr void AddNext(tag_t tag, tag_t len = 0) {
 		size_t size = 0;
 		EncodeTag(_data, size, tag);
 		EncodeLength(_data, size, len);
+		dump_hex(_data);
 	}
 	constexpr void AddNextWithData(tag_t tag, tag_t len) {
 		if (len > 0)
