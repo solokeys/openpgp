@@ -481,9 +481,7 @@ public:
 		_data.set_length(_data.length() - cur_elm_len);
 
 		// normalize parent lengths
-		dump_hex(_data);
 		NormalizeParents(-cur_elm_len);
-		dump_hex(_data);
 
 		Init(_data);
 	}
