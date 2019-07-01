@@ -3,8 +3,8 @@ RM = rm -rf
 
 SRC = 	src/main.cpp \
 		src/applet/applet.cpp\
-		src/util.c \
-		pc/device.c
+		src/util.cpp \
+		pc/device.cpp
 		
 INC = -I. -Ipc/ -Isrc/
 
@@ -20,3 +20,12 @@ all: $(OBJ)
 
 clean:
 	$(RM) $(OBJ) $(TARGET)
+	
+testpy:
+	#cd ./pytest
+	cd ~/solo/gnuk/tests; py.test-3 -x
+
+testc:
+	cd ./gtest; make clean; make all; ./ptest
+
+testall: testc testpy
