@@ -125,6 +125,8 @@ TEST(dolTest, CheckEncodeDecode) {
     dol.AddNext(0x83, 0x0101ff);
     dol.AddNext(0x7f66, 0xffffff);
     dol.AddNext(0xdfee25, 0xfefeff);
+    
+    EXPECT_TRUE(dol.GetData() == "\x7f\x49\x00\x81\x81\xaa\x82\x82\x01\xff\x83\x83\x01\x01\xff\x7f\x66\x83\xff\xff\xff\xdf\xee\x25\x83\xfe\xfe\xff"_bstr);
 
     ASSERT_TRUE(dol.GoFirst());
     EXPECT_EQ(dol.CurrentElm().Tag(), 0x7f49);

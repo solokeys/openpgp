@@ -702,7 +702,6 @@ public:
 		size_t size = 0;
 		EncodeTag(_data, size, tag);
 		EncodeLength(_data, size, len);
-		dump_hex(_data);
 	}
 	constexpr void AddNextWithData(tag_t tag, tag_t len) {
 		if (len > 0)
