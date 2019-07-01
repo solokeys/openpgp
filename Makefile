@@ -14,7 +14,8 @@ DEP_FILES = $(OBJ_FILES:.o=.d)
 
 INC = -I. -Ipc/ -Isrc/
 
-CPPFLAGS = -std=c++17 -O2 -Wall $(INC)
+CPPFLAGS = -std=c++17 -O2 -Wall -g3 $(INC)
+LDFLAGS = -lmbedtls -lmbedcrypto -lmbedx509
 
 TARGET=main
 
@@ -22,11 +23,9 @@ $(OBJ_DIR)/%.o:
 	$(CC) $(CPPFLAGS) -c -o $@ $(filter %/$(strip $(patsubst %.o, %.cpp, $(notdir $@))), $(SRC_FILES))
 
 all:  $(OBJ_FILES)
-	$(CC) $(LDFLAGS) -o $@ $^
+	$(CC) -o $(TARGET) $^ $(LDFLAGS)
 
 clean:
-	@echo I $(SRC_FILES) I
-	@echo I $(OBJ_FILES) I
 	$(RM) $(OBJ_FILES) $(DEP_FILES) $(TARGET)
 	
 testpy:
