@@ -647,8 +647,8 @@ public:
 	constexpr DOLElm &CurrentElm() {
 		return _dolElm;
 	}
-	constexpr void GoFirst() {
-		Init(_data);
+	constexpr bool GoFirst() {
+		return Init(_data) == Error::NoError;
 	}
 	constexpr bool GoNext() {
 		if (_dolElm.RestLength() == 0)
