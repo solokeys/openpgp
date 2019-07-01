@@ -1,25 +1,33 @@
 CC = g++
 RM = rm -rf
 
-SRC = 	src/main.cpp \
-		src/applet/applet.cpp\
-		src/util.cpp \
-		pc/device.cpp
-		
-INC = -I. -Ipc/ -Isrc/
+rwildcard=$(wildcard $1$2) $(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2))
 
-OBJTMP = $(SRC:.c=.o)
-OBJ = $(OBJTMP:.cpp=.o)
+OBJ_DIR := ./obj
+SRC_DIRS := ./pc \
+			./src \
+			./src/applets \
+			./src/applets/openpgp
+SRC_FILES := $(sort $(foreach var, $(SRC_DIRS), $(wildcard $(var)/*.cpp)))
+OBJ_FILES := $(patsubst %.cpp, $(OBJ_DIR)/%.o, $(notdir $(SRC_FILES)))
+DEP_FILES = $(OBJ_FILES:.o=.d)
+
+INC = -I. -Ipc/ -Isrc/
 
 CPPFLAGS = -std=c++17 -O2 -Wall $(INC)
 
 TARGET=main
 
-all: $(OBJ)
-	$(CC) -o main $(OBJ)
+$(OBJ_DIR)/%.o:  
+	$(CC) $(CPPFLAGS) -c -o $@ $(filter %/$(strip $(patsubst %.o, %.cpp, $(notdir $@))), $(SRC_FILES))
+
+all:  $(OBJ_FILES)
+	$(CC) $(LDFLAGS) -o $@ $^
 
 clean:
-	$(RM) $(OBJ) $(TARGET)
+	@echo I $(SRC_FILES) I
+	@echo I $(OBJ_FILES) I
+	$(RM) $(OBJ_FILES) $(DEP_FILES) $(TARGET)
 	
 testpy:
 	#cd ./pytest
