@@ -470,15 +470,10 @@ public:
 	}
 	constexpr void DeleteCurrent() {
 		// current element params
-		uint8_t *start_ptr = _data.uint8Data();
-		uint8_t *current_ptr = CurrentElm().GetPtr();
-		size_t cur_elm_offset = current_ptr - start_ptr;
+		size_t cur_elm_offset = CurrentElm().GetPtr() - _data.uint8Data();
 		size_t cur_elm_len = CurrentElm().ElmLength();
-		size_t cur_elm_end_offset = cur_elm_offset + cur_elm_len;
-		size_t move_data_len = _data.length() - cur_elm_end_offset;
 
-		memmove(current_ptr, current_ptr + cur_elm_len, move_data_len);
-		_data.set_length(_data.length() - cur_elm_len);
+		_data.del(cur_elm_offset, cur_elm_len);
 
 		// normalize parent lengths
 		NormalizeParents(-cur_elm_len);
