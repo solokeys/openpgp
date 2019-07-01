@@ -555,7 +555,7 @@ public:
 			if (!GoNextTreeElm())
 				break;
 		}
-
+		GoFirst();
 	}
 };
 
@@ -681,7 +681,7 @@ public:
 			if (!GoNext())
 				break;
 		}
-
+		GoFirst();
 	}
 
 	constexpr void AddRoot(tag_t tag, tag_t len = 0) {
