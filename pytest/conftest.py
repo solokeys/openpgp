@@ -14,6 +14,7 @@ def card():
     print("Reader:", reader.get_string(1), reader.get_string(2))
     card = OpenPGP_Card(reader)
     card.cmd_select_openpgp()
+    card.is_gnuk = True
     yield card
     del card
     reader.ccid_power_off()
