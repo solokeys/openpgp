@@ -98,29 +98,29 @@ const CONFIG_CCID  configuration_ccid={{
     0x00,                   /* bPinSupport: No PIN pad */
     0x01,                   /* bMaxCCIDBusySlots: 1 */
     },{ 
-    /* Endpoint Descriptor */
+    /* Endpoint Descriptors */
     /* Endpoint IN1 Descriptor */
     0x07,/*sizeof(USB_EP_DSC)*/
     USB_DESCRIPTOR_ENDPOINT,    //Endpoint Descriptor
-    0x02,                       //EndpointAddress
-    0x02,                       //Attributes
-    0x0020,                     //size
+    CCID_IN_EP,                 //EndpointAddress
+    0x02,                       //bmAttributes: Bulk
+    CCID_DATA_PACKET_SIZE,      //size
     0x00                        //Interval
     },{
     /* Endpoint OUT1 Descriptor */
     0x07,/*sizeof(USB_EP_DSC)*/
     USB_DESCRIPTOR_ENDPOINT,    //Endpoint Descriptor
-    0x82,                       //EndpointAddress
-    0x02,                       //Attributes
-    0x0020,                     //size
+    CCID_OUT_EP,                //EndpointAddress
+    0x02,                       //bmAttributes: Bulk
+    CCID_DATA_PACKET_SIZE,      //size
     0x00                        //Interval
     },{
     /* Endpoint IN2 Descriptor */
     0x07,/*sizeof(USB_EP_DSC)*/
     USB_DESCRIPTOR_ENDPOINT,    //Endpoint Descriptor
-    0x02,                       //EndpointAddress
-    0x03,                       //Attributes: interrupt
-    0x0400,                     //size 4b
+    CCID_CMD_EP,                //EndpointAddress
+    0x03,                       //bmAttributes: Interrupt
+    0x0400,                     //wMaxPacketSize: 4
     0xff                        //Interval 255ms
     }
 };

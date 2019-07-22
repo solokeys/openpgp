@@ -226,6 +226,25 @@ typedef struct __attribute__ ((__packed__)) _CONFIG_CDC
 // CCID
 //=================================================================================
 
+#define CCID_IN_EP                          0x84U  /* EP1 for data IN */
+#define CCID_OUT_EP                         0x04U  /* EP1 for data OUT */
+#define CCID_CMD_EP                         0x85U  /* EP2 for CDC commands */
+
+#define CCID_DATA_PACKET_SIZE               64
+
+#define CCID_SET_PARAMS                     0x61
+#define CCID_POWER_ON                       0x62
+#define CCID_POWER_OFF                      0x63
+#define CCID_SLOT_STATUS                    0x65
+#define CCID_SECURE                         0x69
+#define CCID_GET_PARAMS                     0x6C
+#define CCID_RESET_PARAMS                   0x6D
+#define CCID_XFR_BLOCK                      0x6F
+#define CCID_DATA_BLOCK_RES                 0x80
+#define CCID_SLOT_STATUS_RES                0x81
+#define CCID_PARAMS_RES                     0x82
+
+
 typedef struct __attribute__ ((__packed__)) _USB_ICC_DESCRIPTOR
 {
     byte bFNLength;
