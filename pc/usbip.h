@@ -61,6 +61,7 @@ typedef struct sockaddr sockaddr;
 #define USB_DESCRIPTOR_INTERFACE        0x04    // Interface Descriptor.
 #define USB_DESCRIPTOR_ENDPOINT         0x05    // Endpoint Descriptor.
 #define USB_DESCRIPTOR_DEVICE_QUALIFIER 0x06    // Device Qualifier.
+#define USB_DESCRIPTOR_ICC              0x21    // ICC descriptor.
 
 typedef struct __attribute__ ((__packed__)) _USB_DEVICE_DESCRIPTOR
 {

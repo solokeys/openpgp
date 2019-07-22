@@ -62,7 +62,7 @@ const CONFIG_CCID  configuration_ccid={{
     },{
     /* ICC Descriptor */
     54,                     // bLength: 
-    0x21,                   // bDescriptorType: USBDESCR_ICC 
+    USB_DESCRIPTOR_ICC,     // bDescriptorType: USBDESCR_ICC 
     0x0110,                 // bcdCCID: revision 1.1 (of CCID) 
     0x00,                   /* bMaxSlotIndex: */
     0x01,                   /* bVoltageSupport: 5V-only */
@@ -100,7 +100,7 @@ const CONFIG_CCID  configuration_ccid={{
     },{ 
     /* Endpoint Descriptors */
     /* Endpoint IN1 Descriptor */
-    0x07,/*sizeof(USB_EP_DSC)*/
+    sizeof(USB_ENDPOINT_DESCRIPTOR),
     USB_DESCRIPTOR_ENDPOINT,    //Endpoint Descriptor
     CCID_IN_EP,                 //EndpointAddress
     0x02,                       //bmAttributes: Bulk
