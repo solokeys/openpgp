@@ -104,7 +104,7 @@ const CONFIG_CCID  configuration_ccid={{
     USB_DESCRIPTOR_ENDPOINT,    //Endpoint Descriptor
     CCID_IN_EP,                 //EndpointAddress
     0x02,                       //bmAttributes: Bulk
-    CCID_DATA_PACKET_SIZE,      //size
+    CCID_DATA_PACKET_SIZE,      //size // was 34U!!!
     0x00                        //Interval
     },{
     /* Endpoint OUT1 Descriptor */
@@ -120,7 +120,7 @@ const CONFIG_CCID  configuration_ccid={{
     USB_DESCRIPTOR_ENDPOINT,    //Endpoint Descriptor
     CCID_CMD_EP,                //EndpointAddress
     0x03,                       //bmAttributes: Interrupt
-    0x0400,                     //wMaxPacketSize: 4
+    0x0004,                     //wMaxPacketSize: 4
     0xff                        //Interval 255ms
     }
 };
