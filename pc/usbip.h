@@ -5,6 +5,7 @@
    ########################################################################
 
    Copyright (c) : 2016  Luis Claudio Gambôa Lopes
+   Copyright (c) : 2019  Oleg Moiseenko
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -40,6 +41,7 @@
 #include<stdlib.h>
 #include<string.h>
 #include<unistd.h>
+#include<stdint.h>
 //defines
 #define        TCP_SERV_PORT        3240
 typedef struct sockaddr sockaddr;
@@ -47,8 +49,9 @@ typedef struct sockaddr sockaddr;
 
 //USB definitions
 
-#define byte unsigned char
-#define word unsigned short
+#define byte uint8_t
+#define word uint16_t
+#define dword uint32_t
 
 // USB Descriptors
 
@@ -220,15 +223,41 @@ typedef struct __attribute__ ((__packed__)) _CONFIG_CDC
 
 
 //=================================================================================
-//CDC
+// CCID
 //=================================================================================
+
+typedef struct __attribute__ ((__packed__)) _USB_ICC_DESCRIPTOR
+{
+    byte bFNLength;
+    byte bDscType;
+    word bcdCCID;
+    byte bMaxSlotIndex;
+    byte bVoltageSupport;
+    dword dwProtocols;
+    dword dwDefaultClock;
+    dword dwMaximumClock;
+    byte bNumClockSupported;
+    dword dwDataRate;
+    dword dwMaxDataRate;
+    byte bNumDataRateSupported;
+    dword dwMaxIFSD;
+    dword dwSynchProtocols;
+    dword dwMechanical;
+    dword dwFeatures;
+    dword dwMaxCCIDMessageLength;
+    byte bClassGetResponse;
+    byte bClassEnvelope;
+    word wLCDLayout;
+    byte bPinSupport;
+    byte bMaxCCIDBusySlots;
+} USB_ICC_DESCRIPTOR;
 
 //Configuration
 typedef struct __attribute__ ((__packed__)) _CONFIG_CCID
 {
  USB_CONFIGURATION_DESCRIPTOR dev_conf0;
  USB_INTERFACE_DESCRIPTOR dev_int0;
- 
+ USB_ICC_DESCRIPTOR icc_desc0;
  USB_ENDPOINT_DESCRIPTOR dev_ep0;
  USB_ENDPOINT_DESCRIPTOR dev_ep1;
  USB_ENDPOINT_DESCRIPTOR dev_ep2;

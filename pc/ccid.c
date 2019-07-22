@@ -63,20 +63,20 @@ const CONFIG_CCID  configuration_ccid={{
     /* ICC Descriptor */
     54,                     // bLength: 
     0x21,                   // bDescriptorType: USBDESCR_ICC 
-    0x10, 0x01,             // bcdCCID: revision 1.1 (of CCID) 
-    0,                      /* bMaxSlotIndex: */
-    1,                      /* bVoltageSupport: 5V-only */
-    0x02, 0, 0, 0,          /* dwProtocols: T=1 */
-    0xa0, 0x0f, 0, 0,       /* dwDefaultClock: 4000 */
-    0xa0, 0x0f, 0, 0,       /* dwMaximumClock: 4000 */
-    0,                      /* bNumClockSupported: 0x00 */
-    0x80, 0x25, 0, 0,       /* dwDataRate: 9600 */
-    0x80, 0x25, 0, 0,       /* dwMaxDataRate: 9600 */
-    0,                      /* bNumDataRateSupported: 0x00 */
-    0xfe, 0, 0, 0,          /* dwMaxIFSD: 254 */
-    0, 0, 0, 0,             /* dwSynchProtocols: 0 */
-    0, 0, 0, 0,             /* dwMechanical: 0 */
-    0x7a, 0x04, 0x02, 0x00, /* dwFeatures:
+    0x0110,                 // bcdCCID: revision 1.1 (of CCID) 
+    0x00,                   /* bMaxSlotIndex: */
+    0x01,                   /* bVoltageSupport: 5V-only */
+    0x00000002,             /* dwProtocols: T=1 */
+    0x00000fa0,             /* dwDefaultClock: 4000 */
+    0x00000fa0,             /* dwMaximumClock: 4000 */
+    0x00,                   /* bNumClockSupported: 0x00 */
+    0x00002580,             /* dwDataRate: 9600 */
+    0x00002580,             /* dwMaxDataRate: 9600 */
+    0x00,                   /* bNumDataRateSupported: 0x00 */
+    0x000000fe,             /* dwMaxIFSD: 254 */
+    0x00000000,             /* dwSynchProtocols: 0 */
+    0x00000000,             /* dwMechanical: 0 */
+    0x0002047a,             /* dwFeatures:
                                 *  Short and extended APDU level: 0x40000 ----
                                 *  Short APDU level             : 0x20000  *
                                 *  (ICCD?)                      : 0x00800 ----
@@ -91,12 +91,12 @@ const CONFIG_CCID  configuration_ccid={{
                                 *  Auto activaction of ICC	    : 0x00004
                                 *  Automatic conf. based on ATR : 0x00002  *
                                 */
-    0x0f, 0x01, 0, 0,       /* dwMaxCCIDMessageLength: 271 */
+    0x0000010f,             /* dwMaxCCIDMessageLength: 271 */
     0xff,                   /* bClassGetResponse: 0xff */
     0x00,                   /* bClassEnvelope: 0 */
-    0, 0,                   /* wLCDLayout: 0 */
-    0,                      /* bPinSupport: No PIN pad */
-    1,                      /* bMaxCCIDBusySlots: 1 */
+    0x0000,                 /* wLCDLayout: 0 */
+    0x00,                   /* bPinSupport: No PIN pad */
+    0x01,                   /* bMaxCCIDBusySlots: 1 */
     },{ 
     /* Endpoint Descriptor */
     /* Endpoint IN1 Descriptor */
@@ -123,11 +123,11 @@ const CONFIG_CCID  configuration_ccid={{
     0x0400,                     //size 4b
     0xff                        //Interval 255ms
     }
-}};
+};
 
 
 const unsigned char string_0[] = { // available languages  descriptor
-		sizeof(string_0),          // was 0x04
+		0x04,
         USB_DESCRIPTOR_STRING, 
 		0x09,                      //  0x0409 (English - United States)
         0x04 
