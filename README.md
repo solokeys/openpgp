@@ -47,6 +47,35 @@ In another terminal, run the Gnuk test suite.
 cd gnuk/tests && py.test-3 -x
 ```
 
+# Emulate via USBIP
+
+Setup
+```
+sudo mkdir /usr/share/hwdata
+sudo cp /var/lib/usbutils/usb.ids /usr/share/hwdata/usb.ids
+```
+
+1st terminal
+```
+cd pc
+make all
+./ccid
+```
+
+2nd terminal
+```
+sudo modprobe vhci-hcd  (once after reboot!!!)
+usbip attach -r 127.0.0.1 -b 1-1
+sudo lsusb -d 03eb:206e -v
+```
+
+list devices:
+```
+usbip list -r 127.0.0.1
+or
+usbip list -l
+```
+
 # TODO
 
 1. Change name from `Applet` to `Application`
