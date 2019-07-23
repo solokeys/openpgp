@@ -42,7 +42,7 @@ const CONFIG_CCID  configuration_ccid={{
     /* Configuration Descriptor */
     0x09,//sizeof(USB_CFG_DSC),    // Size of this descriptor in bytes
     USB_DESCRIPTOR_CONFIGURATION,  // CONFIGURATION descriptor type
-    sizeof(CONFIG_CDC),            // Total length of data for this cfg
+    sizeof(CONFIG_CCID),            // Total length of data for this cfg
     1,                             // Number of interfaces in this cfg
     1,                             // Index value of this configuration
     0,                             // Configuration string index
@@ -63,7 +63,7 @@ const CONFIG_CCID  configuration_ccid={{
     /* ICC Descriptor */
     54,                     // bLength: 
     USB_DESCRIPTOR_ICC,     // bDescriptorType: USBDESCR_ICC 
-    0x0110,                 // bcdCCID: revision 1.1 (of CCID) 
+    0x0100,                 // bcdCCID: revision 1.1 (of CCID) 
     0x00,                   /* bMaxSlotIndex: */
     0x01,                   /* bVoltageSupport: 5V-only */
     0x00000002,             /* dwProtocols: T=1 */

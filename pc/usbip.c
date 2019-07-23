@@ -210,11 +210,13 @@ int handle_get_descriptor(int sockfd, StandardDeviceRequest * control_req, USBIP
      handled = 1;
      send_usb_req(sockfd,usb_req, (char *) &dev_qua , control_req->wLength ,0);
    }
-   if(control_req->wValue1 == 0xA) // config status ???
+   if(control_req->wValue1 == 0xA) // Get interface 
    {
-     printf("Unknow\n");  
+     printf("Get interface\n");  
      handled = 1;
-     send_usb_req(sockfd,usb_req,"",0,1);        
+     printf("interface number: %d\n", control_req->wIndex0);
+     uint8_t intf[1] = {0x00};
+     send_usb_req(sockfd, usb_req, (char *) intf, 1, 0);
    }  
    return handled;
 }
