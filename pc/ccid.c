@@ -24,16 +24,16 @@ const USB_DEVICE_DESCRIPTOR dev_dsc=
     0x01                    // Number of possible configurations
 };
 
-const USB_DEVICE_QUALIFIER_DESCRIPTOR dev_qua = { // ????
-    0x0A,       // bLength
-    0x06,       // bDescriptorType
-    0x0200,     // bcdUSB 
-    0x02,       // bDeviceClass
-    0x00,       // bDeviceSubClass
-    0x00,       // bDeviceProtocol
-    0x10,       // bMaxPacketSize
-    0x01,       // iSerialNumber
-    0x00        // bNumConfigurations
+const USB_DEVICE_QUALIFIER_DESCRIPTOR dev_qua = { // A high-speed capable device that has different device information for full-speed and high-speed must have a Device Qualifier Descriptor 
+    0x0A,                   // bLength
+    0x06,                   // bDescriptorType
+    0x0200,                 // bcdUSB 
+    0x00,                   // bDeviceClass
+    0x00,                   // bDeviceSubClass
+    0x00,                   // bDeviceProtocol
+    CCID_DATA_PACKET_SIZE,  // bMaxPacketSize
+    0x01,                   // bNumConfigurations
+    0x00                    // RFU == 0
 };
 
 
