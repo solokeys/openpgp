@@ -20,7 +20,7 @@ const USB_DEVICE_DESCRIPTOR dev_dsc=
     0x0100,                 // Device release number in BCD format
     0x01,                   // Manufacturer string index
     0x03,                   // Product string index
-    0x00,                   // Device serial number string index
+    0x04,                   // Device serial number string index
     0x01                    // Number of possible configurations
 };
 
@@ -42,7 +42,7 @@ const CONFIG_CCID  configuration_ccid={{
     /* Configuration Descriptor */
     0x09,//sizeof(USB_CFG_DSC),    // Size of this descriptor in bytes
     USB_DESCRIPTOR_CONFIGURATION,  // CONFIGURATION descriptor type
-    sizeof(CONFIG_CCID),            // Total length of data for this cfg
+    sizeof(CONFIG_CCID),           // Total length of data for this cfg
     1,                             // Number of interfaces in this cfg
     1,                             // Index value of this configuration
     0,                             // Configuration string index
@@ -64,18 +64,18 @@ const CONFIG_CCID  configuration_ccid={{
     54,                     // bLength: 
     USB_DESCRIPTOR_ICC,     // bDescriptorType: USBDESCR_ICC 
     0x0100,                 // bcdCCID: revision 1.1 (of CCID) 
-    0x00,                   /* bMaxSlotIndex: */
-    0x01,                   /* bVoltageSupport: 5V-only */
-    0x00000002,             /* dwProtocols: T=1 */
-    0x00000fa0,             /* dwDefaultClock: 4000 */
-    0x00000fa0,             /* dwMaximumClock: 4000 */
-    0x00,                   /* bNumClockSupported: 0x00 */
-    0x00002580,             /* dwDataRate: 9600 */
-    0x00002580,             /* dwMaxDataRate: 9600 */
-    0x00,                   /* bNumDataRateSupported: 0x00 */
-    0x000000fe,             /* dwMaxIFSD: 254 */
-    0x00000000,             /* dwSynchProtocols: 0 */
-    0x00000000,             /* dwMechanical: 0 */
+    0x00,                   // bMaxSlotIndex: 0
+    0x01,                   // bVoltageSupport: 5V-only
+    0x00000002,             // dwProtocols: T=1 
+    0x00000fa0,             // dwDefaultClock: 4000 
+    0x00000fa0,             // dwMaximumClock: 4000 
+    0x00,                   // bNumClockSupported: 0x00 
+    0x00002580,             // dwDataRate: 9600 
+    0x00002580,             // dwMaxDataRate: 9600 
+    0x00,                   // bNumDataRateSupported: 0x00 
+    0x000000fe,             // dwMaxIFSD: 254 
+    0x00000000,             // dwSynchProtocols: 0 
+    0x00000000,             // dwMechanical: 0 
     0x0002047a,             /* dwFeatures:
                                 *  Short and extended APDU level: 0x40000 ----
                                 *  Short APDU level             : 0x20000  *
@@ -91,12 +91,12 @@ const CONFIG_CCID  configuration_ccid={{
                                 *  Auto activaction of ICC	    : 0x00004
                                 *  Automatic conf. based on ATR : 0x00002  *
                                 */
-    0x0000010f,             /* dwMaxCCIDMessageLength: 271 */
-    0xff,                   /* bClassGetResponse: 0xff */
-    0x00,                   /* bClassEnvelope: 0 */
-    0x0000,                 /* wLCDLayout: 0 */
-    0x00,                   /* bPinSupport: No PIN pad */
-    0x01,                   /* bMaxCCIDBusySlots: 1 */
+    0x0000010f,             // dwMaxCCIDMessageLength: 271 
+    0xff,                   // bClassGetResponse: 0xff 
+    0x00,                   // bClassEnvelope: 0 
+    0x0000,                 // wLCDLayout: 0 
+    0x00,                   // bPinSupport: No PIN pad 
+    0x01,                   // bMaxCCIDBusySlots: 1 
     },{ 
     /* Endpoint Descriptors */
     /* Endpoint IN1 Descriptor */
@@ -133,42 +133,61 @@ const unsigned char string_0[] = { // available languages  descriptor
         0x04 
 		};
 
-const unsigned char string_1[] = { //
-		0x0A, 
+const unsigned char string_1[] = { // Manufacturer
+		0x10, 
         USB_DESCRIPTOR_STRING, // bLength, bDscType
-		'T', 0x00, //
-		'e', 0x00, //
-		's', 0x00, //
-		't', 0x00, //
+		'S', 0x00, 
+		'o', 0x00, 
+		'l', 0x00, 
+		'o', 0x00, 
+		'D', 0x00, 
+		'e', 0x00, 
+		'v', 0x00, 
 		};
 
-const unsigned char string_2[] = { //
+const unsigned char string_2[] = { 
 		0x11, 
-        USB_DESCRIPTOR_STRING, //
-		'U', 0x00, //
-		'S', 0x00, //
-		'B', 0x00, //
-		' ', 0x00, //
-		'C', 0x00, //
-		'C', 0x00, //
-		'I', 0x00, //
-		'D', 0x00, //
+        USB_DESCRIPTOR_STRING, 
+		'U', 0x00, 
+		'S', 0x00, 
+		'B', 0x00, 
+		' ', 0x00, 
+		'C', 0x00, 
+		'C', 0x00, 
+		'I', 0x00, 
+		'D', 0x00, 
 		};
 
-const unsigned char string_3[] = { //
+const unsigned char string_3[] = { // product
 		0x18, 
-        USB_DESCRIPTOR_STRING, //
-		'V', 0x00, //
-		'i', 0x00, //
-		'r', 0x00, //
-		't', 0x00, //
-		'u', 0x00, //
-		'a', 0x00, //
-		'l', 0x00, //
-		' ', 0x00, //
-        'U', 0x00, //
-        'S', 0x00, //
-        'B', 0x00, //
+        USB_DESCRIPTOR_STRING, 
+		'V', 0x00, 
+		'i', 0x00, 
+		'r', 0x00, 
+		't', 0x00, 
+		'u', 0x00, 
+		'a', 0x00, 
+		'l', 0x00, 
+		' ', 0x00, 
+        'U', 0x00, 
+        'S', 0x00, 
+        'B', 0x00, 
+		};
+        
+const unsigned char string_4[] = { // serial number
+		0x18, 
+        USB_DESCRIPTOR_STRING, 
+		'1', 0x00, 
+		'2', 0x00, 
+		'3', 0x00, 
+		'4', 0x00, 
+		'5', 0x00, 
+		'6', 0x00, 
+		'7', 0x00, 
+		'8', 0x00, 
+        '9', 0x00, 
+        'A', 0x00, 
+        'B', 0x00, 
 		};
 
 
@@ -176,7 +195,7 @@ const char *configuration = (const char *)&configuration_ccid;
 
 const USB_INTERFACE_DESCRIPTOR *interfaces[] = {&configuration_ccid.dev_int0};
 
-const unsigned char *strings[] = {string_0, string_1, string_2, string_3};
+const unsigned char *strings[] = {string_0, string_1, string_2, string_3, string_4};
 
 
 #define BSIZE 64 
@@ -187,9 +206,9 @@ int  bsize=0;
 void handle_data(int sockfd, USBIP_RET_SUBMIT *usb_req, int bl)
 {   
     
-  if(usb_req->ep == 0x01)
+  if(usb_req->ep == 0x04)
   {  
-    printf("EP1 received \n"); 
+    printf("EP4 received \n"); 
     
     if(usb_req->direction == 0) //input
     { 
@@ -208,40 +227,16 @@ void handle_data(int sockfd, USBIP_RET_SUBMIT *usb_req, int bl)
     usleep(500);
   }
   
-  if((usb_req->ep == 0x02))
+  if((usb_req->ep == 0x05))
   {
-    printf("EP2 received \n"); 
+    printf("EP5 received \n"); 
     if(usb_req->direction == 0) //input
     { 
-      int i;
       printf("direction=input\n");  
-      bsize=recv (sockfd, (char *) buffer , bl, 0);
-      send_usb_req(sockfd, usb_req,"", 0, 0);
-      buffer[bsize+1]=0; //string terminator
-      printf("received (%s)\n",buffer);
-      for(i=0;i<bsize;i++)
-          printf("%02X",(unsigned char)buffer[i]);
-      printf("\n");       
     }
     else //output
     {
       printf("direction=output\n");  
-      if(bsize != 0)
-      {   
-        int i;
-        for(i=0;i<bsize;i++)//increment received char
-           buffer[i]+=1;
-
-        send_usb_req(sockfd, usb_req, buffer, bsize, 0);    
-        printf("sending (%s)\n",buffer);
-        bsize=0;
-      }
-      else
-      {
-        send_usb_req(sockfd, usb_req,"", 0, 0);    
-        usleep(500);
-        printf("no data disponible\n");
-      }
     }
   }
   
