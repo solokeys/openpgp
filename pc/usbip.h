@@ -227,11 +227,12 @@ typedef struct __attribute__ ((__packed__)) _CONFIG_CDC
 // CCID
 //=================================================================================
 
-#define CCID_IN_EP                          0x84U  /* EP1 for data IN */
-#define CCID_OUT_EP                         0x04U  /* EP1 for data OUT */
-#define CCID_CMD_EP                         0x85U  /* EP2 for CDC commands */
+#define CCID_IN_EP                             0x84U  /* EP1 for data IN */
+#define CCID_OUT_EP                            0x04U  /* EP1 for data OUT */
+#define CCID_CMD_EP                            0x85U  /* EP2 for CDC commands */
 
-#define CCID_DATA_PACKET_SIZE               64
+#define CCID_DATA_PACKET_SIZE                  64
+#define CCID_HEADER_SIZE                       10
 
 /*CCID specification version 1.10*/
 #define CCID1_10                               0x0110
@@ -239,9 +240,9 @@ typedef struct __attribute__ ((__packed__)) _CONFIG_CDC
 /* Smart Card Device Class Descriptor Type */
 #define CCID_DECRIPTOR_TYPE                    0x21
 /* Table 5.3-1 Summary of CCID Class Specific Request */
-#define CCIDGENERICREQ_ABORT                    0x01
-#define CCIDGENERICREQ_GET_CLOCK_FREQUENCIES    0x02
-#define CCIDGENERICREQ_GET_DATA_RATES           0x03
+#define CCIDGENERICREQ_ABORT                   0x01
+#define CCIDGENERICREQ_GET_CLOCK_FREQUENCIES   0x02
+#define CCIDGENERICREQ_GET_DATA_RATES          0x03
 /* 6.1 Command Pipe, Bulk-OUT Messages */
 #define PC_TO_RDR_ICCPOWERON                   0x62
 #define PC_TO_RDR_ICCPOWEROFF                  0x63
@@ -266,22 +267,62 @@ typedef struct __attribute__ ((__packed__)) _CONFIG_CDC
 /* 6.3 Interrupt-IN Messages */
 #define RDR_TO_PC_NOTIFYSLOTCHANGE             0x50
 #define RDR_TO_PC_HARDWAREERROR                0x51
-/* Table 6.2-2 Slot error register when bmCommandStatus = 1 */
-#define CMD_ABORTED                            0xFF
-#define ICC_MUTE                               0xFE
-#define XFR_PARITY_ERROR                       0xFD
-#define XFR_OVERRUN                            0xFC
-#define HW_ERROR                               0xFB
-#define BAD_ATR_TS                             0xF8
-#define BAD_ATR_TCK                            0xF7
-#define ICC_PROTOCOL_NOT_SUPPORTED             0xF6
-#define ICC_CLASS_NOT_SUPPORTED                0xF5
-#define PROCEDURE_BYTE_CONFLICT                0xF4
-#define DEACTIVATED_PROTOCOL                   0xF3
-#define BUSY_WITH_AUTO_SEQUENCE                0xF2
-#define PIN_TIMEOUT                            0xF0
-#define PIN_CANCELLED                          0xEF
-#define CMD_SLOT_BUSY                          0xE0
+/* Command status for USB Bulk In Messages : bmCommandStatus */
+#define BM_ICC_PRESENT_ACTIVE                  0x00
+#define BM_ICC_PRESENT_INACTIVE                0x01
+#define BM_ICC_NO_ICC_PRESENT                  0x02
+
+#define BM_COMMAND_STATUS_OFFSET               0x06
+#define BM_COMMAND_STATUS_NO_ERROR             (0x00 << BM_COMMAND_STATUS_OFFSET)
+#define BM_COMMAND_STATUS_FAILED               (0x01 << BM_COMMAND_STATUS_OFFSET)
+#define BM_COMMAND_STATUS_TIME_EXTN            (0x02 << BM_COMMAND_STATUS_OFFSET)
+/* ERROR CODES for USB Bulk In Messages : bError */
+#define   SLOT_NO_ERROR                        0x81
+#define   SLOTERROR_UNKNOWN                    0x82
+/* Index of not supported / incorrect message parameter : 7Fh to 01h */
+/* These Values are used for Return Types between Firmware Layers    */
+/*
+Failure of a command 
+The CCID cannot parse one parameter or the ICC is not supporting one parameter. 
+Then the Slot Error register contains the index of the first bad parameter as a 
+positive number (1-127). For instance, if the CCID receives an ICC command to 
+an unimplemented slot, then the Slot Error register shall be set to 
+‘5’ (index of bSlot field). */
+#define   SLOTERROR_BAD_LENTGH                 0x01
+#define   SLOTERROR_BAD_SLOT                   0x05
+#define   SLOTERROR_BAD_POWERSELECT            0x07
+#define   SLOTERROR_BAD_PROTOCOLNUM            0x07
+#define   SLOTERROR_BAD_CLOCKCOMMAND           0x07
+#define   SLOTERROR_BAD_ABRFU_3B               0x07
+#define   SLOTERROR_BAD_BMCHANGES              0x07
+#define   SLOTERROR_BAD_BFUNCTION_MECHANICAL   0x07
+#define   SLOTERROR_BAD_ABRFU_2B               0x08
+#define   SLOTERROR_BAD_LEVELPARAMETER         0x08
+#define   SLOTERROR_BAD_FIDI                   0x0A
+#define   SLOTERROR_BAD_T01CONVCHECKSUM        0x0B
+#define   SLOTERROR_BAD_GUARDTIME              0x0C
+#define   SLOTERROR_BAD_WAITINGINTEGER         0x0D
+#define   SLOTERROR_BAD_CLOCKSTOP              0x0E
+#define   SLOTERROR_BAD_IFSC                   0x0F
+#define   SLOTERROR_BAD_NAD                    0x10
+#define   SLOTERROR_BAD_DWLENGTH               0x08  /* Used in PC_to_RDR_XfrBlock*/
+/* Table 6.2-2 Slot error register when bmCommandStatus = 1 (BM_COMMAND_STATUS_FAILED) */
+#define   SLOTERROR_CMD_ABORTED                0xFF
+#define   SLOTERROR_ICC_MUTE                   0xFE
+#define   SLOTERROR_XFR_PARITY_ERROR           0xFD
+#define   SLOTERROR_XFR_OVERRUN                0xFC
+#define   SLOTERROR_HW_ERROR                   0xFB
+#define   SLOTERROR_BAD_ATR_TS                 0xF8
+#define   SLOTERROR_BAD_ATR_TCK                0xF7
+#define   SLOTERROR_ICC_PROTOCOL_NOT_SUPPORTED 0xF6
+#define   SLOTERROR_ICC_CLASS_NOT_SUPPORTED    0xF5
+#define   SLOTERROR_PROCEDURE_BYTE_CONFLICT    0xF4
+#define   SLOTERROR_DEACTIVATED_PROTOCOL       0xF3
+#define   SLOTERROR_BUSY_WITH_AUTO_SEQUENCE    0xF2
+#define   SLOTERROR_PIN_TIMEOUT                0xF0
+#define   SLOTERROR_PIN_CANCELLED              0xEF
+#define   SLOTERROR_CMD_SLOT_BUSY              0xE0
+#define   SLOTERROR_CMD_NOT_SUPPORTED          0x00
 /* CCID rev 1.1, p.27 */
 #define VOLTS_AUTO                             0x00
 #define VOLTS_5_0                              0x01

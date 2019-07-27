@@ -83,7 +83,7 @@ void handle_device_list(const USB_DEVICE_DESCRIPTOR *dev_dsc, OP_REP_DEVLIST *li
   list->device.bConfigurationValue=conf->dev_conf.bConfigurationValue;
   list->device.bNumConfigurations=dev_dsc->bNumConfigurations; 
   list->device.bNumInterfaces=conf->dev_conf.bNumInterfaces;
-  list->interfaces=malloc(list->device.bNumInterfaces*sizeof(OP_REP_DEVLIST_INTERFACE));
+  list->interfaces=(OP_REP_DEVLIST_INTERFACE *)malloc(list->device.bNumInterfaces*sizeof(OP_REP_DEVLIST_INTERFACE));
   for(i=0;i<list->device.bNumInterfaces;i++)
   {     
     list->interfaces[i].bInterfaceClass=interfaces[i]->bInterfaceClass;
@@ -227,7 +227,7 @@ int handle_set_configuration(int sockfd, StandardDeviceRequest * control_req, US
   int handled = 0;
   printf("handle_set_configuration %u[%u]\n",control_req->wValue1,control_req->wValue0 );
   handled = 1;
-  send_usb_req(sockfd, usb_req, "", 0, 0);        
+  send_usb_req(sockfd, usb_req, nullptr, 0, 0);        
   return handled;
 }
 
@@ -283,7 +283,7 @@ void handle_usb_control(int sockfd, USBIP_RET_SUBMIT *usb_req)
           if(control_req.bRequest == 0x0B) //SET_INTERFACE  
           {
             printf("SET_INTERFACE\n");   
-            send_usb_req(sockfd,usb_req,"",0,1);
+            send_usb_req(sockfd,usb_req,nullptr,0,1);
             handled=1; 
           } 
         }
@@ -394,17 +394,18 @@ usbip_run (const USB_DEVICE_DESCRIPTOR *dev_dsc)                                
 
                handle_device_list(dev_dsc,&list);
 
-               if (send (sockfd, (char *)&list.header, sizeof(OP_REP_DEVLIST_HEADER), 0) != sizeof(OP_REP_DEVLIST_HEADER))
+               if (send (sockfd, (char *)&list.header, sizeof(OP_REP_DEVLIST_HEADER), 0) != (int)sizeof(OP_REP_DEVLIST_HEADER))
                {
                    printf ("send error : %s \n", strerror (errno));
                    break;
                };
-               if (send (sockfd, (char *)&list.device, sizeof(OP_REP_DEVLIST_DEVICE), 0) != sizeof(OP_REP_DEVLIST_DEVICE))
+               if (send (sockfd, (char *)&list.device, sizeof(OP_REP_DEVLIST_DEVICE), 0) != (int)sizeof(OP_REP_DEVLIST_DEVICE))
                {
                    printf ("send error : %s \n", strerror (errno));
                    break;
                };
-               if (send (sockfd, (char *)list.interfaces, sizeof(OP_REP_DEVLIST_INTERFACE)*list.device.bNumInterfaces, 0) != sizeof(OP_REP_DEVLIST_INTERFACE)*list.device.bNumInterfaces)
+               if (send (sockfd, (char *)list.interfaces, sizeof(OP_REP_DEVLIST_INTERFACE)*list.device.bNumInterfaces, 0) != 
+                   (int)sizeof(OP_REP_DEVLIST_INTERFACE)*list.device.bNumInterfaces)
                {
                    printf ("send error : %s \n", strerror (errno));
                    break;

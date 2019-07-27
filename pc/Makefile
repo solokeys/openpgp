@@ -1,12 +1,12 @@
-CC=gcc
+CC=g++
 CFLAGS= -Wall -DLINUX 
 PROGS= ccid
 
 all:	${PROGS}
 
-ccid:		usbip.c ccid.c 
-		${CC} ${CFLAGS} usbip.c -c 
-		${CC} ${CFLAGS} usbip.o ccid.c -o ccid
+ccid:		usbip.cpp ccid.cpp 
+		${CC} ${CFLAGS} usbip.cpp -c 
+		${CC} ${CFLAGS} usbip.o ccid.cpp -o ccid
 
 clean:
-		rm -f ${PROGS} core core.* *.o temp.* *.out typescript*
+		rm -f ${PROGS} *.o *.d

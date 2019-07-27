@@ -221,7 +221,7 @@ void handle_data(int sockfd, USBIP_RET_SUBMIT *usb_req, int bl) {
                         
             bool res = ProcessCCIDTransfer(buffer, bsize, bufferout, &bsizeout);
             // ACK
-            send_usb_req(sockfd, usb_req, "", 0, res ? 0 : 1);
+            send_usb_req(sockfd, usb_req, nullptr, 0, res ? 0 : 1);
         }
         else
         {    
@@ -237,7 +237,7 @@ void handle_data(int sockfd, USBIP_RET_SUBMIT *usb_req, int bl) {
         if(usb_req->direction == 0) { 
             printf("direction=input. WARNNING!!!!\n");  
             //not supported
-            send_usb_req(sockfd, usb_req, "", 0, 0);
+            send_usb_req(sockfd, usb_req, nullptr, 0, 0);
             //usleep(500);
         } else {
             printf("direction=output\n");  
@@ -275,7 +275,7 @@ void handle_unknown_control(int sockfd, StandardDeviceRequest * control_req, USB
               printf ("receive error : %s \n", strerror (errno));
               exit(-1);
             };
-            send_usb_req(sockfd,usb_req,"",0,0);
+            send_usb_req(sockfd,usb_req,nullptr,0,0);
           } 
           if(control_req->bRequest == 0x21)  //GET_LINE_CODING
           {
@@ -286,12 +286,12 @@ void handle_unknown_control(int sockfd, StandardDeviceRequest * control_req, USB
           {
             linecs=control_req->wValue0;
             printf("SET_LINE_CONTROL_STATE 0x%02X\n", linecs);   
-            send_usb_req(sockfd,usb_req,"",0,0);
+            send_usb_req(sockfd,usb_req,nullptr,0,0);
           }
           if(control_req->bRequest == 0x23)  //SEND_BREAK
           {
             printf("SEND_BREAK\n");   
-            send_usb_req(sockfd,usb_req,"",0,0);
+            send_usb_req(sockfd,usb_req,nullptr,0,0);
           }
         } 
 
@@ -304,20 +304,190 @@ int main()
    printf("ccid stopped....\n");
 }
 
+#define ABDATA_SIZE 261
+
+typedef struct { 
+    uint8_t bMessageType; /* Offset = 0*/
+    uint32_t dwLength;    /* Offset = 1, The length field (dwLength) is the length  
+                            of the message not including the 10-byte header.*/
+    uint8_t bSlot;        /* Offset = 5*/
+    uint8_t bSeq;         /* Offset = 6*/
+    uint8_t bSpecific_0;  /* Offset = 7*/
+    uint8_t bSpecific_1;  /* Offset = 8*/
+    uint8_t bSpecific_2;  /* Offset = 9*/
+    uint8_t abData [ABDATA_SIZE]; /* Offset = 10, For reference, the absolute 
+                            maximum block size for a TPDU T=0 block is 260 bytes 
+                            (5 bytes command; 255 bytes data), 
+                            or for a TPDU T=1 block is 259 bytes, 
+                            or for a short APDU T=1 block is 261 bytes, 
+                            or for an extended APDU T=1 block is 65544 bytes.*/
+} __attribute__((packed, aligned(1))) CCID_bulkin_data_t; 
+
+typedef struct { 
+    uint8_t bMessageType;   /* Offset = 0*/
+    uint32_t dwLength;      /* Offset = 1*/
+    uint8_t bSlot;          /* Offset = 5, Same as Bulk-OUT message */
+    uint8_t bSeq;           /* Offset = 6, Same as Bulk-OUT message */
+    uint8_t bStatus;        /* Offset = 7, Slot status as defined in § 6.2.6*/
+    uint8_t bError;         /* Offset = 8, Slot error  as defined in § 6.2.6*/
+    uint8_t bSpecific;      /* Offset = 9*/
+    uint8_t abData[ABDATA_SIZE]; /* Offset = 10*/
+    uint16_t u16SizeToSend; 
+} __attribute__((packed, aligned(1))) CCID_bulkout_data_t;
+
+static const uint8_t atrconst[] = {
+    0x3B, 0xDA, 0x11, 0xFF, 0x81, 0xB1, 0xFE, 0x55, 
+    0x1F, 0x03, 0x00, 0x31, 0x84, 0x73, 0x80, 0x01, 
+    0x80, 0x00, 0x90, 0x00, 0xE4 };
+
+void CCID_UpdateResponseStatus(CCID_bulkout_data_t *pckout, uint8_t status, uint8_t error) {
+    pckout->bStatus = status;
+    pckout->bError = error;
+};
+
+void PC_to_RDR_IccPowerOn(CCID_bulkin_data_t *pckin, CCID_bulkout_data_t *pckout) {
+    uint8_t voltage = pckin->bSpecific_0;
+    if (voltage >= VOLTS_1_8) {
+        /* The Voltage specified is out of Spec */
+        CCID_UpdateResponseStatus(pckout, BM_COMMAND_STATUS_FAILED | BM_ICC_PRESENT_ACTIVE, SLOTERROR_BAD_POWERSELECT);
+        return; 
+    }
+    
+    pckout->dwLength = sizeof(atrconst);
+    memmove(pckout->abData, atrconst, sizeof(atrconst));
+
+    CCID_UpdateResponseStatus(pckout, BM_COMMAND_STATUS_NO_ERROR | BM_ICC_PRESENT_ACTIVE, SLOT_NO_ERROR);
+};
+
+void PC_to_RDR_IccPowerOff(CCID_bulkin_data_t *pckin, CCID_bulkout_data_t *pckout) {
+    
+    CCID_UpdateResponseStatus(pckout, BM_COMMAND_STATUS_NO_ERROR | BM_ICC_PRESENT_ACTIVE, SLOT_NO_ERROR);
+};
+
+void PC_to_RDR_GetSlotStatus(CCID_bulkin_data_t *pckin, CCID_bulkout_data_t *pckout) {
+    
+    CCID_UpdateResponseStatus(pckout, BM_COMMAND_STATUS_NO_ERROR | BM_ICC_PRESENT_ACTIVE, SLOT_NO_ERROR);
+};
+
+void PC_to_RDR_XfrBlock(CCID_bulkin_data_t *pckin, CCID_bulkout_data_t *pckout) {
+    
+};
+
+void RDR_to_PC_NotifySlotChange(void) {
+};
+
+void RDR_to_PC_SlotStatus(CCID_bulkout_data_t *pckout) {
+    pckout->bMessageType = RDR_TO_PC_SLOTSTATUS; 
+    pckout->dwLength  = 0;
+    pckout->bSpecific = 0;    /* bClockStatus = 00h Clock running
+                                                01h Clock stopped in state L
+                                                02h Clock stopped in state H
+                                                03h Clock stopped in an unknown state
+                                                All other values are RFU. */                                                                            
+};
+
+void RDR_to_PC_DataBlock(CCID_bulkout_data_t *pckout) {
+    pckout->bMessageType = RDR_TO_PC_DATABLOCK; 
+    pckout->bSpecific = 0;    /* bChainParameter */
+    
+    // if error - no data send
+    if(pckout->bError != SLOT_NO_ERROR) {
+        pckout->dwLength = 0;  
+    }     
+};
+
 bool ProcessCCIDTransfer(uint8_t *datain, size_t datainlen, uint8_t *dataout, size_t *dataoutlen) {
 
     *dataoutlen = 0;
     
+    if (datainlen < 10)
+        return false;
+    
     printf("<<<[%ld]: ", datainlen);
-    for (int i = 0; i < datainlen; i++)
+    for (size_t i = 0; i < datainlen; i++)
         printf("%02x ",datain[i]);
     printf("\n"); 
     
+    CCID_bulkin_data_t *sdatain = (CCID_bulkin_data_t *)datain;
     
+    if (sdatain->dwLength + CCID_HEADER_SIZE != datainlen)
+        return false;
     
+    // structures vice versa!    
+    CCID_bulkout_data_t  *sdataout = (CCID_bulkout_data_t *)dataout;
+    memset(dataout, 0x00, CCID_HEADER_SIZE);
+    sdataout->bSlot = sdatain->bSlot;
+    sdataout->bSeq = sdatain->bSeq;
     
-    printf("<<<[%ld]: ", *dataoutlen);
-    for (int i = 0; i < *dataoutlen; i++)
+    switch (sdatain->bMessageType) {
+    case PC_TO_RDR_ICCPOWERON:
+        PC_to_RDR_IccPowerOn(sdatain, sdataout);
+        RDR_to_PC_DataBlock(sdataout);
+        break;
+    case PC_TO_RDR_ICCPOWEROFF:
+        PC_to_RDR_IccPowerOff(sdatain, sdataout);
+        RDR_to_PC_SlotStatus(sdataout);
+        break;
+    case PC_TO_RDR_GETSLOTSTATUS:
+        PC_to_RDR_GetSlotStatus(sdatain, sdataout);
+        RDR_to_PC_SlotStatus(sdataout);
+        break;
+    case PC_TO_RDR_XFRBLOCK:
+        PC_to_RDR_XfrBlock(sdatain, sdataout);
+        RDR_to_PC_DataBlock(sdataout);
+        break;
+/*
+    case PC_TO_RDR_GETPARAMETERS:
+        errorCode = PC_to_RDR_GetParameters();
+        RDR_to_PC_Parameters(errorCode);
+        break;
+    case PC_TO_RDR_RESETPARAMETERS:
+        errorCode = PC_to_RDR_ResetParameters();
+        RDR_to_PC_Parameters(errorCode);
+        break;
+    case PC_TO_RDR_SETPARAMETERS:
+        errorCode = PC_to_RDR_SetParameters();
+        RDR_to_PC_Parameters(errorCode);
+        break;
+    case PC_TO_RDR_ESCAPE:
+        errorCode = PC_to_RDR_Escape();
+        RDR_to_PC_Escape(errorCode);
+        break;
+    case PC_TO_RDR_ICCCLOCK:
+        errorCode = PC_to_RDR_IccClock();
+        RDR_to_PC_SlotStatus(errorCode);
+        break;
+    case PC_TO_RDR_ABORT:
+        errorCode = PC_to_RDR_Abort();
+        RDR_to_PC_SlotStatus(errorCode);
+        break;
+    case PC_TO_RDR_T0APDU:
+        errorCode = PC_TO_RDR_T0Apdu();
+        RDR_to_PC_SlotStatus(errorCode);
+        break;
+    case PC_TO_RDR_MECHANICAL:
+        errorCode = PC_TO_RDR_Mechanical();
+        RDR_to_PC_SlotStatus(errorCode);
+        break;   
+    case PC_TO_RDR_SETDATARATEANDCLOCKFREQUENCY:
+        errorCode = PC_TO_RDR_SetDataRateAndClockFrequency();
+        RDR_to_PC_DataRateAndClockFrequency(errorCode);
+        break;
+    case PC_TO_RDR_SECURE:
+        errorCode = PC_TO_RDR_Secure();
+        RDR_to_PC_DataBlock(errorCode);
+        break;
+        */
+    default:
+        CCID_UpdateResponseStatus(sdataout, BM_COMMAND_STATUS_FAILED | BM_ICC_PRESENT_ACTIVE, SLOTERROR_CMD_NOT_SUPPORTED);
+        RDR_to_PC_SlotStatus(sdataout);
+        break;
+    };    
+    
+    *dataoutlen = CCID_HEADER_SIZE + sdataout->dwLength;
+    
+    printf(">>>[%ld]: ", *dataoutlen);
+    for (size_t i = 0; i < *dataoutlen; i++)
         printf("%02x ",dataout[i]);
     printf("\n"); 
     
