@@ -376,6 +376,11 @@ void PC_to_RDR_GetSlotStatus(CCID_bulkin_data_t *pckin, CCID_bulkout_data_t *pck
 
 void PC_to_RDR_XfrBlock(CCID_bulkin_data_t *pckin, CCID_bulkout_data_t *pckout) {
     
+    pckout->dwLength = 2;
+    pckout->abData[0] = 0x90;
+    pckout->abData[1] = 0x00;
+    
+    CCID_UpdateResponseStatus(pckout, BM_COMMAND_STATUS_NO_ERROR | BM_ICC_PRESENT_ACTIVE, SLOT_NO_ERROR);
 };
 
 void RDR_to_PC_NotifySlotChange(void) {
