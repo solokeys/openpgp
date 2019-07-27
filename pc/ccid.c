@@ -15,8 +15,8 @@ const USB_DEVICE_DESCRIPTOR dev_dsc=
     0x00,                   // Subclass code
     0x00,                   // Protocol code
     0x10,                   // Max packet size for EP0, see usb_config.h
-    0x03EB,                 // Vendor ID
-    0x206E,                 // Product ID
+    0x072f,                 // Vendor ID  (1209)
+    0x90cc,                 // Product ID (5070)
     0x0100,                 // Device release number in BCD format
     0x01,                   // Manufacturer string index
     0x03,                   // Product string index
@@ -203,43 +203,45 @@ char buffer[BSIZE+1];
 int  bsize=0;
 
 
-void handle_data(int sockfd, USBIP_RET_SUBMIT *usb_req, int bl)
-{   
-    
-  if(usb_req->ep == 0x04)
-  {  
-    printf("EP4 received \n"); 
-    
-    if(usb_req->direction == 0) //input
-    { 
-      printf("direction=input\n");  
-      bsize=recv (sockfd, (char *) buffer , bl, 0);
-      send_usb_req(sockfd, usb_req,"", 0, 0);
-      buffer[bsize+1]=0; //string terminator
-      printf("received (%s)\n",buffer);
+void handle_data(int sockfd, USBIP_RET_SUBMIT *usb_req, int bl) {  
+    // data channel
+    if(usb_req->ep == 0x04)
+    {  
+        printf("##Data (EP4) received \n"); 
+        
+        if(usb_req->direction == 0) //input
+        { 
+        printf("direction=input\n");  
+        bsize=recv (sockfd, (char *) buffer , bl, 0);
+        send_usb_req(sockfd, usb_req,"", 0, 0);
+        buffer[bsize+1]=0; //string terminator
+        
+        printf("received[%d]: ", bsize);
+        for (int i = 0; i < bsize; i++)
+            printf("%02x ",buffer[i]);
+        printf("\n");
+        }
+        else
+        {    
+            printf("direction=output\n");  
+        }
+        //not supported
+        send_usb_req(sockfd, usb_req, "", 0, 0);
+        usleep(500);
     }
-    else
-    {    
-        printf("direction=output\n");  
-    }
-    //not supported
-    send_usb_req(sockfd, usb_req, "", 0, 0);
-    usleep(500);
-  }
   
-  if((usb_req->ep == 0x05))
-  {
-    printf("EP5 received \n"); 
-    if(usb_req->direction == 0) //input
-    { 
-      printf("direction=input\n");  
+    // Interrupt channel
+    if((usb_req->ep == 0x05)) {
+        printf("##Interrupt (EP5) received \n"); 
+        if(usb_req->direction == 0) { 
+            printf("direction=input. WARNNING!!!!\n");  
+        } else {
+            printf("direction=output\n");  
+
+            uint8_t data[] = {RDR_TO_PC_NOTIFYSLOTCHANGE, ICC_INSERTED_EVENT}; // b0 - slot0 current state b1 - slot0 changed state
+            send_usb_req(sockfd, usb_req, (char*)data, 2, 0);
+        }
     }
-    else //output
-    {
-      printf("direction=output\n");  
-    }
-  }
-  
 };
 
 
