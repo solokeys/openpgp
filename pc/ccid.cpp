@@ -206,6 +206,8 @@ static size_t  bsize = 0;
 static uint8_t bufferout[BSIZE + 1];
 static size_t  bsizeout = 0;
 
+bool ICCStateChanged = true;
+
 bool ProcessCCIDTransfer(uint8_t *datain, size_t datainlen, uint8_t *dataout, size_t *dataoutlen);
 
 void handle_data(int sockfd, USBIP_RET_SUBMIT *usb_req, int bl) {  
@@ -242,7 +244,10 @@ void handle_data(int sockfd, USBIP_RET_SUBMIT *usb_req, int bl) {
         } else {
             printf("direction=output\n");  
 
-            uint8_t data[] = {RDR_TO_PC_NOTIFYSLOTCHANGE, ICC_INSERTED_EVENT}; // b0 - slot0 current state b1 - slot0 changed state
+            // b0 - slot0 current state b1 - slot0 changed state
+            uint8_t state = ICC_PRESENT | (ICCStateChanged ? ICC_CHANGE : 0x00);
+            uint8_t data[] = {RDR_TO_PC_NOTIFYSLOTCHANGE, state}; 
+            ICCStateChanged = false;
             send_usb_req(sockfd, usb_req, (char*)data, 2, 0);
         }
     }
