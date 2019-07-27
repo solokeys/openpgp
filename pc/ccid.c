@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <stdbool.h>
 #include "usbip.h"
 
 /* Device Descriptor */
@@ -198,10 +199,14 @@ const USB_INTERFACE_DESCRIPTOR *interfaces[] = {&configuration_ccid.dev_int0};
 const unsigned char *strings[] = {string_0, string_1, string_2, string_3, string_4};
 
 
-#define BSIZE 64 
-char buffer[BSIZE+1];
-int  bsize=0;
+#define BSIZE 2048 
+static uint8_t buffer[BSIZE + 1];
+static size_t  bsize = 0;
 
+static uint8_t bufferout[BSIZE + 1];
+static size_t  bsizeout = 0;
+
+bool ProcessCCIDTransfer(uint8_t *datain, size_t datainlen, uint8_t *dataout, size_t *dataoutlen);
 
 void handle_data(int sockfd, USBIP_RET_SUBMIT *usb_req, int bl) {  
     // data channel
@@ -211,30 +216,29 @@ void handle_data(int sockfd, USBIP_RET_SUBMIT *usb_req, int bl) {
         
         if(usb_req->direction == 0) //input
         { 
-        printf("direction=input\n");  
-        bsize=recv (sockfd, (char *) buffer , bl, 0);
-        send_usb_req(sockfd, usb_req,"", 0, 0);
-        buffer[bsize+1]=0; //string terminator
-        
-        printf("received[%d]: ", bsize);
-        for (int i = 0; i < bsize; i++)
-            printf("%02x ",buffer[i]);
-        printf("\n");
+            printf("direction=input\n");  
+            bsize=recv (sockfd, (char *)buffer, bl, 0);
+                        
+            bool res = ProcessCCIDTransfer(buffer, bsize, bufferout, &bsizeout);
+            // ACK
+            send_usb_req(sockfd, usb_req, "", 0, res ? 0 : 1);
         }
         else
         {    
             printf("direction=output\n");  
-        }
-        //not supported
-        send_usb_req(sockfd, usb_req, "", 0, 0);
-        usleep(500);
-    }
+            send_usb_req(sockfd, usb_req, (char *)bufferout, bsizeout, 0); 
+            bsizeout = 0;
+       }
+     }
   
     // Interrupt channel
     if((usb_req->ep == 0x05)) {
         printf("##Interrupt (EP5) received \n"); 
         if(usb_req->direction == 0) { 
             printf("direction=input. WARNNING!!!!\n");  
+            //not supported
+            send_usb_req(sockfd, usb_req, "", 0, 0);
+            //usleep(500);
         } else {
             printf("direction=output\n");  
 
@@ -298,5 +302,25 @@ int main()
    printf("ccid started....\n");
    usbip_run(&dev_dsc);
    printf("ccid stopped....\n");
+}
+
+bool ProcessCCIDTransfer(uint8_t *datain, size_t datainlen, uint8_t *dataout, size_t *dataoutlen) {
+
+    *dataoutlen = 0;
+    
+    printf("<<<[%ld]: ", datainlen);
+    for (int i = 0; i < datainlen; i++)
+        printf("%02x ",datain[i]);
+    printf("\n"); 
+    
+    
+    
+    
+    printf("<<<[%ld]: ", *dataoutlen);
+    for (int i = 0; i < *dataoutlen; i++)
+        printf("%02x ",dataout[i]);
+    printf("\n"); 
+    
+    return true;
 }
 
