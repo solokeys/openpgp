@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdbool.h>
+
+#include "ccid.h"
 #include "usbip.h"
 
 /* Device Descriptor */
@@ -302,11 +304,12 @@ void handle_unknown_control(int sockfd, StandardDeviceRequest * control_req, USB
 
 };
 
-int main()
+int usbip_ccid_start()
 {
    printf("ccid started....\n");
    usbip_run(&dev_dsc);
    printf("ccid stopped....\n");
+   return 0;
 }
 
 #define ABDATA_SIZE 261

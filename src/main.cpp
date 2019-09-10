@@ -4,6 +4,7 @@
 #include "solofactory.h"
 #include "util.h"
 #include "applets/apduconst.h"
+#include "ccid.h"
 
 int main(int argc, char * argv[])
 {
@@ -25,6 +26,8 @@ int main(int argc, char * argv[])
 
     printf("Clear applet memory OK.\n");
 
+
+    usbip_ccid_start();
 
 	uint8_t result[300] = {0};
     while (1)

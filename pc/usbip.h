@@ -24,6 +24,11 @@
    For e-mail suggestions :  lcgamboa@yahoo.com
    ######################################################################## */
 
+#ifndef USBIP_H_
+#define USBIP_H_
+
+#define LINUX = __linux__
+
 #ifdef LINUX
 #include<sys/types.h>
 #include<sys/socket.h>
@@ -550,3 +555,6 @@ extern const unsigned char *strings[];
 
 void handle_data(int sockfd, USBIP_RET_SUBMIT *usb_req, int bl);
 void handle_unknown_control(int sockfd, StandardDeviceRequest * control_req, USBIP_RET_SUBMIT *usb_req);
+
+#endif /* USBIP_H_ */
+
