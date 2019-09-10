@@ -65,7 +65,7 @@ make all
 2nd terminal
 ```
 sudo modprobe vhci-hcd  (once after reboot!!!)
-usbip attach -r 127.0.0.1 -b 1-1
+sudo usbip attach -r 127.0.0.1 -b 1-1
 sudo lsusb -d 03eb:206e -v
 ```
 
