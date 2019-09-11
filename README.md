@@ -65,7 +65,11 @@ make all
 ```
 sudo modprobe vhci-hcd  (once after reboot!!!)
 sudo usbip attach -r 127.0.0.1 -b 1-1
-sudo lsusb -d 03eb:206e -v
+sudo lsusb -d 072f:90cc -v
+
+pcsc_scan
+gpg2 --card-edit (command line: admin, list, name, lang, generate)
+gpg2 --card-edit --expert (admin, key-attr)
 ```
 
 list devices:
@@ -73,6 +77,22 @@ list devices:
 usbip list -r 127.0.0.1
 or
 usbip list -l
+```
+
+export keys
+```
+To get a simple file of your public key, you can just use 
+gpg2 --armor --export keyID > pubkey.asc
+gpg2 --output pubkey.pgp --armor --export keyID
+gpg2 --armor --export-secret-key keyID > privatekey.asc
+gpg2 --output backupkeys.pgp --armor --export --export-options export-backup user@email
+```
+
+import keys from card
+```
+gpg2 --import pubkey.asc
+gpg --card-status
+gpg --list-secret
 ```
 
 # TODO
