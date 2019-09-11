@@ -57,9 +57,8 @@ sudo cp /var/lib/usbutils/usb.ids /usr/share/hwdata/usb.ids
 
 1st terminal
 ```
-cd pc
 make all
-./ccid
+./main
 ```
 
 2nd terminal
