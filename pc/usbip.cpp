@@ -442,8 +442,8 @@ usbip_run (const USB_DEVICE_DESCRIPTOR *dev_dsc)                                
           }
           else
           {
-             printf("------------------------------------------------\n"); 
 #ifdef _DEBUGPRN
+             printf("------------------------------------------------\n"); 
              printf("handles requests\n");
 #endif // _DEBUGPRN
              USBIP_CMD_SUBMIT cmd;

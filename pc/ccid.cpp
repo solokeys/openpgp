@@ -209,6 +209,7 @@ static uint8_t bufferout[BSIZE + 1];
 static size_t  bsizeout = 0;
 
 bool ICCStateChanged = true;
+bool ICCPowered = false;
 
 bool ProcessCCIDTransfer(uint8_t *datain, size_t datainlen, uint8_t *dataout, size_t *dataoutlen);
 
@@ -216,11 +217,13 @@ void handle_data(int sockfd, USBIP_RET_SUBMIT *usb_req, int bl) {
     // data channel
     if(usb_req->ep == 0x04)
     {  
+#ifdef _DEBUGCLI
         printf("##Data (EP4) received \n"); 
+#endif // _DEBUGCLI
         
         if(usb_req->direction == 0) //input
         { 
-            printf("direction=input\n");  
+            printf("EP4 direction=input\n");
             bsize=recv (sockfd, (char *)buffer, bl, 0);
                         
             bool res = ProcessCCIDTransfer(buffer, bsize, bufferout, &bsizeout);
@@ -229,25 +232,29 @@ void handle_data(int sockfd, USBIP_RET_SUBMIT *usb_req, int bl) {
         }
         else
         {    
-            printf("direction=output\n");  
-            send_usb_req(sockfd, usb_req, (char *)bufferout, bsizeout, 0); 
+            printf("EP4 direction=output\n");
+            send_usb_req(sockfd, usb_req, (char *)bufferout, bsizeout, 0);
             bsizeout = 0;
        }
      }
   
     // Interrupt channel
     if((usb_req->ep == 0x05)) {
-        printf("##Interrupt (EP5) received \n"); 
+#ifdef _DEBUGCLI
+        printf("##Interrupt (EP5) received \n");
+#endif // _DEBUGCLI
         if(usb_req->direction == 0) { 
-            printf("direction=input. WARNNING!!!!\n");  
+            printf("EP5 direction=input. WARNNING!!!!\n");
             //not supported
             send_usb_req(sockfd, usb_req, nullptr, 0, 0);
             //usleep(500);
         } else {
-            printf("direction=output\n");  
+#ifdef _DEBUGCLI
+            printf("EP5 direction=output\n");
+#endif // _DEBUGCLI
 
             // b0 - slot0 current state b1 - slot0 changed state
-            uint8_t state = ICC_PRESENT | (ICCStateChanged ? ICC_CHANGE : 0x00);
+            uint8_t state = (ICCPowered ? ICC_PRESENT : ICC_NOT_PRESENT) | (ICCStateChanged ? ICC_CHANGE : 0x00);
             uint8_t data[] = {RDR_TO_PC_NOTIFYSLOTCHANGE, state}; 
             ICCStateChanged = false;
             send_usb_req(sockfd, usb_req, (char*)data, 2, 0);
@@ -304,12 +311,13 @@ void handle_unknown_control(int sockfd, StandardDeviceRequest * control_req, USB
 
 };
 
-int usbip_ccid_start()
-{
-   printf("ccid started....\n");
-   usbip_run(&dev_dsc);
-   printf("ccid stopped....\n");
-   return 0;
+static ex_cb exchange_callback = nullptr;
+int usbip_ccid_start(ex_cb cb) {
+    exchange_callback = cb;
+    printf("ccid started....\n");
+    usbip_run(&dev_dsc);
+    printf("ccid stopped....\n");
+    return 0;
 }
 
 #define ABDATA_SIZE 261
@@ -360,6 +368,9 @@ void PC_to_RDR_IccPowerOn(CCID_bulkin_data_t *pckin, CCID_bulkout_data_t *pckout
         CCID_UpdateResponseStatus(pckout, BM_COMMAND_STATUS_FAILED | BM_ICC_PRESENT_ACTIVE, SLOTERROR_BAD_POWERSELECT);
         return; 
     }
+
+    ICCPowered = true;
+    ICCStateChanged = true;
     
     pckout->dwLength = sizeof(atrconst);
     memmove(pckout->abData, atrconst, sizeof(atrconst));
@@ -368,20 +379,21 @@ void PC_to_RDR_IccPowerOn(CCID_bulkin_data_t *pckin, CCID_bulkout_data_t *pckout
 };
 
 void PC_to_RDR_IccPowerOff(CCID_bulkin_data_t *pckin, CCID_bulkout_data_t *pckout) {
-    
-    CCID_UpdateResponseStatus(pckout, BM_COMMAND_STATUS_NO_ERROR | BM_ICC_PRESENT_ACTIVE, SLOT_NO_ERROR);
+	ICCPowered = false;
+    ICCStateChanged = true;
+    CCID_UpdateResponseStatus(pckout, BM_COMMAND_STATUS_NO_ERROR | BM_ICC_NO_ICC_PRESENT, SLOT_NO_ERROR);
 };
 
 void PC_to_RDR_GetSlotStatus(CCID_bulkin_data_t *pckin, CCID_bulkout_data_t *pckout) {
     
-    CCID_UpdateResponseStatus(pckout, BM_COMMAND_STATUS_NO_ERROR | BM_ICC_PRESENT_ACTIVE, SLOT_NO_ERROR);
+    CCID_UpdateResponseStatus(pckout,  BM_COMMAND_STATUS_NO_ERROR | BM_ICC_PRESENT_ACTIVE, SLOT_NO_ERROR);
 };
 
 void PC_to_RDR_XfrBlock(CCID_bulkin_data_t *pckin, CCID_bulkout_data_t *pckout) {
     
-    pckout->dwLength = 2;
-    pckout->abData[0] = 0x90;
-    pckout->abData[1] = 0x00;
+    size_t len = 0;
+    exchange_callback(pckin->abData, pckin->dwLength, pckout->abData, &len);
+    pckout->dwLength = len;
     
     CCID_UpdateResponseStatus(pckout, BM_COMMAND_STATUS_NO_ERROR | BM_ICC_PRESENT_ACTIVE, SLOT_NO_ERROR);
 };

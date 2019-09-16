@@ -11,8 +11,12 @@
 #ifndef CCID_H_
 #define CCID_H_
 
+#include <stdint.h>
 
-extern int usbip_ccid_start();
+/* reg_callback.h */
+typedef void (*ex_cb)(uint8_t*, size_t, uint8_t*, size_t*);
+
+extern int usbip_ccid_start(ex_cb cb);
 
 
 

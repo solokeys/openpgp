@@ -6,6 +6,24 @@
 #include "applets/apduconst.h"
 #include "ccid.h"
 
+#define USBIP_MODE
+
+Applet::APDUExecutor *fexecutor;
+void exchangeFunc(uint8_t *datain, size_t datainlen, uint8_t *dataout, size_t *outlen) {
+	*outlen = 0;
+
+	uint8_t apdu_result[4096] = {0};
+	auto resstr = bstr(apdu_result, 0, sizeof(apdu_result) - 10);
+	auto apdu = bstr(datain, datainlen);
+
+	printf("a>> "); dump_hex(apdu);
+    fexecutor->Execute(apdu, resstr);
+    printf("a<< "); dump_hex(resstr);
+
+    *outlen = resstr.length();
+    memcpy(dataout, apdu_result, *outlen);
+}
+
 int main(int argc, char * argv[])
 {
 	uint8_t ccidbuf[350];
@@ -18,6 +36,7 @@ int main(int argc, char * argv[])
 
     Factory::SoloFactory &factory = Factory::SoloFactory::GetSoloFactory();
     Applet::APDUExecutor executor = factory.GetAPDUExecutor();
+    fexecutor = &executor;
 
     printf("OpenPGP factory OK.\n");
 
@@ -26,8 +45,11 @@ int main(int argc, char * argv[])
 
     printf("Clear applet memory OK.\n");
 
-
-    usbip_ccid_start();
+#ifdef USBIP_MODE
+    printf("USBIP mode.\n");
+    usbip_ccid_start(&exchangeFunc);
+    return 0;
+#endif
 
 	uint8_t result[300] = {0};
     while (1)
