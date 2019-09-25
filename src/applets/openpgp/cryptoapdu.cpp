@@ -26,7 +26,7 @@ Util::Error APDUGetChallenge::Check(uint8_t cla, uint8_t ins,
 	if (cla != 0x00)
 		return Util::Error::WrongAPDUCLA;
 
-	if ((p1 != 0x00 && p2 != 0x00))   // encipher
+	if (p1 != 0x00 && p2 != 0x00)   // encipher
 		return Util::Error::WrongAPDUP1P2;
 
 	return Util::Error::NoError;

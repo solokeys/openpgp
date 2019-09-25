@@ -17,6 +17,7 @@
 #include "resetprovider.h"
 #include "userapdu.h"
 #include "cryptoapdu.h"
+#include "secureapdu.h"
 
 namespace OpenPGP {
 
@@ -35,7 +36,12 @@ namespace OpenPGP {
 		APDUGenerateAsymmetricKeyPair apduGenerateAsymmetricKeyPair;
 		APDUPSO apduPSO;
 
-		std::array<Applet::APDUCommand*, 9> commands = {
+		//secureapdu
+		APDUActivateFile apduActivateFile;
+		APDUTerminateDF apduTerminateDF;
+		APDUManageSecurityEnvironment apduManageSecurityEnvironment;
+
+		std::array<Applet::APDUCommand*, 12> commands = {
 			&apduVerify,
 			&apduChangeReferenceData,
 			&apduResetRetryCounter,
@@ -46,6 +52,10 @@ namespace OpenPGP {
 			&apduInternalAuthenticate,
 			&apduGenerateAsymmetricKeyPair,
 			&apduPSO,
+
+			&apduActivateFile,
+			&apduTerminateDF,
+			&apduManageSecurityEnvironment,
 		};
 
 		ResetProvider resetProvider;

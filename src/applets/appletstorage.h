@@ -18,7 +18,6 @@
 #include "applet.h"
 #include "openpgpapplet.h"
 #include "testapplet.h"
-//#include "solofactory.h"
 
 namespace Applet {
 
