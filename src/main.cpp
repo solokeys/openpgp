@@ -40,8 +40,8 @@ int main(int argc, char * argv[])
 
     printf("OpenPGP factory OK.\n");
 
-	File::FileSystem &filesystem = factory.GetFileSystem();
-	filesystem.DeleteFiles(File::AppletID::OpenPGP);
+    OpenPGP::ResetProvider &resetprovider = factory.GetOpenPGPFactory().GetResetProvider();
+    resetprovider.ResetCard();
 
     printf("Clear applet memory OK.\n");
 
