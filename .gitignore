@@ -113,4 +113,5 @@ ptest
 .settings
 /Debug/
 data/
-pytest/.idea
+pytest/.idea/
+.directory
