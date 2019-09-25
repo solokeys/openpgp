@@ -149,7 +149,7 @@ const unsigned char string_1[] = { // Manufacturer
 		};
 
 const unsigned char string_2[] = { 
-		0x11, 
+		0x12,
         USB_DESCRIPTOR_STRING, 
 		'U', 0x00, 
 		'S', 0x00, 
@@ -223,7 +223,9 @@ void handle_data(int sockfd, USBIP_RET_SUBMIT *usb_req, int bl) {
         
         if(usb_req->direction == 0) //input
         { 
+#ifdef _DEBUGCLI
             printf("EP4 direction=input\n");
+#endif // _DEBUGCLI
             bsize=recv (sockfd, (char *)buffer, bl, 0);
                         
             bool res = ProcessCCIDTransfer(buffer, bsize, bufferout, &bsizeout);
@@ -232,7 +234,9 @@ void handle_data(int sockfd, USBIP_RET_SUBMIT *usb_req, int bl) {
         }
         else
         {    
+#ifdef _DEBUGCLI
             printf("EP4 direction=output\n");
+#endif // _DEBUGCLI
             send_usb_req(sockfd, usb_req, (char *)bufferout, bsizeout, 0);
             bsizeout = 0;
        }
@@ -428,10 +432,12 @@ bool ProcessCCIDTransfer(uint8_t *datain, size_t datainlen, uint8_t *dataout, si
     if (datainlen < 10)
         return false;
     
+#ifdef _DEBUGCLI
     printf("<<<[%ld]: ", datainlen);
     for (size_t i = 0; i < datainlen; i++)
         printf("%02x ",datain[i]);
     printf("\n"); 
+#endif // _DEBUGCLI
     
     CCID_bulkin_data_t *sdatain = (CCID_bulkin_data_t *)datain;
     
@@ -511,10 +517,12 @@ bool ProcessCCIDTransfer(uint8_t *datain, size_t datainlen, uint8_t *dataout, si
     
     *dataoutlen = CCID_HEADER_SIZE + sdataout->dwLength;
     
+#ifdef _DEBUGCLI
     printf(">>>[%ld]: ", *dataoutlen);
     for (size_t i = 0; i < *dataoutlen; i++)
         printf("%02x ",dataout[i]);
     printf("\n"); 
+#endif // _DEBUGCLI
     
     return true;
 }
