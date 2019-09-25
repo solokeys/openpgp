@@ -11,20 +11,13 @@ Clone Gnuk to get their testing suite.  Note, there are symlinks in the repo, so
 make sure you clone using a \*nix environment!
 
 ```
-git clone https://salsa.debian.org/gnuk-team/gnuk/gnuk
+git clone https://github.com/solokeys/openpgp.git
 ```
 
 Install Python test tools to run Gnuk tests.
 
 ```
 sudo apt install python3-pytest python3-usb python3-cffi
-```
-
-Replace the normal card reader class, with our testing class to connect
-the `CCID/OpenPGP` application locally to the tests via UDP.
-
-```
-cp card_reader.py gnuk/tests/card_reader.py
 ```
 
 Build our `CCID/OpenPGP` application
@@ -41,13 +34,23 @@ In one terminal, run our `CCID/OpenPGP` application.
 ./main
 ```
 
-In another terminal, run the Gnuk test suite.
+In another terminal: 
+
+connect it via USBIP
 
 ```
-cd gnuk/tests && py.test-3 -x
+sudo usbip attach -r 127.0.0.1 -b 1-1
+kill pcscd (somehow)
 ```
 
-# Emulate via USBIP
+run python test suite.
+
+```
+cd pytest 
+sudo py.test-3 -s -x
+```
+
+# Work with USBIP
 
 Setup
 ```
@@ -55,18 +58,16 @@ sudo mkdir /usr/share/hwdata
 sudo cp /var/lib/usbutils/usb.ids /usr/share/hwdata/usb.ids
 ```
 
-1st terminal
-```
-make all
-./main
-```
-
-2nd terminal
+init commands
 ```
 sudo modprobe vhci-hcd  (once after reboot!!!)
 sudo usbip attach -r 127.0.0.1 -b 1-1
 sudo lsusb -d 072f:90cc -v
+```
 
+Check if all is in working state
+
+```
 pcsc_scan
 gpg2 --card-edit (command line: admin, list, name, lang, generate)
 gpg2 --card-edit --expert (admin, key-attr)
@@ -79,7 +80,7 @@ or
 usbip list -l
 ```
 
-export keys
+gpg export keys
 ```
 To get a simple file of your public key, you can just use 
 gpg2 --armor --export keyID > pubkey.asc
@@ -88,7 +89,7 @@ gpg2 --armor --export-secret-key keyID > privatekey.asc
 gpg2 --output backupkeys.pgp --armor --export --export-options export-backup user@email
 ```
 
-import keys from card
+gpg import keys from card
 ```
 gpg2 --import pubkey.asc
 gpg --card-status
@@ -98,8 +99,9 @@ gpg --list-secret
 # TODO
 
 1. Change name from `Applet` to `Application`
-2. test via virtual USB in linux
+2. ~~test via virtual USB in linux~~
 3. Add tests for:
+  - init card at the begining of tests
   - access rights to commands and DO
   - refactor some tests and change some "magic" values in them
   - test RSA4096 generation and increase interface timeouts
