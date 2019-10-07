@@ -11,6 +11,24 @@
 
 namespace OpenPGP {
 
+Util::Error AppletConfig::Load(File::FileSystem &fs) {
+	bstr data(reinterpret_cast<uint8_t *>(this), 1, 1);
+	auto err = fs.ReadFile(File::AppletID::OpenPGP, File::SecureFileID::State, File::Secure, data);
+	if (err != Util::Error::NoError)
+		return err;
+
+	return Util::Error::NoError;
+}
+
+Util::Error AppletConfig::Save(File::FileSystem &fs) {
+	bstr data(reinterpret_cast<uint8_t *>(this), 1, 1);
+
+	auto err = fs.WriteFile(File::AppletID::OpenPGP, File::SecureFileID::State, File::Secure, data);
+	if (err != Util::Error::NoError)
+		return err;
+	return Util::Error::NoError;
+}
+
 Util::Error PWStatusBytes::Load(File::FileSystem &fs) {
 	bstr data(reinterpret_cast<uint8_t *>(this), 7, 7);
 	auto err = fs.ReadFile(File::AppletID::OpenPGP, 0xc4, File::FileType::File, data);

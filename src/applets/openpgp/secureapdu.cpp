@@ -42,7 +42,25 @@ Util::Error APDUActivateFile::Process(uint8_t cla, uint8_t ins,
 	if (err_check != Util::Error::NoError)
 		return err_check;
 
-	return Util::Error::WrongCommand;
+    Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
+	OpenPGP::OpenPGPFactory &opgp_factory = solo.GetOpenPGPFactory();
+	OpenPGP::Security &security = opgp_factory.GetSecurity();
+    OpenPGP::ResetProvider &resetprovider = opgp_factory.GetResetProvider();
+
+    LifeCycleState lcstate = LifeCycleState::Init;
+    auto err = security.GetLifeCycleState(lcstate);
+	if (err != Util::Error::NoError)
+		return err;
+
+	if (lcstate == LifeCycleState::Init) { // and was reset
+	    resetprovider.ResetCard();
+	}
+
+	err = security.SetLifeCycleState(LifeCycleState::Operational);
+	if (err != Util::Error::NoError)
+		return err;
+
+	return Util::Error::NoError;
 }
 
 Util::Error APDUTerminateDF::Check(uint8_t cla, uint8_t ins,
@@ -68,7 +86,18 @@ Util::Error APDUTerminateDF::Process(uint8_t cla, uint8_t ins,
 	if (err_check != Util::Error::NoError)
 		return err_check;
 
-	return Util::Error::WrongCommand;
+    Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
+	OpenPGP::OpenPGPFactory &opgp_factory = solo.GetOpenPGPFactory();
+	OpenPGP::Security &security = opgp_factory.GetSecurity();
+
+	// TODO: if authenticated with PW3
+	// TODO: set "need reset" flag for dummy acticatedf in case...
+
+    auto err = security.SetLifeCycleState(LifeCycleState::Init);
+	if (err != Util::Error::NoError)
+		return err;
+
+	return Util::Error::NoError;
 }
 
 Util::Error APDUManageSecurityEnvironment::Check(uint8_t cla,

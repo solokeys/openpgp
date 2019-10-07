@@ -216,7 +216,10 @@ void Security::ClearAllAuth() {
 
 void Security::Init() {
 	ClearAllAuth();
-	appletConfig.state = LifeCycleState::Init; // TODO: load
+
+	Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
+	File::FileSystem &filesystem = solo.GetFileSystem();
+	appletConfig.Load(filesystem);
 
 	Reload();
 }
@@ -260,6 +263,19 @@ Util::Error Security::AfterSaveFileLogic(uint16_t objectID) {
 	}
 
 	return Util::Error::NoError;
+}
+
+Util::Error Security::GetLifeCycleState(LifeCycleState &state) {
+	state = appletConfig.state;
+	return Util::Error::NoError;
+}
+
+Util::Error Security::SetLifeCycleState(LifeCycleState state) {
+	Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
+	File::FileSystem &filesystem = solo.GetFileSystem();
+
+	appletConfig.state = state;
+	return appletConfig.Save(filesystem);
 }
 
 Util::Error Security::SetPasswd(Password passwdId, bstr password) {

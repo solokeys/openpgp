@@ -24,9 +24,11 @@ enum FileType {
 };
 
 enum SecureFileID {
-	PW1 = 0x80,
-	PW3 = 0x81,
-	RC  = 0x82,
+	PW1   = 0x80,
+	PW3   = 0x81,
+	RC    = 0x82,
+
+	State = 0x90,
 
 	DigitalSignature = 0xb6,
 	Confidentiality  = 0xb8,

@@ -97,6 +97,9 @@ Util::Error ConfigFileSystem::ReadFile(AppID_t AppId, KeyID_t FileID,
 		case SecureFileID::PW3:
 			data.set("12345678"_bstr);
 			return Util::Error::NoError;
+		case SecureFileID::State:
+			data.set("\x05"_bstr);  // State - Operational by default
+			return Util::Error::NoError;
 		default:
 			break;
 		}

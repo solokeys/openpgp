@@ -33,8 +33,8 @@ struct AppletState {
 struct AppletConfig {
 	LifeCycleState state;
 
-	Util::Error Load();
-	Util::Error Save();
+	Util::Error Load(File::FileSystem &fs);
+	Util::Error Save(File::FileSystem &fs);
 };
 
 struct __attribute__ ((packed)) PWStatusBytes {
