@@ -29,6 +29,17 @@ import pytest
 
 EMPTY_60=bytes(60)
 
+def test_reset_card(card):
+    card.cmd_terminate_df()
+
+    card.cmd_restart_card()
+    card.cmd_select_openpgp()
+    card.cmd_activate_file()
+
+    card.cmd_restart_card()
+    card.cmd_select_openpgp()
+    assert True
+
 def test_login(card):
     login = get_data_object(card, 0x5e)
     assert check_null(login)

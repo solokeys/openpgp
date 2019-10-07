@@ -419,6 +419,25 @@ class OpenPGP_Card(object):
         if not (sw[0] == 0x90 and sw[1] == 0x00):
             raise ValueError("%02x%02x" % (sw[0], sw[1]))
 
+    def cmd_activate_file(self):
+        cmd_data = iso7816_compose(0x44, 0x00, 0x00, None)
+        sw = self.__reader.send_cmd(cmd_data)
+        if len(sw) != 2:
+            raise ValueError(sw)
+        if not (sw[0] == 0x90 and sw[1] == 0x00):
+            raise ValueError("%02x%02x" % (sw[0], sw[1]))
+
+    def cmd_terminate_df(self):
+        cmd_data = iso7816_compose(0xe6, 0x00, 0x00, None)
+        sw = self.__reader.send_cmd(cmd_data)
+        if len(sw) != 2:
+            raise ValueError(sw)
+        if not (sw[0] == 0x90 and sw[1] == 0x00):
+            raise ValueError("%02x%02x" % (sw[0], sw[1]))
+
+    def cmd_restart_card(self):
+        pass
+
 def parse_kdf_data(kdf_data):
     if len(kdf_data) == 90:
         single_salt = True
