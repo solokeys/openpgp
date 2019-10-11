@@ -33,7 +33,19 @@ def test_reset_card(card):
     card.cmd_terminate_df()
 
     card.cmd_restart_card()
-    card.cmd_select_openpgp()
+    try:
+        print("xx1")
+        card.cmd_select_openpgp()
+        print("xx2")
+    except ValueError as e:
+        if str(e) != "6285":
+            print("1", str(e))
+            raise
+        else:
+            print("2", str(e))
+            pass
+
+    print("xx3")
     card.cmd_activate_file()
 
     card.cmd_restart_card()

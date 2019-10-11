@@ -157,7 +157,10 @@ Util::Error Security::CommandAccessCheck(
 		return Util::Error::ConditionsNotSatisfied;
 
 	// application terminated
-	if (isTerminated())
+	if (isTerminated() &&
+		(ins != Applet::APDUcommands::ActivateFile ||
+		 ins != Applet::APDUcommands::TerminateDF ||
+		 ins != Applet::APDUcommands::SoloReboot) )
 		return Util::Error::ConditionsNotSatisfied;
 
 

@@ -211,6 +211,8 @@ class OpenPGP_Card(object):
         if sw[0] == 0x61:
             self.cmd_get_response(sw[1])
             return True
+        if sw[0] == 0x62 and sw[1] == 0x85:
+            return True
         if not (sw[0] == 0x90 and sw[1] == 0x00):
             raise ValueError("%02x%02x" % (sw[0], sw[1]))
         return True
