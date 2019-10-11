@@ -31,6 +31,9 @@ Util::Error OpenPGPApplet::Select(bstr &result) {
 
 	security.Init();
 
+	if (security.isTerminated())
+		return Util::Error::ApplicationTerminated;
+
 	return err;
 }
 

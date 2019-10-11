@@ -24,6 +24,8 @@ namespace Util {
 		WrongCommand,
 		WrongData,
 
+		ConditionsNotSatisfied,
+
 		DataNotFound,
 		WrongPassword,
 
@@ -42,6 +44,8 @@ namespace Util {
 		CryptoDataError,
 		CryptoOperationError,
 		CryptoResultError,
+
+		ApplicationTerminated,
 
 		// error code was put in the response
 		ErrorPutInData,
@@ -62,6 +66,8 @@ namespace Util {
 		"Wrong command",
 		"Wrong data",
 
+		"Conditions of use not satisfied",
+
 		"Data not found",
 		"Wrong password",
 		"File not found",
@@ -80,7 +86,10 @@ namespace Util {
 		"Crypto operation error",
 		"Crypto result error",
 
+		"Application terminated",
+
 		"Error. Error code already in the response"
+
 		"n/a"};
 
 	inline const char *GetStrError(Error err) {

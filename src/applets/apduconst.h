@@ -57,6 +57,7 @@ namespace Applet {
 		ManageSecurityEnv		= 0x22,
 		TerminateDF				= 0xe6,
 		ActivateFile			= 0x44,
+		SoloReboot				= 0xee,
 	};
 
 }

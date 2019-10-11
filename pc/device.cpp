@@ -216,3 +216,8 @@ int deletefiles(char* name) {
     return 0;
 }
 
+int hwreboot() {
+
+	return 0;
+}
+

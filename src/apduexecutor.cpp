@@ -20,6 +20,9 @@ void APDUExecutor::SetResultError(bstr& result, Util::Error error) {
 	case Error::NoError:
 		result.appendAPDUres(APDUResponse::OK);
 		break;
+	case Error::ConditionsNotSatisfied:
+    	result.setAPDURes(APDUResponse::ConditionsUseNotSatisfied);
+    	break;
 	case Error::AppletNotFound:
     	result.setAPDURes(APDUResponse::FileNotFound);
 		break;
@@ -45,7 +48,9 @@ void APDUExecutor::SetResultError(bstr& result, Util::Error error) {
 	case Error::WrongPassword:
     	result.setAPDURes(APDUResponse::SecurityStatusNotSatisfied);
 		break;
-
+	case Error::ApplicationTerminated:
+    	result.setAPDURes(APDUResponse::SelectInTerminationState);
+		break;
 
 	case Error::ErrorPutInData:
     	// error already in the data field

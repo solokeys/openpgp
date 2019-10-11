@@ -34,6 +34,12 @@ namespace OpenPGP {
 		virtual Util::Error Process(uint8_t cla, uint8_t ins, uint8_t p1, uint8_t p2, bstr data, uint8_t le, bstr &dataOut);
 	};
 
+
+	class APDUSoloReboot : public Applet::APDUCommand {
+	public:
+		virtual Util::Error Check(uint8_t cla, uint8_t ins, uint8_t p1, uint8_t p2);
+		virtual Util::Error Process(uint8_t cla, uint8_t ins, uint8_t p1, uint8_t p2, bstr data, uint8_t le, bstr &dataOut);
+	};
 }
 
 #endif /* SRC_APPLETS_OPENPGP_SECUREAPDU_H_ */

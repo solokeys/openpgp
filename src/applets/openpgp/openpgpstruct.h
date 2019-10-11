@@ -19,14 +19,20 @@
 namespace OpenPGP {
 
 struct AppletState {
-	bool pw1Authenticated;
-	bool cdsAuthenticated;
-	bool pw3Authenticated;
+	bool pw1Authenticated = false;
+	bool cdsAuthenticated = false;
+	bool pw3Authenticated = false;
+
+	bool terminateExecuted = false;
 
 	void Clear() {
 		pw1Authenticated = false;
 		cdsAuthenticated = false;
 		pw3Authenticated = false;
+	}
+	void Init() {
+		Clear();
+		terminateExecuted = false;
 	}
 };
 

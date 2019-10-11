@@ -147,6 +147,20 @@ Util::Error OpenPGP::Security::DataObjectInAllowedList(uint16_t dataObjectID) {
 Util::Error Security::CommandAccessCheck(
 		uint8_t cla, uint8_t ins, uint8_t p1, uint8_t p2) {
 
+	// check init state
+    LifeCycleState lcstate = LifeCycleState::Init;
+    auto err = GetLifeCycleState(lcstate);
+	if (err != Util::Error::NoError)
+		return err;
+
+	if (lcstate != LifeCycleState::Operational)
+		return Util::Error::ConditionsNotSatisfied;
+
+	// application terminated
+	if (isTerminated())
+		return Util::Error::ConditionsNotSatisfied;
+
+
 	// DataObjectAccessCheck
 	if (ins == Applet::APDUcommands::GetData ||
 		ins == Applet::APDUcommands::GetData2 ||
@@ -537,6 +551,14 @@ Util::Error Security::IncDSCounter() {
 		return cntrerr;
 
 	return Util::Error::NoError;
+}
+
+void Security::Terminate() {
+	appletState.terminateExecuted = true;
+}
+
+bool Security::isTerminated() {
+	return appletState.terminateExecuted;
 }
 
 } /* namespace OpenPGP */

@@ -16,6 +16,7 @@
 #include "applets/openpgpapplet.h"
 #include "applets/openpgp/openpgpconst.h"
 #include "applets/openpgp/openpgpstruct.h"
+#include "device.h"
 
 namespace OpenPGP {
 
@@ -52,8 +53,9 @@ Util::Error APDUActivateFile::Process(uint8_t cla, uint8_t ins,
 	if (err != Util::Error::NoError)
 		return err;
 
-	if (lcstate == LifeCycleState::Init) { // and was reset
+	if (lcstate == LifeCycleState::Init && !security.isTerminated()) { // isTerminated==false: `terminate df` and then reset
 	    resetprovider.ResetCard();
+	    security.Init();
 	}
 
 	err = security.SetLifeCycleState(LifeCycleState::Operational);
@@ -91,7 +93,8 @@ Util::Error APDUTerminateDF::Process(uint8_t cla, uint8_t ins,
 	OpenPGP::Security &security = opgp_factory.GetSecurity();
 
 	// TODO: if authenticated with PW3
-	// TODO: set "need reset" flag for dummy acticatedf in case...
+
+	security.Terminate();
 
     auto err = security.SetLifeCycleState(LifeCycleState::Init);
 	if (err != Util::Error::NoError)
@@ -127,5 +130,35 @@ Util::Error APDUManageSecurityEnvironment::Process(uint8_t cla,
 	return Util::Error::WrongCommand;
 }
 
+Util::Error APDUSoloReboot::Check(uint8_t cla, uint8_t ins, uint8_t p1,
+		uint8_t p2) {
+	if (ins != Applet::APDUcommands::SoloReboot)
+		return Util::Error::WrongCommand;
+
+	if (cla != 0x00)
+		return Util::Error::WrongAPDUCLA;
+
+	if (p1 != 0x00 || p2 != 0x00)
+		return Util::Error::WrongAPDUP1P2;
+
+	return Util::Error::NoError;
 }
 
+Util::Error APDUSoloReboot::Process(uint8_t cla, uint8_t ins,
+		uint8_t p1, uint8_t p2, bstr data, uint8_t le, bstr& dataOut) {
+	dataOut.clear();
+
+	auto err_check = Check(cla, ins, p1, p2);
+	if (err_check != Util::Error::NoError)
+		return err_check;
+
+	if (data != "reboot"_bstr)
+		return Util::Error::AccessDenied;
+
+	//reboot from hardware
+	hwreboot();
+
+	return Util::Error::NoError;
+}
+
+}

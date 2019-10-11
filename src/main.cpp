@@ -35,6 +35,7 @@ int main(int argc, char * argv[])
     printf("Init CCID\n");
 
     Factory::SoloFactory &factory = Factory::SoloFactory::GetSoloFactory();
+    factory.Init();  // init solokey
     Applet::APDUExecutor executor = factory.GetAPDUExecutor();
     fexecutor = &executor;
 
