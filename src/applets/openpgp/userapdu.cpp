@@ -73,6 +73,11 @@ Util::Error APDUVerify::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 	return security.VerifyPasswd(passwd_id, data, false, nullptr);
 }
 
+std::string_view APDUVerify::GetName() {
+	using namespace std::literals;
+	return "Verify"sv;
+}
+
 Util::Error APDUChangeReferenceData::Check(uint8_t cla, uint8_t ins, uint8_t p1, uint8_t p2) {
 	if (ins != Applet::APDUcommands::ChangeReferenceData)
 		return Util::Error::WrongCommand;
@@ -113,6 +118,11 @@ Util::Error APDUChangeReferenceData::Process(uint8_t cla, uint8_t ins,
 		return err;
 
 	return Util::Error::NoError;
+}
+
+std::string_view APDUChangeReferenceData::GetName() {
+	using namespace std::literals;
+	return "ChangeReferenceData"sv;
 }
 
 Util::Error APDUResetRetryCounter::Check(uint8_t cla, uint8_t ins, uint8_t p1, uint8_t p2) {
@@ -172,6 +182,11 @@ Util::Error APDUResetRetryCounter::Process(uint8_t cla, uint8_t ins,
 	return Util::Error::NoError;
 }
 
+std::string_view APDUResetRetryCounter::GetName() {
+	using namespace std::literals;
+	return "ResetRetryCounter"sv;
+}
+
 // Open PGP application v 3.3.1 page 49
 Util::Error APDUGetData::Check(uint8_t cla, uint8_t ins, uint8_t p1, uint8_t p2) {
 	if (ins != Applet::APDUcommands::GetData && ins != Applet::APDUcommands::GetData2)
@@ -199,6 +214,11 @@ Util::Error APDUGetData::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 	filesystem.ReadFile(File::AppletID::OpenPGP, object_id, File::File, dataOut);
 
 	return Util::Error::NoError;
+}
+
+std::string_view APDUGetData::GetName() {
+	using namespace std::literals;
+	return "GetData"sv;
 }
 
 Util::Error APDUPutData::Check(uint8_t cla, uint8_t ins, uint8_t p1, uint8_t p2) {
@@ -253,6 +273,11 @@ Util::Error APDUPutData::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 	}
 
 	return Util::Error::NoError;
+}
+
+std::string_view APDUPutData::GetName() {
+	using namespace std::literals;
+	return "PutData"sv;
 }
 
 } // namespace OpenPGP

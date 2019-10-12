@@ -54,6 +54,11 @@ Util::Error APDUGetChallenge::Process(uint8_t cla, uint8_t ins,
 	return crypto.GenerateRandom(le, dataOut);
 }
 
+std::string_view APDUGetChallenge::GetName() {
+	using namespace std::literals;
+	return "GetChallenge"sv;
+}
+
 Util::Error APDUInternalAuthenticate::Check(uint8_t cla, uint8_t ins,
 		uint8_t p1, uint8_t p2) {
 
@@ -97,6 +102,11 @@ Util::Error APDUInternalAuthenticate::Process(uint8_t cla, uint8_t ins,
 		err = crypto_e.ECDSASign(File::AppletID::OpenPGP, OpenPGPKeyType::Authentication, data, dataOut);
 
 	return err;
+}
+
+std::string_view APDUInternalAuthenticate::GetName() {
+	using namespace std::literals;
+	return "InternalAuthenticate"sv;
 }
 
 Util::Error APDUGenerateAsymmetricKeyPair::Check(uint8_t cla,
@@ -216,6 +226,11 @@ Util::Error APDUGenerateAsymmetricKeyPair::Process(uint8_t cla,
 	return Util::Error::NoError;
 }
 
+std::string_view APDUGenerateAsymmetricKeyPair::GetName() {
+	using namespace std::literals;
+	return "GenerateAsymmetricKeyPair"sv;
+}
+
 Util::Error APDUPSO::Check(uint8_t cla, uint8_t ins, uint8_t p1,
 		uint8_t p2) {
 	if (ins != Applet::APDUcommands::PSO)
@@ -316,6 +331,11 @@ Util::Error APDUPSO::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 	}
 
 	return Util::Error::NoError;
+}
+
+std::string_view APDUPSO::GetName() {
+	using namespace std::literals;
+	return "PSO(Perform Security Operation)"sv;
 }
 
 } // namespace OpenPGP

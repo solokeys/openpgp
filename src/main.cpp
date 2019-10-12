@@ -41,11 +41,6 @@ int main(int argc, char * argv[])
 
     printf("OpenPGP factory OK.\n");
 
-    OpenPGP::ResetProvider &resetprovider = factory.GetOpenPGPFactory().GetResetProvider();
-    resetprovider.ResetCard();
-
-    printf("Clear applet memory OK.\n");
-
 #ifdef USBIP_MODE
     printf("USBIP mode.\n");
     usbip_ccid_start(&exchangeFunc);
