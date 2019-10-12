@@ -218,7 +218,7 @@ Util::Error GenericFileSystem::ReadFile(AppID_t AppId, KeyID_t FileID,
 	SetFileName(AppId, FileID, FileType, file_name);
 
 	size_t len = 0;
-	int res = readfile(file_name, data.uint8Data(), 1024, &len); // TODO: change 1024 to `data` max length
+	int res = readfile(file_name, data.uint8Data(), data.max_length(), &len);
 	if (res == 0) {
 		data.set_length(len);
 		return Util::Error::NoError;
@@ -257,7 +257,7 @@ Util::Error FileSystem::ReadFile(AppID_t AppId, KeyID_t FileID,
 	// check if it needs to compose file
 	if (isTagComposite(FileID)) {
 		uint8_t _vdata[1024] = {0};
-		bstr vdata(_vdata);
+		bstr vdata(_vdata, 0, sizeof(_vdata));
 		for(const auto& ctag: CompositeTag) {
 	    	if (ctag.TagGroup == FileID) {
 	    		vdata.clear();

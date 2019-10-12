@@ -1,5 +1,5 @@
 """
-test_031_user_do.py - test user data objects (0101, 0102, 0103, 0104)
+test_032_rsa4096py - test setting rsa 4096
 
 Copyright (C) 2019  SoloKeys
 Author: Oleg Moiseenko (merlokk)
