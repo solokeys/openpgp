@@ -118,6 +118,10 @@ struct ECDSAKey {
 		Private.set_length(0);
 		Public.set_length(0);
 	}
+	constexpr void Print() {
+		printf("Public  [%lu] ", Public.length());  dump_hex(Public,  48);
+		printf("Private [%lu] ", Private.length()); dump_hex(Private, 48);
+	}
 };
 
 class CryptoEngine;
