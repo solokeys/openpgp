@@ -157,6 +157,15 @@ class OpenPGP_Card(object):
             raise ValueError("%02x%02x" % (sw[0], sw[1]))
         return True
 
+    def cmd_verify_reset(self, who):
+        cmd_data = iso7816_compose(0x20, 0xff, 0x80+who, "")
+        sw = self.__reader.send_cmd(cmd_data)
+        if len(sw) != 2:
+            raise ValueError(sw)
+        if not (sw[0] == 0x90 and sw[1] == 0x00):
+            raise ValueError("%02x%02x" % (sw[0], sw[1]))
+        return True
+
     def cmd_read_binary(self, fileid):
         cmd_data = iso7816_compose(0xb0, 0x80+fileid, 0x00, b'')
         sw = self.__reader.send_cmd(cmd_data)
