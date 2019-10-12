@@ -147,21 +147,24 @@ Util::Error OpenPGP::Security::DataObjectInAllowedList(uint16_t dataObjectID) {
 Util::Error Security::CommandAccessCheck(
 		uint8_t cla, uint8_t ins, uint8_t p1, uint8_t p2) {
 
-	// check init state
-    LifeCycleState lcstate = LifeCycleState::Init;
-    auto err = GetLifeCycleState(lcstate);
-	if (err != Util::Error::NoError)
-		return err;
+	// check init and terminated card states
+	if (ins != Applet::APDUcommands::ActivateFile &&
+		ins != Applet::APDUcommands::TerminateDF &&
+		ins != Applet::APDUcommands::SoloReboot ) {
 
-	if (lcstate != LifeCycleState::Operational)
-		return Util::Error::ConditionsNotSatisfied;
+		// check init state
+		LifeCycleState lcstate = LifeCycleState::Init;
+		auto err = GetLifeCycleState(lcstate);
+		if (err != Util::Error::NoError)
+			return err;
 
-	// application terminated
-	if (isTerminated() &&
-		(ins != Applet::APDUcommands::ActivateFile ||
-		 ins != Applet::APDUcommands::TerminateDF ||
-		 ins != Applet::APDUcommands::SoloReboot) )
-		return Util::Error::ConditionsNotSatisfied;
+		if (lcstate != LifeCycleState::Operational)
+			return Util::Error::ConditionsNotSatisfied;
+
+		// application terminated
+		if (isTerminated())
+			return Util::Error::ConditionsNotSatisfied;
+	}
 
 
 	// DataObjectAccessCheck
@@ -247,6 +250,11 @@ void Security::Reload() {
 
 	pwstatus.Load(filesystem);
 	kdfDO.Load(filesystem);
+}
+
+void Security::intRESET() {
+	appletState.Init();  // clear `terminateExecuted` state
+	Init();
 }
 
 Util::Error Security::AfterSaveFileLogic(uint16_t objectID) {

@@ -56,6 +56,7 @@ Util::Error APDUActivateFile::Process(uint8_t cla, uint8_t ins,
 	if (lcstate == LifeCycleState::Init && !security.isTerminated()) { // isTerminated==false: `terminate df` and then reset
 	    resetprovider.ResetCard();
 	    security.Init();
+	    printf("Card was CLEARED\n");
 	}
 
 	err = security.SetLifeCycleState(LifeCycleState::Operational);
@@ -169,6 +170,13 @@ Util::Error APDUSoloReboot::Process(uint8_t cla, uint8_t ins,
 
 	if (data != "reboot"_bstr)
 		return Util::Error::AccessDenied;
+
+	// reset form pc only
+    Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
+	OpenPGP::OpenPGPFactory &opgp_factory = solo.GetOpenPGPFactory();
+	OpenPGP::Security &security = opgp_factory.GetSecurity();
+
+	security.intRESET();
 
 	//reboot from hardware
 	hwreboot();

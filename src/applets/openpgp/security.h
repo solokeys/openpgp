@@ -56,6 +56,7 @@ namespace OpenPGP {
 
 		void Terminate();
 		bool isTerminated();
+		void intRESET();
 	};
 
 } /* namespace OpenPGP */

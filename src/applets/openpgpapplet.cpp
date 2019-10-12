@@ -31,7 +31,13 @@ Util::Error OpenPGPApplet::Select(bstr &result) {
 
 	security.Init();
 
-	if (security.isTerminated())
+	using namespace OpenPGP;
+    LifeCycleState lcstate = LifeCycleState::Init;
+    auto errsec = security.GetLifeCycleState(lcstate);
+	if (errsec != Util::Error::NoError)
+		return errsec;
+
+	if (lcstate != LifeCycleState::Operational)
 		return Util::Error::ApplicationTerminated;
 
 	return err;

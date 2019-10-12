@@ -40,8 +40,9 @@ namespace OpenPGP {
 		APDUActivateFile apduActivateFile;
 		APDUTerminateDF apduTerminateDF;
 		APDUManageSecurityEnvironment apduManageSecurityEnvironment;
+		APDUSoloReboot apduSoloReboot;
 
-		std::array<Applet::APDUCommand*, 12> commands = {
+		std::array<Applet::APDUCommand*, 13> commands = {
 			&apduVerify,
 			&apduChangeReferenceData,
 			&apduResetRetryCounter,
@@ -56,6 +57,7 @@ namespace OpenPGP {
 			&apduActivateFile,
 			&apduTerminateDF,
 			&apduManageSecurityEnvironment,
+			&apduSoloReboot,
 		};
 
 		ResetProvider resetProvider;
