@@ -69,6 +69,9 @@ Util::Error OpenPGPApplet::APDUExchange(bstr header, bstr data, uint8_t le, bstr
 	if (!cmd)
 		return Util::Error::WrongCommand;
 
+	auto name = cmd->GetName();
+	printf("------- command: %.*s\n", static_cast<int>(name.size()), name.data());
+
 	auto cmderr = cmd->Process(cla, ins, p1, p2, data, le, result);
 	if (cmderr != Util::Error::NoError)
 		return cmderr;

@@ -27,4 +27,9 @@ Util::Error APDUCommand::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 	return Util::Error::WrongCommand;
 }
 
+std::string_view APDUCommand::GetName() {
+	using namespace std::literals;
+	return "base class"sv;
+}
+
 } // namespace Applet

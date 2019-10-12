@@ -65,6 +65,11 @@ Util::Error APDUActivateFile::Process(uint8_t cla, uint8_t ins,
 	return Util::Error::NoError;
 }
 
+std::string_view APDUActivateFile::GetName() {
+	using namespace std::literals;
+	return "ActivateFile"sv;
+}
+
 Util::Error APDUTerminateDF::Check(uint8_t cla, uint8_t ins,
 		uint8_t p1, uint8_t p2) {
 	if (ins != Applet::APDUcommands::TerminateDF)
@@ -103,6 +108,11 @@ Util::Error APDUTerminateDF::Process(uint8_t cla, uint8_t ins,
 	return Util::Error::NoError;
 }
 
+std::string_view APDUTerminateDF::GetName() {
+	using namespace std::literals;
+	return "TerminateDF"sv;
+}
+
 Util::Error APDUManageSecurityEnvironment::Check(uint8_t cla,
 		uint8_t ins, uint8_t p1, uint8_t p2) {
 	if (ins != Applet::APDUcommands::ManageSecurityEnv)
@@ -128,6 +138,11 @@ Util::Error APDUManageSecurityEnvironment::Process(uint8_t cla,
 		return err_check;
 
 	return Util::Error::WrongCommand;
+}
+
+std::string_view APDUManageSecurityEnvironment::GetName() {
+	using namespace std::literals;
+	return "ManageSecurityEnvironment"sv;
 }
 
 Util::Error APDUSoloReboot::Check(uint8_t cla, uint8_t ins, uint8_t p1,
@@ -159,6 +174,11 @@ Util::Error APDUSoloReboot::Process(uint8_t cla, uint8_t ins,
 	hwreboot();
 
 	return Util::Error::NoError;
+}
+
+std::string_view APDUSoloReboot::GetName() {
+	using namespace std::literals;
+	return "SoloReboot"sv;
 }
 
 }
