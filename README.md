@@ -108,7 +108,7 @@ gpg --list-secret
 4. Add tests and functionality for:
   - ECDSA
   - ~~reset card~~
-  - user DO (0101-0104) and check access rights
+  - ~~user DO (0101-0104) and check access rights~~
   - PSO:ENCIPHER and DECIPHER with AES
   - Secure messaging????
   - ALGO_ED25519 (EdDSA), ALGO_CURVE25519(ECDH)???
