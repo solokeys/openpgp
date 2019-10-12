@@ -21,8 +21,33 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+from enum import Enum, unique
 from struct import pack, unpack
 from kdf_calc import kdf_calc
+
+
+@unique
+class CryptoAlg(Enum):
+    Signature = 0xc1
+    Decryption = 0xc2
+    Authentication = 0xc3
+
+
+@unique
+class CryptoAlgType(Enum):
+    RSA = 1
+    ECDH = 12
+    ECDSA = 13
+
+
+@unique
+class CryptoAlgImportFormat(Enum):
+    RSAStandard = 0
+    RSAStandardWithModulus = 1
+    RSACRT = 2
+    RSACRTWithModulus = 3
+    ECDSAWithPublicKey = 0xff
+
 
 def iso7816_compose(ins, p1, p2, data, cls=0x00, le=None):
     data_len = len(data)
@@ -45,6 +70,7 @@ def iso7816_compose(ins, p1, p2, data, cls=0x00, le=None):
             else:
                 return pack('>BBBBBH', cls, ins, p1, p2, 0, data_len) \
                     + data + pack('>H', le)
+
 
 class OpenPGP_Card(object):
     def __init__(self, reader):
@@ -133,6 +159,10 @@ class OpenPGP_Card(object):
             return self.cmd_reset_retry_counter(2, 0x81, pw1_hash)
         else:
             return self.cmd_reset_retry_counter(2, 0x81, pw1)
+
+    def set_rsa_algorithm_attributes(self, alg, protocol, n_len, exp_len, private_key_format):
+        data = pack('>BHHB', protocol, n_len, exp_len, private_key_format)
+        return self.cmd_put_data(0x00, alg, data)
 
     def cmd_get_response(self, expected_len):
         result = b""
