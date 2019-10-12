@@ -101,13 +101,13 @@ gpg --list-secret
 1. Change name from `Applet` to `Application`
 2. ~~test via virtual USB in linux~~
 3. Add tests for:
-  - init card at the begining of tests
+  - ~~init card at the begining of tests~~
   - access rights to commands and DO
   - refactor some tests and change some "magic" values in them
   - test RSA4096 generation and increase interface timeouts
 4. Add tests and functionality for:
   - ECDSA
-  - reset card 
+  - ~~reset card~~
   - user DO (0101-0104) and check access rights
   - PSO:ENCIPHER and DECIPHER with AES
   - Secure messaging????
