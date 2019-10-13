@@ -94,13 +94,13 @@ def modinv(a, m):
     else:
         return x % m
 
-def pkcs1_pad_for_sign(digestinfo):
-    byte_repr = b'\x00' + b'\x01' + bytes.ljust(b'', 256 - 19 - 32 - 3, b'\xff') \
+def pkcs1_pad_for_sign(keylen, digestinfo):
+    byte_repr = b'\x00' + b'\x01' + bytes.ljust(b'', keylen - 19 - 32 - 3, b'\xff') \
         + b'\x00' + digestinfo
     return int(hexlify(byte_repr), 16)
 
-def pkcs1_pad_for_crypt(msg):
-    padlen = 256 - 3 - len(msg)
+def pkcs1_pad_for_crypt(keylen, msg):
+    padlen = keylen - 3 - len(msg)
     byte_repr = b'\x00' + b'\x02' \
         + bytes.replace(urandom(padlen), b'\x00', b'\x01') + b'\x00' + msg
     return int(hexlify(byte_repr), 16)
@@ -118,31 +118,33 @@ def compute_signature(keyno, digestinfo):
     dq = d % q1
     qp = modinv(q, p)
 
-    input = pkcs1_pad_for_sign(digestinfo)
+    input = pkcs1_pad_for_sign(n.bit_length() // 8, digestinfo)
     t1 = pow(input, dp, p)
     t2 = pow(input, dq, q)
     t = ((t1 - t2) * qp) % p
     sig = t2 + t * q
     return sig
 
-def integer_to_bytes_256(i):
-    return i.to_bytes(256, byteorder='big')
+def integer_to_bytes_x(bytelength, i):
+    return i.to_bytes(bytelength, byteorder='big')
 
 def encrypt(keyno, plaintext):
     e = key[keyno][4]
     n = key[keyno][7]
-    m = pkcs1_pad_for_crypt(plaintext)
-    return b'\x00' + integer_to_bytes_256(pow(m, e, n))
+    keylen = n.bit_length() // 8
+    m = pkcs1_pad_for_crypt(keylen, plaintext)
+    return b'\x00' + integer_to_bytes_x(keylen, pow(m, e, n))
 
 def encrypt_with_pubkey(pubkey_info, plaintext):
     n = int(hexlify(pubkey_info[0]), 16)
     e = int(hexlify(pubkey_info[1]), 16)
-    m = pkcs1_pad_for_crypt(plaintext)
-    return b'\x00' + integer_to_bytes_256(pow(m, e, n))
+    keylen = n.bit_length() // 8
+    m = pkcs1_pad_for_crypt(keylen, plaintext)
+    return b'\x00' + integer_to_bytes_x(keylen, pow(m, e, n))
 
 def verify_signature(pubkey_info, digestinfo, sig):
     n = int(hexlify(pubkey_info[0]), 16)
     e = int(hexlify(pubkey_info[1]), 16)
     di_pkcs1 = pow(sig,e,n)
-    m = pkcs1_pad_for_sign(digestinfo)
+    m = pkcs1_pad_for_sign(len(pubkey_info[0]), digestinfo)
     return di_pkcs1 == m

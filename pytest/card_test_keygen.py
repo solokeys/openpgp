@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from binascii import hexlify
 import rsa_keys
+from tlv import *
 from card_const import *
 
 class Test_Card_Keygen(object):
@@ -53,12 +54,21 @@ class Test_Card_Keygen(object):
         v = card.cmd_verify(1, FACTORY_PASSPHRASE_PW1)
         assert v
 
+    def get_pk_info(self, pk):
+        pktlv = TLV(pk)
+        pktlv.show()
+        tag81 = pktlv.search(0x81)
+        tag82 = pktlv.search(0x82)
+        assert not (tag81 is None)
+        assert not (tag82 is None)
+        return (tag81.data, tag82.data)
+
     def test_signature_sigkey(self, card):
         msg = b"Sign me please"
         pk = card.cmd_get_public_key(1)
-        pk_info = (pk[9:9+256], pk[9+256+2:])
+        pk_info = self.get_pk_info(pk)
         digest = rsa_keys.compute_digestinfo(msg)
-        sig = int(hexlify(card.cmd_pso(0x9e, 0x9a, digest)),16)
+        sig = int(hexlify(card.cmd_pso(0x9e, 0x9a, digest)), 16)
         r = rsa_keys.verify_signature(pk_info, digest, sig)
         assert r
 
@@ -69,7 +79,7 @@ class Test_Card_Keygen(object):
     def test_decryption(self, card):
         msg = b"encrypt me please"
         pk = card.cmd_get_public_key(2)
-        pk_info = (pk[9:9+256], pk[9+256+2:])
+        pk_info = self.get_pk_info(pk)
         ciphertext = rsa_keys.encrypt_with_pubkey(pk_info, msg)
         r = card.cmd_pso(0x80, 0x86, ciphertext)
         assert r == msg
@@ -77,7 +87,7 @@ class Test_Card_Keygen(object):
     def test_signature_authkey(self, card):
         msg = b"Sign me please to authenticate"
         pk = card.cmd_get_public_key(3)
-        pk_info = (pk[9:9+256], pk[9+256+2:])
+        pk_info = self.get_pk_info(pk)
         digest = rsa_keys.compute_digestinfo(msg)
         sig = int(hexlify(card.cmd_internal_authenticate(digest)),16)
         r = rsa_keys.verify_signature(pk_info, digest, sig)
