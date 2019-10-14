@@ -36,9 +36,9 @@ class CryptoAlg(Enum):
 
 @unique
 class CryptoAlgType(Enum):
-    RSA = 1
-    ECDH = 12
-    ECDSA = 13
+    RSA = 0x01
+    ECDH = 0x12
+    ECDSA = 0x13
 
 
 @unique
