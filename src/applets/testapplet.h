@@ -20,7 +20,7 @@ namespace Applet {
 	public:
 		virtual const bstr *GetAID();
 
-		virtual Util::Error APDUExchange(bstr header, bstr data, uint8_t le, bstr &result);
+		virtual Util::Error APDUExchange(APDUStruct &apdu, bstr &result);
 	};
 
 }

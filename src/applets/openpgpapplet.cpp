@@ -47,7 +47,7 @@ const bstr* OpenPGPApplet::GetAID() {
 	return &aid;
 }
 
-Util::Error OpenPGPApplet::APDUExchange(bstr header, bstr data, uint8_t le, bstr &result) {
+Util::Error OpenPGPApplet::APDUExchange(APDUStruct &apdu, bstr &result) {
 	result.clear();
 
 	if (!selected)
@@ -58,31 +58,22 @@ Util::Error OpenPGPApplet::APDUExchange(bstr header, bstr data, uint8_t le, bstr
 	OpenPGP::Security &security = opgp_factory.GetSecurity();
 
 
-	printf("0>"); dump_hex(header); dump_hex(data);
-
-	auto cla = header[0];
-	auto ins = header[1];
-	auto p1 = header[2];
-	auto p2 = header[3];
-
-	auto err = security.CommandAccessCheck(cla, ins, p1, p2);
+	auto err = security.CommandAccessCheck(apdu.cla, apdu.ins, apdu.p1, apdu.p2);
 	if (err != Util::Error::NoError) {
 		printf("Security error. Access denied.\n");
 		return err;
 	}
 
-	auto cmd = opgp_factory.GetAPDUCommand(cla, ins, p1, p2);
+	auto cmd = opgp_factory.GetAPDUCommand(apdu.cla, apdu.ins, apdu.p1, apdu.p2);
 	if (!cmd)
 		return Util::Error::WrongCommand;
 
 	auto name = cmd->GetName();
 	printf("======== %.*s\n", static_cast<int>(name.size()), name.data());
 
-	auto cmderr = cmd->Process(cla, ins, p1, p2, data, le, result);
+	auto cmderr = cmd->Process(apdu.cla, apdu.ins, apdu.p1, apdu.p2, apdu.data, apdu.le, result);
 	if (cmderr != Util::Error::NoError)
 		return cmderr;
-
-	printf("0<"); dump_hex(result);
 
 	return Util::Error::NoError;
 }

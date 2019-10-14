@@ -10,16 +10,19 @@
 #ifndef SRC_APDUEXECUTOR_H_
 #define SRC_APDUEXECUTOR_H_
 
+#include <cstdint>
+#include <cstdlib>
 #include "util.h"
 #include "errors.h"
 #include "applets/appletstorage.h"
+#include "applets/apduconst.h"
 
 namespace Applet {
 
 class APDUExecutor {
 private:
-	uint8_t apduBuffer[1030];
-	uint8_t resultBuffer[1030];
+	uint8_t apduBuffer[1130];
+	uint8_t resultBuffer[1130];
 	bstr sapdu{apduBuffer, 0, sizeof(apduBuffer)};
 	bstr sresult{resultBuffer, 0, sizeof(resultBuffer)};
 
