@@ -49,12 +49,36 @@ Util::Error CryptoLib::GenerateRandom(size_t length, bstr& dataOut) {
 
 Util::Error CryptoLib::AESEncrypt(bstr key, bstr dataIn,
 		bstr& dataOut) {
-	return Util::Error::InternalError;
+	dataOut.clear();
+	uint8_t iv[64] = {0};
+
+	mbedtls_aes_context aes;
+	mbedtls_aes_init(&aes);
+	if (mbedtls_aes_setkey_enc(&aes, key.uint8Data(), key.length() * 8))
+		return Util::Error::StoredKeyError;
+	if (mbedtls_aes_crypt_cbc(&aes, MBEDTLS_AES_ENCRYPT, dataIn.length(), iv, dataIn.uint8Data(), dataOut.uint8Data()))
+		return Util::Error::CryptoOperationError;
+	mbedtls_aes_free(&aes);
+
+	dataOut.set_length(dataIn.length());
+	return Util::Error::NoError;
 }
 
 Util::Error CryptoLib::AESDecrypt(bstr key, bstr dataIn,
 		bstr& dataOut) {
-	return Util::Error::InternalError;
+	dataOut.clear();
+	uint8_t iv[64] = {0};
+
+	mbedtls_aes_context aes;
+	mbedtls_aes_init(&aes);
+	if (mbedtls_aes_setkey_dec(&aes, key.uint8Data(), key.length() * 8))
+		return Util::Error::StoredKeyError;
+	if (mbedtls_aes_crypt_cbc(&aes, MBEDTLS_AES_DECRYPT, dataIn.length(), iv, dataIn.uint8Data(), dataOut.uint8Data()))
+		return Util::Error::CryptoOperationError;
+	mbedtls_aes_free(&aes);
+
+	dataOut.set_length(dataIn.length());
+	return Util::Error::NoError;
 }
 
 Util::Error CryptoLib::AppendKeyPart(bstr &buffer, bstr &keypart, mbedtls_mpi *mpi) {
