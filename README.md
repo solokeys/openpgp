@@ -98,6 +98,8 @@ gpg --list-secret
 
 # Google test
 
+Test some critical parts of code
+
 ## install
 
 `sudo apt-get install libgtest-dev`
@@ -105,6 +107,7 @@ gpg --list-secret
 ## check
 
 `cd gtest`
+
 `make test`
 
 # TODO
