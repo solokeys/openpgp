@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from enum import Enum, unique
 from struct import pack, unpack
 from kdf_calc import kdf_calc
+from util import *
 
 
 @unique
@@ -47,6 +48,16 @@ class CryptoAlgImportFormat(Enum):
     RSACRT = 2
     RSACRTWithModulus = 3
     ECDSAWithPublicKey = 0xff
+
+
+@unique
+class ECDSACurves(Enum):
+    ansix9p256r1 = b"\x2A\x86\x48\xCE\x3D\x03\x01\x07"
+    ansix9p384r1 = b"\x2B\x81\x04\x00\x22"
+    ansix9p521r1 = b"\x2B\x81\x04\x00\x23"
+    brainpoolP256r1 = b"\x2B\x24\x03\x03\x02\x08\x01\x01\x07"
+    brainpoolP384r1 = b"\x2B\x24\x03\x03\x02\x08\x01\x01\x0B"
+    brainpoolP512r1 = b"\x2B\x24\x03\x03\x02\x08\x01\x01\x0D"
 
 
 def iso7816_compose(ins, p1, p2, data, cls=0x00, le=None):
@@ -162,6 +173,10 @@ class OpenPGP_Card(object):
 
     def set_rsa_algorithm_attributes(self, alg, protocol, n_len, exp_len, private_key_format):
         data = pack('>BHHB', protocol, n_len, exp_len, private_key_format)
+        return self.cmd_put_data(0x00, alg, data)
+
+    def set_ecdsa_algorithm_attributes(self, alg, protocol, curve_oid):
+        data = pack('>B', protocol) + curve_oid + b"\x00"
         return self.cmd_put_data(0x00, alg, data)
 
     def cmd_get_response(self, expected_len):
@@ -393,7 +408,7 @@ class OpenPGP_Card(object):
             pk = sw
         else:
             raise ValueError("%02x%02x" % (sw[0], sw[1]))
-        return (pk[9:9+256], pk[9+256+2:-2])
+        return get_pk_info(pk)
 
     def cmd_get_public_key(self, keyno):
         if keyno == 1:
