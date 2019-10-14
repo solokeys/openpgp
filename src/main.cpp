@@ -49,6 +49,7 @@ int main(int argc, char * argv[])
     printf("USBIP mode.\n");
     std::thread t([] {
     		std::this_thread::sleep_for(std::chrono::seconds(2));
+    		// needs too add NOPASSWD line to /etc/sudoers file!!!
     		system("sudo usbip attach -r 127.0.0.1 -b 1-1");
     });
     //t.detach();
