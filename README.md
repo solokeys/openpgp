@@ -96,6 +96,17 @@ gpg --card-status
 gpg --list-secret
 ```
 
+# Google test
+
+## install
+
+`sudo apt-get install libgtest-dev`
+
+## check
+
+`cd gtest`
+`make test`
+
 # TODO
 
 1. Change name from `Applet` to `Application`
