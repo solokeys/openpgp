@@ -144,15 +144,18 @@ class Test_Card_Personalize_Card(object):
 
     def test_public_key_1(self, card):
         pk = card.cmd_get_public_key(1)
-        assert rsa_keys.key[0][0] == pk[9:9+256]
+        pk_info = get_pk_info(pk)
+        assert rsa_keys.key[0][0] == pk_info[0]
 
     def test_public_key_2(self, card):
         pk = card.cmd_get_public_key(2)
-        assert rsa_keys.key[1][0] == pk[9:9+256]
+        pk_info = get_pk_info(pk)
+        assert rsa_keys.key[1][0] == pk_info[0]
 
     def test_public_key_3(self, card):
         pk = card.cmd_get_public_key(3)
-        assert rsa_keys.key[2][0] == pk[9:9+256]
+        pk_info = get_pk_info(pk)
+        assert rsa_keys.key[2][0] == pk_info[0]
 
     def test_setup_pw1_0(self, card):
         r = card.change_passwd(1, FACTORY_PASSPHRASE_PW1, PW1_TEST0)
