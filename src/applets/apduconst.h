@@ -11,6 +11,12 @@
 #ifndef SRC_APPLETS_APDUCONST_H_
 #define SRC_APPLETS_APDUCONST_H_
 
+#include <cstdint>
+#include <cstdlib>
+#include <cstdio>
+#include "util.h"
+#include "error.h"
+
 namespace Applet {
 
 	enum APDUResponse {
@@ -58,6 +64,154 @@ namespace Applet {
 		TerminateDF				= 0xe6,
 		ActivateFile			= 0x44,
 		SoloReboot				= 0xee,
+	};
+
+	class APDUStruct {
+	public:
+	    uint8_t cla;
+	    uint8_t ins;
+	    uint8_t p1;
+	    uint8_t p2;
+	    uint16_t lc;
+	    bstr data;
+	    uint32_t le;
+	    bool extended_apdu;
+	    uint8_t case_type;
+
+	    constexpr void clear() {
+	    	cla = 0;
+	    	ins = 0;
+	    	p1 = 0;
+	    	p2 = 0;
+	    	lc = 0;
+	    	data.clear();
+	    	le = 0;
+	    	extended_apdu = false;
+	    	case_type = 0;
+	    }
+
+	    // iso7816:2013. 5.3.2 Decoding conventions for command bodies
+	    constexpr Util::Error decode(const bstr idata) {
+	    	clear();
+
+	    	cla = idata[0];
+	    	ins = idata[1];
+	    	p1 = idata[2];
+	    	p2 = idata[3];
+
+	    	uint8_t b0 = idata[4];
+
+	    	// case 1
+	    	if (idata.length() == 4) {
+	    		case_type = 0x01;
+	    	}
+
+	    	 // case 2S (Le)
+	    	if (idata.length() == 5) {
+	    		case_type = 0x02;
+	    		le = b0;
+	    		if (!le)
+	    			le = 0x100;
+	    	}
+
+	    	// case 3S (Lc + data)
+	    	if (idata.length() == 5U + b0 && b0 != 0) {
+	    		case_type = 0x03;
+	    		lc = b0;
+	    	}
+
+	    	// case 4S (Lc + data + Le)
+	    	if (idata.length() == 5U + b0 + 1U && b0 != 0) {
+	    		case_type = 0x04;
+	    		lc = b0;
+	    		le = idata[idata.length() - 1];
+	    		if (!le)
+	    			le = 0x100;
+	    	}
+
+	    	// extended length apdu
+	    	if (idata.length() >= 7 && b0 == 0) {
+	    		uint16_t extlen = (idata[5] << 8) + idata[6];
+
+	    		if (idata.length() - 7 < extlen) {
+	    			return Util::Error::WrongAPDULength;
+	    		}
+
+	    		 // case 2E (Le) - extended
+	    		if (idata.length() == 7) {
+	    			case_type = 0x12;
+	    			extended_apdu = true;
+	    			le = extlen;
+	    			if (!le)
+	    				le = 0x10000;
+	    		}
+
+	    	   // case 3E (Lc + data) - extended
+	    	   if (idata.length() == 7U + extlen) {
+	    			case_type = 0x13;
+	    			extended_apdu = true;
+	    			lc = extlen;
+	    		}
+
+	    	   // case 4E (Lc + data + Le) - extended 2-byte Le
+	    	   if (idata.length() == 7U + extlen + 2U) {
+	    			case_type = 0x14;
+	    			extended_apdu = true;
+	    			lc = extlen;
+	    			le = (idata[idata.length() - 2] << 8) + idata[idata.length() - 1];
+	    		if (!le)
+	    			le = 0x10000;
+	    		}
+
+	    	   // case 4E (Lc + data + Le) - extended 3-byte Le
+	    	   if (idata.length() == 7U + extlen + 3U && idata[idata.length() - 3] == 0) {
+	    			case_type = 0x24;
+	    			extended_apdu = true;
+	    			lc = extlen;
+	    			le = (idata[idata.length() - 2] << 8) + idata[idata.length() - 1];
+	    		if (!le)
+	    			le = 0x10000;
+	    		}
+	    	} else {
+	    		if ((idata.length() > 5) && (idata.length() - 5 < b0)) {
+	    			return Util::Error::WrongAPDULength;
+	    		}
+	    	}
+
+	    	if (!case_type) {
+	    		return Util::Error::ConditionsNotSatisfied;
+	    	}
+
+	    	if (lc) {
+	    		if (extended_apdu) {
+	    			data = idata.substr(7, lc);
+	    		} else {
+	    			data = idata.substr(5, lc);
+	    		}
+
+	    	}
+
+	    	return Util::Error::NoError;
+	    }
+
+	    constexpr void print() {
+	    	printEx(0);
+	    }
+
+	    constexpr void printEx(const size_t maxdatalen) {
+	        printf("APDU: %scase=0x%02x cla=0x%02x ins=0x%02x p1=0x%02x p2=0x%02x Lc=0x%02x(%d) Le=0x%02x(%d)",
+	               extended_apdu ? "[e]" : "", case_type, cla, ins, p1, p2, lc, lc, le, le);
+	        if (maxdatalen > 0) {
+	        	if (lc > 0) {
+	        		printf(" data: ");
+	        		dump_hex(data, maxdatalen);
+	        	} else {
+	        		printf("\n");
+	        	}
+	        } else {
+	        	printf("\n");
+	        }
+	    }
 	};
 
 }
