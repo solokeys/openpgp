@@ -109,6 +109,7 @@ gpg --list-secret
   - ECDSA
   - ~~reset card~~
   - ~~user DO (0101-0104) and check access rights~~
+  - add user DO length check
   - PSO:ENCIPHER and DECIPHER with AES
   - Secure messaging????
   - ALGO_ED25519 (EdDSA), ALGO_CURVE25519(ECDH)???
