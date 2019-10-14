@@ -16,6 +16,10 @@ def get_pk_info(pk):
     #pktlv.show()
     tag81 = pktlv.search(0x81)
     tag82 = pktlv.search(0x82)
-    assert not (tag81 is None)
-    assert not (tag82 is None)
-    return tag81.data, tag82.data
+    tag86 = pktlv.search(0x86) # format `04 || x || y`
+    if tag86 is None:
+        assert not (tag81 is None)
+        assert not (tag82 is None)
+        return tag81.data, tag82.data
+    else:
+        return tag86.data, None

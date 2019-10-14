@@ -1,5 +1,5 @@
 """
-test_032_rsa4096py - test setting rsa 4096
+test_032_rsa4096.py - test setting rsa 4096
 
 Copyright (C) 2019  SoloKeys
 Author: Oleg Moiseenko (merlokk)
