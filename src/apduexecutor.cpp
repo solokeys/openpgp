@@ -143,7 +143,7 @@ Util::Error APDUExecutor::Execute(bstr apdu, bstr& result) {
 
     	Util::Error err = applet->APDUExchange(decapdu, sresult);
     	SetResultError(sresult, err);
-      	printf("appdu exchange result: %s\n", Util::GetStrError(err));
+      	printf("appdu result: %s\n", Util::GetStrError(err));
 
       	// clear apdu buffer
 		sapdu.clear();

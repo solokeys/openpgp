@@ -1,4 +1,7 @@
 #include <stdio.h>
+#include <cstdlib>
+#include <chrono>
+#include <thread>
 
 #include "device.h"
 #include "solofactory.h"
@@ -16,6 +19,7 @@ void exchangeFunc(uint8_t *datain, size_t datainlen, uint8_t *dataout, size_t *o
 	auto resstr = bstr(apdu_result, 0, sizeof(apdu_result) - 10);
 	auto apdu = bstr(datain, datainlen);
 
+	printf("================\n");
 	printf("a>> "); dump_hex(apdu);
     fexecutor->Execute(apdu, resstr);
     printf("a<< "); dump_hex(resstr);
@@ -43,6 +47,12 @@ int main(int argc, char * argv[])
 
 #ifdef USBIP_MODE
     printf("USBIP mode.\n");
+    std::thread t([] {
+    		std::this_thread::sleep_for(std::chrono::seconds(2));
+    		system("sudo usbip attach -r 127.0.0.1 -b 1-1");
+    });
+    //t.detach();
+
     usbip_ccid_start(&exchangeFunc);
     return 0;
 #endif
