@@ -13,7 +13,7 @@ def check_null(data_object):
 
 def get_pk_info(pk):
     pktlv = TLV(pk)
-    pktlv.show()
+    #pktlv.show()
     tag81 = pktlv.search(0x81)
     tag82 = pktlv.search(0x82)
     assert not (tag81 is None)
