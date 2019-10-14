@@ -104,7 +104,7 @@ gpg --list-secret
   - ~~init card at the begining of tests~~
   - access rights to commands and DO
   - refactor some tests and change some "magic" values in them
-  - test RSA4096 generation and increase interface timeouts
+  - ~~test RSA4096 generation and increase interface timeouts~~
 4. Add tests and functionality for:
   - ECDSA
   - ~~reset card~~
