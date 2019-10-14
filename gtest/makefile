@@ -19,5 +19,8 @@ $(TARGET): $(OBJECTS)
 clean:
 	rm -f $(TARGET) $(OBJECTS)
 
-.PHONY: all clean
+test: all
+	./ptest
+
+.PHONY: all clean test
 
