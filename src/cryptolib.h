@@ -20,6 +20,7 @@
 #include <mbedtls/rsa.h>
 #include <mbedtls/aes.h>
 #include <mbedtls/havege.h>
+#include <mbedtls/ecdsa.h>
 
 namespace Crypto {
 
@@ -40,14 +41,15 @@ enum RSAKeyImportFormat {
 };
 
 // ECDSA OIDs. OpenPGP 3.3.1 pages 90-92.
-// ansix9p256r1, OID = {1.2.840.10045.3.1.7} = ´2A8648CE3D030107´
-// ansix9p384r1, OID = {1.3.132.0.34} = '2B81040022'
-// ansix9p521r1, OID = {1.3.132.0.35} = '2B81040023'
-// brainpoolP256r1, OID={1.3.36.3.3.2.8.1.1.7} = ´2B2403030208010107´
-// brainpoolP384r1, OID={1.3.36.3.3.2.8.1.1.11} = ´2B240303020801010B´
-// brainpoolP512r1, OID={1.3.36.3.3.2.8.1.1.13} = ´2B240303020801010D´
+// ansix9p256r1, OID = {1.2.840.10045.3.1.7} = ´2A8648CE3D030107´         MBEDTLS_ECP_DP_SECP256R1
+// ansix9p384r1, OID = {1.3.132.0.34} = '2B81040022'                      MBEDTLS_ECP_DP_SECP384R1
+// ansix9p521r1, OID = {1.3.132.0.35} = '2B81040023'                      MBEDTLS_ECP_DP_SECP521R1
+// brainpoolP256r1, OID={1.3.36.3.3.2.8.1.1.7} = ´2B2403030208010107´     MBEDTLS_ECP_DP_BP256R1
+// brainpoolP384r1, OID={1.3.36.3.3.2.8.1.1.11} = ´2B240303020801010B´    MBEDTLS_ECP_DP_BP384R1
+// brainpoolP512r1, OID={1.3.36.3.3.2.8.1.1.13} = ´2B240303020801010D´    MBEDTLS_ECP_DP_BP512R1
 // max OID length 9 bytes
 enum ECDSAaid {
+	none,
 	ansix9p256r1,
 	ansix9p384r1,
 	ansix9p521r1,
@@ -56,6 +58,35 @@ enum ECDSAaid {
 	brainpoolP512r1
 };
 
+struct ECDSAalgParams {
+	ECDSAaid aid;
+	bstr oid;
+	mbedtls_ecp_group_id mbedtlsGroup;
+};
+
+static const std::array<ECDSAalgParams, 1> ECDSAalgParamsList = {
+		{none,         ""_bstr,                                 MBEDTLS_ECP_DP_NONE},
+		//{ansix9p256r1, "\x2A\x86\x48\xCE\x3D\x03\x01\x07"_bstr, MBEDTLS_ECP_DP_SECP256R1}
+};
+/*
+ECDSAaid AIDfromOID(bstr oid) {
+
+	if (oid == "\x2A\x86\x48\xCE\x3D\x03\x01\x07"_bstr)
+		return ECDSAaid::ansix9p256r1;
+	if (oid == "\x2B\x81\x04\x00\x22"_bstr)
+		return ECDSAaid::ansix9p384r1;
+	if (oid == "\x2B\x81\x04\x00\x23"_bstr)
+		return ECDSAaid::ansix9p521r1;
+	if (oid == "\x2B\x24\x03\x03\x02\x08\x01\x01\x07"_bstr)
+		return ECDSAaid::brainpoolP256r1;
+	if (oid == "\x2B\x24\x03\x03\x02\x08\x01\x01\x0B"_bstr)
+		return ECDSAaid::brainpoolP384r1;
+	if (oid == "\x2B\x24\x03\x03\x02\x08\x01\x01\x0D"_bstr)
+		return ECDSAaid::brainpoolP512r1;
+
+	return ECDSAaid::none;
+}
+*/
 enum KeyType {
 	Symmetric,
 	FullAsymmetric,

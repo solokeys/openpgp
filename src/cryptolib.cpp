@@ -342,10 +342,87 @@ Util::Error CryptoLib::RSAVerify(bstr publicKey, bstr data, bstr signature) {
 	return Util::Error::InternalError;
 }
 
+static int ecdsa_init(mbedtls_ecdsa_context *ctx, mbedtls_ecp_group_id curveID, uint8_t *key_d, uint8_t *key_xy) {
+	if (!ctx)
+		return 1;
+
+	int res;
+
+	mbedtls_ecdsa_init(ctx);
+	res = mbedtls_ecp_group_load(&ctx->grp, curveID);
+	if (res)
+		return res;
+
+	size_t keylen = (ctx->grp.nbits + 7 ) / 8;
+	if (key_d) {
+		res = mbedtls_mpi_read_binary(&ctx->d, key_d, keylen);
+		if (res)
+			return res;
+	}
+
+	if (key_xy) {
+		res = mbedtls_ecp_point_read_binary(&ctx->grp, &ctx->Q, key_xy, keylen * 2 + 1);
+		if (res)
+			return res;
+	}
+
+	return 0;
+};
+
 Util::Error CryptoLib::ECDSAGenKey(ECDSAKey& keyOut) {
 	ClearKeyBuffer();
+	keyOut.clear();
 
+	mbedtls_ecp_group_id curveID = MBEDTLS_ECP_DP_SECP256R1;
+
+	mbedtls_ecdsa_context ctx;
+	ecdsa_init(&ctx, curveID, NULL, NULL);
+
+
+	mbedtls_entropy_context entropy;
+	mbedtls_ctr_drbg_context ctr_drbg;
+	const char *pers = "ecdsa solokeys";
+
+	mbedtls_entropy_init(&entropy);
+	mbedtls_ctr_drbg_init(&ctr_drbg);
+
+	while (true) {
+		int res = mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy, (const unsigned char *)pers, strlen(pers));
+		if (res)
+			break;
+
+		res = mbedtls_ecdsa_genkey(&ctx, curveID, mbedtls_ctr_drbg_random, &ctr_drbg);
+		if (res)
+			break;
+
+		size_t keylen = (ctx.grp.nbits + 7) / 8;
+		keyOut.Private.set_length(keylen);
+		res = mbedtls_mpi_write_binary(&ctx.d, keyOut.Private.uint8Data(), keylen);
+		if (res)
+			break;
+
+		size_t public_keylen = 0;
+		uint8_t public_key[200] = {0};
+		res = mbedtls_ecp_point_write_binary(&ctx.grp, &ctx.Q, MBEDTLS_ECP_PF_UNCOMPRESSED, &public_keylen, public_key, sizeof(public_key));
+		if (res)
+			break;
+
+		if (public_keylen != 1 + 2 * keylen) { // 0x04 <key x><key y>
+			res = 1;
+			break;
+		}
+		keyOut.Public.append(public_key, public_keylen);
+
+		mbedtls_entropy_free(&entropy);
+		mbedtls_ctr_drbg_free(&ctr_drbg);
+		mbedtls_ecdsa_free(&ctx);
+		return Util::Error::NoError;
+	}
+	mbedtls_entropy_free(&entropy);
+	mbedtls_ctr_drbg_free(&ctr_drbg);
+	mbedtls_ecdsa_free(&ctx);
 	return Util::Error::InternalError;
+
 }
 
 Util::Error CryptoLib::ECDSASign(bstr key, bstr data, bstr& signature) {
