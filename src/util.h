@@ -8,10 +8,10 @@
 #ifndef _UTIL_H
 #define _UTIL_H
 
-#include <stdio.h>
+#include <cstdio>
 #include <cstdint>
 #include <string_view>
-#include <string.h>
+#include <cstring>
 
 #ifndef MIN
 #define MIN(a,b) (((a) < (b)) ? (a) : (b))
