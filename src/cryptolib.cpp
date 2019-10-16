@@ -544,8 +544,30 @@ bool KeyStorage::KeyExists(AppID_t appID, KeyID_t keyID) {
 }
 
 
-Util::Error KeyStorage::GetECDSAPrivateKey(AppID_t appID, KeyID_t keyID, ECDSAKey& key) {
-	return Util::Error::InternalError;
+Util::Error KeyStorage::GetECDSAKey(AppID_t appID, KeyID_t keyID, ECDSAKey& key) {
+
+	Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
+	File::FileSystem &filesystem = solo.GetFileSystem();
+
+	// clear key storage
+	prvStr.clear();
+
+	auto err = filesystem.ReadFile(appID, keyID, File::Secure, prvStr);
+	if (err != Util::Error::NoError)
+		return err;
+
+	GetKeyPart(prvStr, KeyPartsECDSA::PublicKey, key.Public);
+	GetKeyPart(prvStr, KeyPartsECDSA::PrivateKey, key.Private);
+
+	if (key.Public.length() == 0 && key.Private.length() > 0) {
+
+		key.Public = bstr(prvStr.uint8Data() + prvStr.length(), 0, prvStr.free_space());
+		err = ECDSACalcPublicKey(key.Private, key.Public);
+		if (err != Util::Error::NoError)
+			return err;
+	}
+
+	return Util::Error::NoError;
 }
 
 Util::Error KeyStorage::SetKey(AppID_t appID, KeyID_t keyID,
@@ -664,11 +686,7 @@ Util::Error KeyStorage::GetPublicKey(AppID_t appID, KeyID_t keyID, uint8_t Algor
 
 	pubKey.clear();
 
-	Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
-	File::FileSystem &filesystem = solo.GetFileSystem();
 	CryptoLib &crypto = cryptoEngine.getCryptoLib();
-
-	printf("GetPublicKey key %x [%lu] loaded.\n", keyID, prvStr.length());
 
 	if (AlgoritmID == Crypto::AlgoritmID::RSA) {
 		RSAKey rsa_key;
@@ -686,29 +704,15 @@ Util::Error KeyStorage::GetPublicKey(AppID_t appID, KeyID_t keyID, uint8_t Algor
 			pubKey = rsa_key.N;
 		}
 	} else {
-		// TODO: move to GetECDSAKey
-
-		// clear key storage
-		prvStr.clear();
-		auto err = filesystem.ReadFile(appID, keyID, File::Secure, prvStr);
+		ECDSAKey ecdsa_key;
+		auto err = GetECDSAKey(appID, keyID, ecdsa_key);
 		if (err != Util::Error::NoError)
 			return err;
 
-		err = GetKeyPart(prvStr, KeyPartsECDSA::PublicKey, pubKey);
-		if (err != Util::Error::NoError || pubKey.length() == 0) {
-			bstr privateKey;
-			err = GetKeyPart(prvStr, KeyPartsECDSA::PrivateKey, privateKey);
-			if (err != Util::Error::NoError)
-				return err;
-
-			printf("Private len: %lu\n", privateKey.length());
-			dump_hex(privateKey);
-
-			err = ECDSACalcPublicKey(privateKey, pubKey);
-			if (err != Util::Error::NoError)
-				return err;
-		}
+		pubKey = ecdsa_key.Public;
 	}
+
+	printf("GetPublicKey key %x [%lu] loaded.\n", keyID, prvStr.length());
 
 	return Util::Error::NoError;
 }

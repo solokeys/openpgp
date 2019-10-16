@@ -207,8 +207,8 @@ public:
 	Util::Error GetPublicKey(AppID_t appID, KeyID_t keyID, uint8_t AlgoritmID, bstr &pubKey);
 	Util::Error GetPublicKey7F49(AppID_t appID, KeyID_t keyID, uint8_t AlgoritmID, bstr &tlvKey);
 
-	Util::Error GetRSAKey(AppID_t appID, KeyID_t keyID, RSAKey &key);         // TODO: rename to GetRSAFullKey
-	Util::Error GetECDSAPrivateKey(AppID_t appID, KeyID_t keyID, ECDSAKey &key);  // TODO: rename to GetECDSAFullKey ???
+	Util::Error GetRSAKey(AppID_t appID, KeyID_t keyID, RSAKey &key);
+	Util::Error GetECDSAKey(AppID_t appID, KeyID_t keyID, ECDSAKey &key);
 	Util::Error PutRSAFullKey(AppID_t appID, KeyID_t keyID, RSAKey key);
 	Util::Error PutECDSAFullKey(AppID_t appID, KeyID_t keyID, ECDSAKey key);
 

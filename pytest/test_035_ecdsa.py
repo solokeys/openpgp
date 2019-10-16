@@ -33,4 +33,9 @@ class Test_ECDSA(object):
         #    r = card.cmd_put_data(0x00, 0xce, fpr_date[1])
         #assert r
 
+    def test_keygen_2(self, card):
+        pk = card.cmd_genkey(2)
+
+    def test_keygen_3(self, card):
+        pk = card.cmd_genkey(3)
 
