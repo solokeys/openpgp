@@ -188,8 +188,8 @@ public:
 
 	Util::Error ECDSAGenKey(ECDSAKey &keyOut);
 	Util::Error ECDSACalcPublicKey(bstr privateKey, bstr &publicKey);
-	Util::Error ECDSASign(bstr key, bstr data, bstr &signature);
-	Util::Error ECDSAVerify(bstr key, bstr data, bstr signature);
+	Util::Error ECDSASign(ECDSAKey key, bstr data, bstr &signature);
+	Util::Error ECDSAVerify(ECDSAKey key, bstr data, bstr signature);
 };
 
 class KeyStorage {

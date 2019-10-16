@@ -426,7 +426,12 @@ Util::Error CryptoLib::ECDSAGenKey(ECDSAKey& keyOut) {
 
 }
 
-Util::Error CryptoLib::ECDSASign(bstr key, bstr data, bstr& signature) {
+Util::Error CryptoLib::ECDSASign(ECDSAKey key, bstr data, bstr& signature) {
+
+
+
+
+
 	return Util::Error::InternalError;
 }
 
@@ -530,7 +535,7 @@ Util::Error ECDSACalcPublicKey(bstr privateKey, bstr &publicKey) {
 	return ret;
 }
 
-Util::Error CryptoLib::ECDSAVerify(bstr key, bstr data,
+Util::Error CryptoLib::ECDSAVerify(ECDSAKey key, bstr data,
 		bstr signature) {
 	return Util::Error::InternalError;
 }
@@ -871,13 +876,15 @@ Util::Error CryptoEngine::RSAVerify(AppID_t appID, KeyID_t keyID,
 Util::Error CryptoEngine::ECDSASign(AppID_t appID, KeyID_t keyID,
 		bstr data, bstr& signature) {
 
-	uint8_t _key[520] = {0};
-	bstr key(_key, 0, sizeof(_key));
-	auto err = keyStorage.GetPublicKey(appID, keyID, AlgoritmID::ECDSAforCDSandIntAuth, key);
+	ECDSAKey key;
+	auto err = keyStorage.GetECDSAKey(appID, keyID, key);
 	if (err != Util::Error::NoError)
 		return err;
 
-	return Util::Error::InternalError;
+	printf("------------ key ------------\n");
+	key.Print();
+
+	return cryptoLib.ECDSASign(key, data, signature);
 }
 
 Util::Error CryptoEngine::ECDSAVerify(AppID_t appID, KeyID_t keyID,
