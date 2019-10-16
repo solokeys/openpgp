@@ -16,8 +16,6 @@ from openpgp_card import *
 class Test_ECDSA(object):
     def test_setup_rsa4096(self, card):
         assert card.verify(3, FACTORY_PASSPHRASE_PW3)
-        assert card.verify(1, FACTORY_PASSPHRASE_PW1)
-        assert card.verify(2, FACTORY_PASSPHRASE_PW1)
 
         assert card.set_ecdsa_algorithm_attributes(
             CryptoAlg.Signature.value, CryptoAlgType.ECDSA.value, ECDSACurves.ansix9p256r1.value)
