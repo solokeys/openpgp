@@ -455,7 +455,6 @@ Util::Error CryptoLib::ECDSASign(ECDSAKey key, bstr data, bstr& signature) {
 		}
 
 		size_t sig_len = 0;
-		printf("--dd1\n");
 		if (mbedtls_ecdsa_write_signature(
 				&ctx,
 				MBEDTLS_MD_SHA256,
@@ -468,7 +467,6 @@ Util::Error CryptoLib::ECDSASign(ECDSAKey key, bstr data, bstr& signature) {
 			ret =  Util::Error::CryptoOperationError;
 			break;
 		}
-		printf("--dd2 %lu\n", sig_len);
 
 		signature.set_length(sig_len);
 		ret =  Util::Error::NoError;
