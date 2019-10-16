@@ -398,7 +398,7 @@ Util::Error CryptoLib::ECDSAGenKey(ECDSAKey& keyOut) {
 
 	mbedtls_entropy_context entropy;
 	mbedtls_ctr_drbg_context ctr_drbg;
-	const char *pers = "ecdsa solokeys";
+	const char *pers = "ecdsa solokeys generate";
 
 	mbedtls_entropy_init(&entropy);
 	mbedtls_ctr_drbg_init(&ctr_drbg);
@@ -427,12 +427,59 @@ Util::Error CryptoLib::ECDSAGenKey(ECDSAKey& keyOut) {
 }
 
 Util::Error CryptoLib::ECDSASign(ECDSAKey key, bstr data, bstr& signature) {
+	signature.clear();
+	mbedtls_ecp_group_id curveID = MBEDTLS_ECP_DP_SECP256R1;
+
+	mbedtls_ecdsa_context ctx;
+	ecdsa_init(&ctx, curveID, NULL, NULL);
 
 
+	mbedtls_entropy_context entropy;
+	mbedtls_ctr_drbg_context ctr_drbg;
+	const char *pers = "ecdsa solokeys signature";
+
+	mbedtls_entropy_init(&entropy);
+	mbedtls_ctr_drbg_init(&ctr_drbg);
+
+	Util::Error ret = Util::Error::InternalError;
+
+	while (true) {
+		if (mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy, (const unsigned char *)pers, strlen(pers))) {
+			ret =  Util::Error::CryptoOperationError;
+			break;
+		}
+
+		if (ecdsa_init(&ctx, curveID, key.Private.uint8Data(), key.Public.uint8Data())) {
+			ret = Util::Error::CryptoDataError;
+			break;
+		}
+
+		size_t sig_len = 0;
+		printf("--dd1\n");
+		if (mbedtls_ecdsa_write_signature(
+				&ctx,
+				MBEDTLS_MD_SHA256,
+				data.uint8Data(),
+				data.length(),
+				signature.uint8Data(),
+				&sig_len,
+				mbedtls_ctr_drbg_random,
+				&ctr_drbg)) {
+			ret =  Util::Error::CryptoOperationError;
+			break;
+		}
+		printf("--dd2 %lu\n", sig_len);
+
+		signature.set_length(sig_len);
+		ret =  Util::Error::NoError;
+		break;
+	}
 
 
-
-	return Util::Error::InternalError;
+	mbedtls_entropy_free(&entropy);
+	mbedtls_ctr_drbg_free(&ctr_drbg);
+	mbedtls_ecdsa_free(&ctx);
+	return ret;
 }
 
 Util::Error CryptoLib::RSACalcPublicKey(bstr strP, bstr strQ, bstr &strN) {
@@ -487,7 +534,7 @@ Util::Error ECDSACalcPublicKey(bstr privateKey, bstr &publicKey) {
 	mbedtls_ecdsa_context ctx;
 	mbedtls_entropy_context entropy;
 	mbedtls_ctr_drbg_context ctr_drbg;
-	const char *pers = "ecdsa solokeys";
+	const char *pers = "ecdsa solokeys public key";
 
 	mbedtls_entropy_init(&entropy);
 	mbedtls_ctr_drbg_init(&ctr_drbg);

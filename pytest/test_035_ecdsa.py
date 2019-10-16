@@ -12,6 +12,7 @@ from card_const import *
 from constants_for_test import *
 from openpgp_card import *
 import ecdsa_keys
+from binascii import hexlify
 
 
 class Test_ECDSA(object):
@@ -58,8 +59,8 @@ class Test_ECDSA(object):
         pk = card.cmd_get_public_key(1)
         pk_info = get_pk_info(pk)
         digest = ecdsa_keys.compute_digestinfo_ecdsa(msg)
-        print(digest)
-        #sig = int(hexlify(card.cmd_pso(0x9e, 0x9a, digest)), 16)
+        sig = int(hexlify(card.cmd_pso(0x9e, 0x9a, digest)), 16)
+        print(sig)
         #r = ecdsa_keys.verify_signature(pk_info, digest, sig)
         #assert r
 
