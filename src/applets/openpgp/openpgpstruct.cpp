@@ -162,8 +162,14 @@ Util::Error OpenPGP::AlgoritmAttr::Load(File::FileSystem& fs, KeyID_t file_id) {
 		RSAa.PubExpLen = (data[3] << 8) + data[4];
 		RSAa.KeyFormat = data[5];
 	} else {
-		ECDSAa.KeyFormat = 0xff; // default!!!
-		ECDSAa.OID = data.substr(1, data.length() - 1);
+		bool keyFormatLen = 0;
+		ECDSAa.KeyFormat = 0x00; // by default - standard (private key only)
+		// high bit cant be used in the last OID byte. In the OID it needs to mark 2-byte value
+		if (data[data.length() - 1] & 0x10) {
+			ECDSAa.KeyFormat = data[data.length() - 1];
+			keyFormatLen = 1;
+		}
+		ECDSAa.OID = data.substr(1, data.length() - 1 - keyFormatLen);
 	}
 
 	return Util::Error::NoError;

@@ -93,6 +93,23 @@ Util::Error CryptoLib::AppendKeyPart(bstr &buffer, bstr &keypart, mbedtls_mpi *m
 	return Util::Error::NoError;
 }
 
+Util::Error CryptoLib::AppendKeyPartEcpPoint(bstr &buffer, bstr &keypart,  mbedtls_ecp_group *grp, mbedtls_ecp_point  *point) {
+	size_t mpi_len = 0;
+	if (mbedtls_ecp_point_write_binary(
+			grp,
+			point,
+			MBEDTLS_ECP_PF_UNCOMPRESSED,
+			&mpi_len,
+			buffer.uint8Data() + buffer.length(),
+			buffer.free_space()) )
+		return Util::Error::CryptoDataError;
+
+	keypart = bstr(buffer.uint8Data() + buffer.length(), mpi_len);
+	buffer.set_length(buffer.length() + mpi_len);
+
+	return Util::Error::NoError;
+}
+
 Util::Error CryptoLib::RSAGenKey(RSAKey& keyOut, size_t keySize) {
 
 	Util::Error ret = Util::Error::NoError;
@@ -386,42 +403,26 @@ Util::Error CryptoLib::ECDSAGenKey(ECDSAKey& keyOut) {
 	mbedtls_entropy_init(&entropy);
 	mbedtls_ctr_drbg_init(&ctr_drbg);
 
+	Util::Error err = Util::Error::InternalError;
+
 	while (true) {
-		int res = mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy, (const unsigned char *)pers, strlen(pers));
-		if (res)
+		if (mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy, (const unsigned char *)pers, strlen(pers)))
 			break;
 
-		res = mbedtls_ecdsa_genkey(&ctx, curveID, mbedtls_ctr_drbg_random, &ctr_drbg);
-		if (res)
+		if (mbedtls_ecdsa_genkey(&ctx, curveID, mbedtls_ctr_drbg_random, &ctr_drbg))
 			break;
 
-		size_t keylen = (ctx.grp.nbits + 7) / 8;
-		keyOut.Private.set_length(keylen);
-		res = mbedtls_mpi_write_binary(&ctx.d, keyOut.Private.uint8Data(), keylen);
-		if (res)
-			break;
+	    AppendKeyPart(KeyBuffer, keyOut.Private, &ctx.d);
+	    AppendKeyPartEcpPoint(KeyBuffer, keyOut.Public,  &ctx.grp, &ctx.Q);
 
-		size_t public_keylen = 0;
-		uint8_t public_key[200] = {0};
-		res = mbedtls_ecp_point_write_binary(&ctx.grp, &ctx.Q, MBEDTLS_ECP_PF_UNCOMPRESSED, &public_keylen, public_key, sizeof(public_key));
-		if (res)
-			break;
-
-		if (public_keylen != 1 + 2 * keylen) { // 0x04 <key x><key y>
-			res = 1;
-			break;
-		}
-		keyOut.Public.append(public_key, public_keylen);
-
-		mbedtls_entropy_free(&entropy);
-		mbedtls_ctr_drbg_free(&ctr_drbg);
-		mbedtls_ecdsa_free(&ctx);
-		return Util::Error::NoError;
+		err =  Util::Error::NoError;
+		break;
 	}
+
 	mbedtls_entropy_free(&entropy);
 	mbedtls_ctr_drbg_free(&ctr_drbg);
 	mbedtls_ecdsa_free(&ctx);
-	return Util::Error::InternalError;
+	return err;
 
 }
 
@@ -470,6 +471,62 @@ Util::Error CryptoLib::RSACalcPublicKey(bstr strP, bstr strQ, bstr &strN) {
 	mbedtls_mpi_free(&P);
 	mbedtls_mpi_free(&Q);
 
+	return ret;
+}
+
+Util::Error ECDSACalcPublicKey(bstr privateKey, bstr &publicKey) {
+	Util::Error ret = Util::Error::NoError;
+
+	mbedtls_ecp_group_id curveID = MBEDTLS_ECP_DP_SECP256R1;
+
+	mbedtls_ecdsa_context ctx;
+	mbedtls_entropy_context entropy;
+	mbedtls_ctr_drbg_context ctr_drbg;
+	const char *pers = "ecdsa solokeys";
+
+	mbedtls_entropy_init(&entropy);
+	mbedtls_ctr_drbg_init(&ctr_drbg);
+
+	while (true) {
+		if (mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy, (const unsigned char *)pers, strlen(pers))) {
+			ret = Util::Error::CryptoOperationError;
+			break;
+		}
+
+		if (ecdsa_init(&ctx, curveID, privateKey.uint8Data(), NULL)) {
+			ret = Util::Error::CryptoDataError;
+			break;
+		}
+
+		// Q = d * P
+		if (mbedtls_ecp_mul( &ctx.grp, &ctx.Q, &ctx.d, &ctx.grp.G, mbedtls_ctr_drbg_random, &ctr_drbg)) {
+			ret = Util::Error::CryptoOperationError;
+			break;
+		}
+
+		if (mbedtls_ecp_check_pubkey(&ctx.grp, &ctx.Q)) {
+			ret = Util::Error::CryptoDataError;
+			break;
+		}
+
+		size_t point_len = 0;
+		if (mbedtls_ecp_point_write_binary(
+				&ctx.grp,
+				&ctx.Q,
+				MBEDTLS_ECP_PF_UNCOMPRESSED,
+				&point_len,
+				publicKey.uint8Data(),
+				publicKey.free_space()) ) {
+			ret = Util::Error::CryptoDataError;
+			break;
+		}
+		publicKey.set_length(point_len);
+		break;
+	}
+
+	mbedtls_entropy_free(&entropy);
+	mbedtls_ctr_drbg_free(&ctr_drbg);
+	mbedtls_ecdsa_free(&ctx);
 	return ret;
 }
 
@@ -644,14 +701,13 @@ Util::Error KeyStorage::GetPublicKey(AppID_t appID, KeyID_t keyID, uint8_t Algor
 			if (err != Util::Error::NoError)
 				return err;
 
-			printf("Private len: %lu", privateKey.length());
+			printf("Private len: %lu\n", privateKey.length());
 			dump_hex(privateKey);
 
-			// TODO: add ECDSA calc public key from private!!!!
-
-			return Util::Error::InternalError;
+			err = ECDSACalcPublicKey(privateKey, pubKey);
+			if (err != Util::Error::NoError)
+				return err;
 		}
-
 	}
 
 	return Util::Error::NoError;
@@ -661,7 +717,7 @@ Util::Error KeyStorage::GetPublicKey7F49(AppID_t appID, KeyID_t keyID,
 		uint8_t AlgoritmID, bstr& tlvKey) {
 
 	uint8_t _pubKey[1024] = {0};
-	bstr pubKey{_pubKey, sizeof(_pubKey)};
+	bstr pubKey{_pubKey, 0, sizeof(_pubKey)};
 	auto err = GetPublicKey(appID, keyID, AlgoritmID, pubKey);
 	if (err != Util::Error::NoError)
 		return err;

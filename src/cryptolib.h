@@ -41,6 +41,7 @@ enum RSAKeyImportFormat {
 };
 
 // ECDSA OIDs. OpenPGP 3.3.1 pages 90-92.
+// decoding https://docs.microsoft.com/ru-ru/windows/win32/seccertenroll/about-object-identifier
 // ansix9p256r1, OID = {1.2.840.10045.3.1.7} = ´2A8648CE3D030107´         MBEDTLS_ECP_DP_SECP256R1
 // ansix9p384r1, OID = {1.3.132.0.34} = '2B81040022'                      MBEDTLS_ECP_DP_SECP384R1
 // ansix9p521r1, OID = {1.3.132.0.35} = '2B81040023'                      MBEDTLS_ECP_DP_SECP521R1
@@ -166,6 +167,7 @@ private:
 
 	Util::Error RSAFillPrivateKey(mbedtls_rsa_context *context, RSAKey key);
 	Util::Error AppendKeyPart(bstr &buffer, bstr &keypart, mbedtls_mpi *mpi);
+	Util::Error AppendKeyPartEcpPoint(bstr &buffer, bstr &keypart,  mbedtls_ecp_group *grp, mbedtls_ecp_point  *point);
 public:
 	CryptoLib(CryptoEngine &_cryptoEngine): cryptoEngine(_cryptoEngine) {
 		ClearKeyBuffer();
@@ -185,6 +187,7 @@ public:
 	Util::Error RSAVerify(bstr publicKey, bstr data, bstr signature);
 
 	Util::Error ECDSAGenKey(ECDSAKey &keyOut);
+	Util::Error ECDSACalcPublicKey(bstr privateKey, bstr &publicKey);
 	Util::Error ECDSASign(bstr key, bstr data, bstr &signature);
 	Util::Error ECDSAVerify(bstr key, bstr data, bstr signature);
 };

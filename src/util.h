@@ -44,6 +44,13 @@ namespace std {
 			return _max_length;
 		}
 
+		constexpr size_t free_space() {
+			if (_max_length > this->length())
+				return _max_length - this->length();
+			else
+				return 0;
+		}
+
 		constexpr uint32_t get_uint_be(const size_t indx, const size_t size) {
 			if (indx + size > this->length())
 				return 0;
