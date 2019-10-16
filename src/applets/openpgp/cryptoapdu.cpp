@@ -199,17 +199,14 @@ Util::Error APDUGenerateAsymmetricKeyPair::Process(uint8_t cla,
 			if (err != Util::Error::NoError)
 				return err;
 
-			printf("--startstorage\n");
 			err = key_storage.PutECDSAFullKey(File::AppletID::OpenPGP, key_type, ecdsa_key);
 			if (err != Util::Error::NoError)
 				return err;
 
-			printf("--create output\n");
 			err = key_storage.GetPublicKey7F49(File::AppletID::OpenPGP, key_type, alg.AlgorithmID, dataOut);
 			if (err != Util::Error::NoError)
 				return err;
 
-			printf("--done\n");
 			return Util::Error::NoError;
 		}
 
