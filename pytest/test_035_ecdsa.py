@@ -21,10 +21,8 @@ class Test_ECDSA(object):
 
         assert card.set_ecdsa_algorithm_attributes(
             CryptoAlg.Signature.value, CryptoAlgType.ECDSA.value, ECDSACurves.ansix9p384r1.value)
-        #assert card.set_ecdsa_algorithm_attributes(
-        #    CryptoAlg.Decryption.value, CryptoAlgType.ECDSA.value, ECDSACurves.ansix9p384r1.value)
-        #assert card.set_ecdsa_algorithm_attributes(
-        #    CryptoAlg.Authentication.value, CryptoAlgType.ECDSA.value, ECDSACurves.ansix9p384r1.value)
+        assert card.set_ecdsa_algorithm_attributes(
+            CryptoAlg.Authentication.value, CryptoAlgType.ECDSA.value, ECDSACurves.ansix9p384r1.value)
 
     def test_keygen_1(self, card):
         pk = card.cmd_genkey(1)
