@@ -1,5 +1,5 @@
 """
-test_035_ecdsa.py - test setting ecdsa keys
+test_035_ecdsa.py - test setting ecdsa keys and crypto operations with them
 
 Copyright (C) 2019  SoloKeys
 Author: Oleg Moiseenko (merlokk)
@@ -73,3 +73,7 @@ class Test_ECDSA(object):
         sig = card.cmd_internal_authenticate(digest)
         r = ecdsa_keys.verify_signature_ecdsa(pk_info[0], digest, sig)
         assert r
+
+    def test_verify_reset(self, card):
+        assert card.cmd_verify_reset(1)
+        assert card.cmd_verify_reset(3)
