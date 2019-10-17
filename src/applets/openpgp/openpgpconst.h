@@ -66,6 +66,7 @@ enum OpenPGPKeyType {
 	DigitalSignature = 0xb6,
 	Confidentiality  = 0xb8,
 	Authentication   = 0xa4,
+	AES              = 0xd5,
 };
 
 // OpenPGP v3.3.1 page 38 and 78

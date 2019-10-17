@@ -251,6 +251,8 @@ Util::Error APDUPSO::Check(uint8_t cla, uint8_t ins, uint8_t p1,
 Util::Error APDUPSO::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 		uint8_t p2, bstr data, uint8_t le, bstr& dataOut) {
 
+	dataOut.clear();
+
 	Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
 	File::FileSystem &filesystem = solo.GetFileSystem();
 	Crypto::CryptoEngine &crypto_e = solo.GetCryptoEngine();
@@ -316,7 +318,13 @@ Util::Error APDUPSO::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 
 		// AES. OpenPGP 3.3.1 page 59
 		if (data[0] == 0x02) {
-			return Util::Error::CryptoOperationError;
+			// OpenPGP application Version 3.3.1 page 58
+			if ((data.length() - 1) % 16)
+				return Util::Error::CryptoDataError;
+
+			err = crypto_e.AESDecrypt(File::AppletID::OpenPGP, OpenPGPKeyType::AES, data.substr(1, data.length() - 1), dataOut);
+			if (err != Util::Error::NoError)
+				return err;
 		}
 
 		// ECDH. OpenPGP 3.3.1 page 59
@@ -330,6 +338,16 @@ Util::Error APDUPSO::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 
 	// 	PSO:ENCIPHER OpenPGP 3.3.1 page 60. iso 7816-8:2004 page 6-8
 	if (p1 == 0x86 && p2 == 0x80) {
+		if (data.length() % 16)
+			return Util::Error::CryptoDataError;
+
+		// append padding byte. OpenPGP 3.3.1 page 60.
+		dataOut.append(0x02);
+
+		bstr aesres = bstr(dataOut.uint8Data() + 1, 0, dataOut.free_space());
+		auto err = crypto_e.AESEncrypt(File::AppletID::OpenPGP, OpenPGPKeyType::AES, data, aesres);
+		if (err != Util::Error::NoError)
+			return err;
 
 	}
 
