@@ -67,19 +67,11 @@ class Test_ECDSA(object):
         v = card.cmd_verify(2, FACTORY_PASSPHRASE_PW1)
         assert v
 
-    #def test_decryption(self, card):
-    #    msg = b"encrypt me please"
-    #    pk = card.cmd_get_public_key(2)
-    #    pk_info = get_pk_info(pk)
-    #    ciphertext = rsa_keys.encrypt_with_pubkey(pk_info, msg)
-    #    r = card.cmd_pso(0x80, 0x86, ciphertext)
-    #    assert r == msg
-
-    #def test_signature_authkey(self, card):
-    #    msg = b"Sign me please to authenticate"
-    #    pk = card.cmd_get_public_key(3)
-    #    pk_info = get_pk_info(pk)
-    #    digest = rsa_keys.compute_digestinfo(msg)
-    #    sig = int(hexlify(card.cmd_internal_authenticate(digest)),16)
-    #    r = rsa_keys.verify_signature(pk_info, digest, sig)
-    #    assert r
+    def test_signature_authkey(self, card):
+        msg = b"Sign me please to authenticate"
+        pk = card.cmd_get_public_key(3)
+        pk_info = get_pk_info(pk)
+        digest = ecdsa_keys.compute_digestinfo_ecdsa(msg)
+        sig = card.cmd_internal_authenticate(digest)
+        r = ecdsa_keys.verify_signature_ecdsa(pk_info[0], digest, sig)
+        assert r

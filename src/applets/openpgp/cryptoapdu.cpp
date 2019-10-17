@@ -307,7 +307,10 @@ Util::Error APDUPSO::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 			if (alg.AlgorithmID == Crypto::AlgoritmID::RSA) {
 				err = crypto_e.RSADecipher(File::AppletID::OpenPGP, OpenPGPKeyType::Confidentiality, data.substr(1, data.length() - 1), dataOut);
 			} else {
-				//err = crypto_e.ECDSADecipher(File::AppletID::OpenPGP, OpenPGPKeyType::Confidentiality, data, dataOut);
+				// decipher not possible for ECDSA
+				return Util::Error::ConditionsNotSatisfied;
+
+				// TODO: decipher for ECDH
 			}
 		}
 
