@@ -57,7 +57,7 @@ class Test_ECDSA(object):
         pk = card.cmd_get_public_key(1)
         pk_info = get_pk_info(pk)
         digest = ecdsa_keys.compute_digestinfo_ecdsa(msg)
-        sig = (card.cmd_pso(0x9e, 0x9a, digest))
+        sig = card.cmd_pso(0x9e, 0x9a, digest)
         r = ecdsa_keys.verify_signature_ecdsa(pk_info[0], digest, sig)
         assert r
 

@@ -390,7 +390,7 @@ Util::Error CryptoLib::ECDSAGenKey(ECDSAKey& keyOut) {
 	ClearKeyBuffer();
 	keyOut.clear();
 
-	mbedtls_ecp_group_id curveID = MBEDTLS_ECP_DP_SECP256R1;
+	mbedtls_ecp_group_id curveID = MBEDTLS_ECP_DP_SECP384R1;
 
 	mbedtls_ecdsa_context ctx;
 	ecdsa_init(&ctx, curveID, NULL, NULL);
@@ -428,10 +428,14 @@ Util::Error CryptoLib::ECDSAGenKey(ECDSAKey& keyOut) {
 
 Util::Error CryptoLib::ECDSASign(ECDSAKey key, bstr data, bstr& signature) {
 	signature.clear();
-	mbedtls_ecp_group_id curveID = MBEDTLS_ECP_DP_SECP256R1;
+	mbedtls_ecp_group_id curveID = MBEDTLS_ECP_DP_SECP384R1;
 
+	mbedtls_mpi r, s;
 	mbedtls_ecdsa_context ctx;
+
 	ecdsa_init(&ctx, curveID, NULL, NULL);
+	mbedtls_mpi_init(&r);
+	mbedtls_mpi_init(&s);
 
 
 	mbedtls_entropy_context entropy;
@@ -454,21 +458,33 @@ Util::Error CryptoLib::ECDSASign(ECDSAKey key, bstr data, bstr& signature) {
 			break;
 		}
 
-		size_t sig_len = 0;
-		if (mbedtls_ecdsa_write_signature(
-				&ctx,
-				MBEDTLS_MD_SHA256,
+		if (mbedtls_ecdsa_sign(
+				&ctx.grp,
+				&r,
+				&s,
+				&ctx.d,
 				data.uint8Data(),
 				data.length(),
-				signature.uint8Data(),
-				&sig_len,
 				mbedtls_ctr_drbg_random,
 				&ctr_drbg)) {
 			ret =  Util::Error::CryptoOperationError;
 			break;
 		}
 
-		signature.set_length(sig_len);
+		size_t mpi_len = mbedtls_mpi_size(&r);
+		if (mbedtls_mpi_write_binary(&r, signature.uint8Data(), mpi_len)) {
+			ret = Util::Error::CryptoDataError;
+			break;
+		}
+		signature.set_length(mpi_len);
+
+		mpi_len = mbedtls_mpi_size(&s);
+		if (mbedtls_mpi_write_binary(&s, signature.uint8Data() + signature.length(), mpi_len)) {
+			ret = Util::Error::CryptoDataError;
+			break;
+		}
+		signature.set_length(signature.length() + mpi_len);
+
 		ret =  Util::Error::NoError;
 		break;
 	}
@@ -477,6 +493,8 @@ Util::Error CryptoLib::ECDSASign(ECDSAKey key, bstr data, bstr& signature) {
 	mbedtls_entropy_free(&entropy);
 	mbedtls_ctr_drbg_free(&ctr_drbg);
 	mbedtls_ecdsa_free(&ctx);
+	mbedtls_mpi_free(&r);
+	mbedtls_mpi_free(&s);
 	return ret;
 }
 
@@ -527,7 +545,7 @@ Util::Error CryptoLib::RSACalcPublicKey(bstr strP, bstr strQ, bstr &strN) {
 Util::Error ECDSACalcPublicKey(bstr privateKey, bstr &publicKey) {
 	Util::Error ret = Util::Error::NoError;
 
-	mbedtls_ecp_group_id curveID = MBEDTLS_ECP_DP_SECP256R1;
+	mbedtls_ecp_group_id curveID = MBEDTLS_ECP_DP_SECP384R1;
 
 	mbedtls_ecdsa_context ctx;
 	mbedtls_entropy_context entropy;
