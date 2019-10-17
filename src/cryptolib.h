@@ -209,6 +209,7 @@ public:
 
 	Util::Error GetRSAKey(AppID_t appID, KeyID_t keyID, RSAKey &key);
 	Util::Error GetECDSAKey(AppID_t appID, KeyID_t keyID, ECDSAKey &key);
+	Util::Error GetAESKey(AppID_t appID, KeyID_t keyID, bstr &key);
 	Util::Error PutRSAFullKey(AppID_t appID, KeyID_t keyID, RSAKey key);
 	Util::Error PutECDSAFullKey(AppID_t appID, KeyID_t keyID, ECDSAKey key);
 

@@ -259,7 +259,8 @@ Util::Error APDUPutData::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 				return err_check;
 		}
 
-		auto err = filesystem.WriteFile(File::AppletID::OpenPGP, object_id, File::File, data);
+		auto area = security.DataObjectInSecureArea(object_id) ? File::Secure : File::File;
+		auto err = filesystem.WriteFile(File::AppletID::OpenPGP, object_id, area, data);
 		if (err != Util::Error::NoError)
 			return err;
 

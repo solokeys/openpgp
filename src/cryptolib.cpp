@@ -638,6 +638,27 @@ Util::Error KeyStorage::GetECDSAKey(AppID_t appID, KeyID_t keyID, ECDSAKey& key)
 	return Util::Error::NoError;
 }
 
+Util::Error KeyStorage::GetAESKey(AppID_t appID, KeyID_t keyID, bstr &key) {
+	key.clear();
+
+	Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
+	File::FileSystem &filesystem = solo.GetFileSystem();
+
+	// clear key storage
+	prvStr.clear();
+
+	auto err = filesystem.ReadFile(appID, keyID, File::Secure, prvStr);
+	if (err != Util::Error::NoError)
+		return err;
+
+	if (prvStr.length() == 0 || prvStr.length() % 16)
+		return Util::Error::StoredKeyError;
+
+	key = prvStr;
+
+	return Util::Error::NoError;
+}
+
 Util::Error KeyStorage::SetKey(AppID_t appID, KeyID_t keyID,
 		KeyType keyType, bstr key) {
 	return Util::Error::InternalError;
@@ -898,12 +919,22 @@ Util::Error KeyStorage::SetKeyExtHeader(AppID_t appID, bstr keyData) {
 
 Util::Error CryptoEngine::AESEncrypt(AppID_t appID, KeyID_t keyID,
 		bstr dataIn, bstr& dataOut) {
-	return Util::Error::InternalError;
+	bstr key;
+	auto err = keyStorage.GetAESKey(appID, keyID, key);
+	if (err != Util::Error::NoError)
+		return err;
+
+	return cryptoLib.AESEncrypt(key, dataIn, dataOut);
 }
 
 Util::Error CryptoEngine::AESDecrypt(AppID_t appID, KeyID_t keyID,
 		bstr dataIn, bstr& dataOut) {
-	return Util::Error::InternalError;
+	bstr key;
+	auto err = keyStorage.GetAESKey(appID, keyID, key);
+	if (err != Util::Error::NoError)
+		return err;
+
+	return cryptoLib.AESDecrypt(key, dataIn, dataOut);
 }
 
 Util::Error CryptoEngine::RSASign(AppID_t appID, KeyID_t keyID,

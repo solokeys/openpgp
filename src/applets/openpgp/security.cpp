@@ -61,7 +61,7 @@ std::array<DOAccess_t, 49> DOAccess = {{
 		{0xd1,   Password::Never, Password::PW3},   // SM-Key-ENC
 		{0xd2,   Password::Never, Password::PW3},   // SM-Key-MAC
 		{0xd3,   Password::Never, Password::PW3},   // Resetting Code
-		{0xd5,   Password::Never, Password::PW3},   // AES-Key for PSO:ENC/DE
+		{0xd5,   Password::Never, Password::PW3},   // AES-Key for PSO:ENC/DEC
 		{0xf4,   Password::Never, Password::PW3},   // SM-Key-Container
 
 		{0x7f66, Password::Any,   Password::Never}, // Extended length information
@@ -229,6 +229,14 @@ Util::Error Security::CommandAccessCheck(
 
 	return Util::Error::NoError;
 }
+
+bool Security::DataObjectInSecureArea(uint16_t dataObjectID) {
+	if (dataObjectID == File::SecureFileID::AES)
+		return true;
+
+	return false;
+}
+
 
 void Security::ClearAllAuth() {
 	appletState.Clear();

@@ -316,7 +316,7 @@ Util::Error APDUPSO::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 			}
 		}
 
-		// AES. OpenPGP 3.3.1 page 59
+		// AES decrypt. OpenPGP 3.3.1 page 59
 		if (data[0] == 0x02) {
 			// OpenPGP application Version 3.3.1 page 58
 			if ((data.length() - 1) % 16)
@@ -349,6 +349,7 @@ Util::Error APDUPSO::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 		if (err != Util::Error::NoError)
 			return err;
 
+		dataOut.set_length(1 + aesres.length());
 	}
 
 	return Util::Error::NoError;

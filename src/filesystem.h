@@ -33,6 +33,8 @@ enum SecureFileID {
 	DigitalSignature = 0xb6,
 	Confidentiality  = 0xb8,
 	Authentication   = 0xa4,
+
+	AES              = 0xd5,
 };
 
 enum AppletID {
