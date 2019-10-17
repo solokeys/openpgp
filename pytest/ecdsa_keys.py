@@ -25,5 +25,7 @@ def compute_digestinfo_ecdsa(msg):
     digest = sha256(msg).digest()
     return digest
 
-
+def verify_signature_ecdsa(pk_info, digest, sig):
+    vk = ecdsa.VerifyingKey.from_string(pk_info[1:], curve=ecdsa.NIST384p, hashfunc=sha256)
+    return vk.verify_digest(sig, digest)
 

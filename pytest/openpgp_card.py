@@ -176,7 +176,7 @@ class OpenPGP_Card(object):
         return self.cmd_put_data(0x00, alg, data)
 
     def set_ecdsa_algorithm_attributes(self, alg, protocol, curve_oid):
-        data = pack('>B', protocol) + curve_oid + b"\x00"
+        data = pack('>B', protocol) + curve_oid
         return self.cmd_put_data(0x00, alg, data)
 
     def cmd_get_response(self, expected_len):

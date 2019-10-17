@@ -16,15 +16,15 @@ from binascii import hexlify
 
 
 class Test_ECDSA(object):
-    def test_setup_rsa4096(self, card):
+    def test_setup_ecdsa(self, card):
         assert card.verify(3, FACTORY_PASSPHRASE_PW3)
 
         assert card.set_ecdsa_algorithm_attributes(
-            CryptoAlg.Signature.value, CryptoAlgType.ECDSA.value, ECDSACurves.ansix9p256r1.value)
-        assert card.set_ecdsa_algorithm_attributes(
-            CryptoAlg.Decryption.value, CryptoAlgType.ECDSA.value, ECDSACurves.ansix9p256r1.value)
-        assert card.set_ecdsa_algorithm_attributes(
-            CryptoAlg.Authentication.value, CryptoAlgType.ECDSA.value, ECDSACurves.ansix9p256r1.value)
+            CryptoAlg.Signature.value, CryptoAlgType.ECDSA.value, ECDSACurves.ansix9p384r1.value)
+        #assert card.set_ecdsa_algorithm_attributes(
+        #    CryptoAlg.Decryption.value, CryptoAlgType.ECDSA.value, ECDSACurves.ansix9p384r1.value)
+        #assert card.set_ecdsa_algorithm_attributes(
+        #    CryptoAlg.Authentication.value, CryptoAlgType.ECDSA.value, ECDSACurves.ansix9p384r1.value)
 
     def test_keygen_1(self, card):
         pk = card.cmd_genkey(1)
@@ -59,10 +59,9 @@ class Test_ECDSA(object):
         pk = card.cmd_get_public_key(1)
         pk_info = get_pk_info(pk)
         digest = ecdsa_keys.compute_digestinfo_ecdsa(msg)
-        sig = int(hexlify(card.cmd_pso(0x9e, 0x9a, digest)), 16)
-        print(sig)
-        #r = ecdsa_keys.verify_signature(pk_info, digest, sig)
-        #assert r
+        sig = (card.cmd_pso(0x9e, 0x9a, digest))
+        r = ecdsa_keys.verify_signature_ecdsa(pk_info[0], digest, sig)
+        assert r
 
     def test_verify_pw1_2(self, card):
         v = card.cmd_verify(2, FACTORY_PASSPHRASE_PW1)
