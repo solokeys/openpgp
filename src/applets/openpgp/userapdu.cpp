@@ -277,7 +277,10 @@ Util::Error APDUPutData::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 			if (data.length() > PGPConst::MaxSpecialDOLen)
 				return Util::Error::WrongAPDUDataLength;
 
-			// TODO: add decode
+			AlgoritmAttr aa;
+			auto err = aa.Decode(data, object_id);
+			if (err != Util::Error::NoError)
+				return err;
 
 		}
 

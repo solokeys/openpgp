@@ -20,6 +20,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+from pytest import *
 from struct import pack
 from re import match, DOTALL
 from util import *
@@ -81,6 +82,28 @@ class Test_Card_Personalize_Card(object):
     def test_pw1_status(self, card):
         s = get_data_object(card, 0xc4)
         assert match(b'\x01...\x03[\x00\x03]\x03', s, DOTALL)
+
+    @mark.parametrize('do', [0xc1, 0xc2, 0xc3])
+    def test_algorithm_attributes_fail(self, card, do):
+        try:
+            card.cmd_put_data(0x00, do, b'\x02\x08\x00\x00\x20\x00')
+            assert False
+        except ValueError:
+            pass
+
+        try:
+            card.cmd_put_data(0x00, do, b'\x01\x08\x00\x00\x20\x11')
+            assert False
+        except ValueError:
+            pass
+
+        try:
+            card.cmd_put_data(0x00, do, b'\x13\x01\x02\x03\x04\x05')
+            assert False
+        except ValueError:
+            pass
+
+        assert card.cmd_put_data(0x00, do, b'\x01\x08\x00\x00\x20\x00')
 
     def test_rsa_import_key_1(self, card):
         t = rsa_keys.build_privkey_template(1, 0)

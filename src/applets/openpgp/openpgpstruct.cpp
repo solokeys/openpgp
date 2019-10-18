@@ -147,11 +147,7 @@ void PWStatusBytes::Print() {
 	);
 }
 
-Util::Error OpenPGP::AlgoritmAttr::Load(File::FileSystem& fs, KeyID_t file_id) {
-	auto err = fs.ReadFile(File::AppletID::OpenPGP, file_id, File::FileType::File, data);
-	if (err != Util::Error::NoError)
-		return err;
-
+Util::Error AlgoritmAttr::Decode(bstr &data, KeyID_t key_id) {
 	if ((data.length() < 2) ||
 		(data[0] == Crypto::AlgoritmID::RSA && data.length() != 6))
 		return Util::Error::InternalError;
@@ -161,18 +157,46 @@ Util::Error OpenPGP::AlgoritmAttr::Load(File::FileSystem& fs, KeyID_t file_id) {
 		RSAa.NLen = (data[1] << 8) + data[2];
 		RSAa.PubExpLen = (data[3] << 8) + data[4];
 		RSAa.KeyFormat = data[5];
-	} else {
+
+		if (RSAa.KeyFormat > 0x03)
+			return Util::Error::WrongData;
+
+		return Util::Error::NoError;
+	}
+
+	if (AlgorithmID == Crypto::AlgoritmID::ECDSAforCDSandIntAuth) {
 		bool keyFormatLen = 0;
 		ECDSAa.KeyFormat = 0x00; // by default - standard (private key only)
-		// high bit cant be used in the last OID byte. In the OID it needs to mark 2-byte value
+		// high bit can't be used in the last OID byte. In the OID it needs to mark 2-byte value
 		if (data[data.length() - 1] & 0x10) {
 			ECDSAa.KeyFormat = data[data.length() - 1];
 			keyFormatLen = 1;
 		}
 		ECDSAa.OID = data.substr(1, data.length() - 1 - keyFormatLen);
+
+		if (Crypto::MbedtlsCurvefromOID(ECDSAa.OID) == MBEDTLS_ECP_DP_NONE ||
+			key_id == 0xc2)
+			return Util::Error::WrongData;
+
+		return Util::Error::NoError;
 	}
 
-	return Util::Error::NoError;
+	if (AlgorithmID == Crypto::AlgoritmID::ECDHforDEC) {
+		if (key_id != 0xc2)
+		return Util::Error::WrongData;
+
+		return Util::Error::NoError;
+	}
+
+	return Util::Error::WrongData;
+}
+
+Util::Error AlgoritmAttr::Load(File::FileSystem& fs, KeyID_t file_id) {
+	auto err = fs.ReadFile(File::AppletID::OpenPGP, file_id, File::FileType::File, data);
+	if (err != Util::Error::NoError)
+		return err;
+
+	return Decode(data, file_id);
 }
 
 Util::Error DSCounter::Load(File::FileSystem& fs) {

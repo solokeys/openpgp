@@ -35,7 +35,7 @@ static const std::array<tag_t, 10> ConstructedTagsList = {
 	0x7f49  // key structure response
 };
 
-constexpr bool isTagConstructed(tag_t tag) {
+constexpr bool isTagConstructed(const tag_t tag) {
 	for(const auto& ctag: ConstructedTagsList) {
     	if (ctag == tag) {
     		return true;

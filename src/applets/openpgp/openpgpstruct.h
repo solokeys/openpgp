@@ -88,6 +88,7 @@ struct  AlgoritmAttr {
 	RSAAlgorithmAttr RSAa;
 	ECDSAAlgorithmAttr ECDSAa;
 
+	Util::Error Decode(bstr &data, KeyID_t key_id);
 	Util::Error Load(File::FileSystem &fs, KeyID_t file_id);
 };
 

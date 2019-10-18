@@ -65,29 +65,34 @@ struct ECDSAalgParams {
 	mbedtls_ecp_group_id mbedtlsGroup;
 };
 
-static const std::array<ECDSAalgParams, 1> ECDSAalgParamsList = {
-		{none,         ""_bstr,                                 MBEDTLS_ECP_DP_NONE},
-		//{ansix9p256r1, "\x2A\x86\x48\xCE\x3D\x03\x01\x07"_bstr, MBEDTLS_ECP_DP_SECP256R1}
-};
-/*
-ECDSAaid AIDfromOID(bstr oid) {
+static const std::array<ECDSAalgParams, 7> ECDSAalgParamsList = {{
+		{none,            ""_bstr,                                     MBEDTLS_ECP_DP_NONE},
+		{ansix9p256r1,    "\x2A\x86\x48\xCE\x3D\x03\x01\x07"_bstr,     MBEDTLS_ECP_DP_SECP256R1},
+		{ansix9p384r1,    "\x2B\x81\x04\x00\x22"_bstr,                 MBEDTLS_ECP_DP_SECP256R1},
+		{ansix9p521r1,    "\x2B\x81\x04\x00\x23"_bstr,                 MBEDTLS_ECP_DP_SECP256R1},
+		{brainpoolP256r1, "\x2B\x24\x03\x03\x02\x08\x01\x01\x07"_bstr, MBEDTLS_ECP_DP_SECP256R1},
+		{brainpoolP384r1, "\x2B\x24\x03\x03\x02\x08\x01\x01\x0B"_bstr, MBEDTLS_ECP_DP_SECP256R1},
+		{brainpoolP512r1, "\x2B\x24\x03\x03\x02\x08\x01\x01\x0D"_bstr, MBEDTLS_ECP_DP_SECP256R1}
+}};
 
-	if (oid == "\x2A\x86\x48\xCE\x3D\x03\x01\x07"_bstr)
-		return ECDSAaid::ansix9p256r1;
-	if (oid == "\x2B\x81\x04\x00\x22"_bstr)
-		return ECDSAaid::ansix9p384r1;
-	if (oid == "\x2B\x81\x04\x00\x23"_bstr)
-		return ECDSAaid::ansix9p521r1;
-	if (oid == "\x2B\x24\x03\x03\x02\x08\x01\x01\x07"_bstr)
-		return ECDSAaid::brainpoolP256r1;
-	if (oid == "\x2B\x24\x03\x03\x02\x08\x01\x01\x0B"_bstr)
-		return ECDSAaid::brainpoolP384r1;
-	if (oid == "\x2B\x24\x03\x03\x02\x08\x01\x01\x0D"_bstr)
-		return ECDSAaid::brainpoolP512r1;
+constexpr mbedtls_ecp_group_id MbedtlsCurvefromOID(const bstr oid) {
+	for(const auto& algp: ECDSAalgParamsList) {
+    	if (algp.oid == oid) {
+    		return algp.mbedtlsGroup;
+    	}
+    }
+	return MBEDTLS_ECP_DP_NONE;
+}
 
+constexpr ECDSAaid AIDfromOID(const bstr oid) {
+	for(const auto& algp: ECDSAalgParamsList) {
+    	if (algp.oid == oid) {
+    		return algp.aid;
+    	}
+    }
 	return ECDSAaid::none;
 }
-*/
+
 enum KeyType {
 	Symmetric,
 	FullAsymmetric,
