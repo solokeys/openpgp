@@ -117,6 +117,11 @@ namespace std {
 			append(sv.data(), sv.length());
 		}
 
+		constexpr void set(const uint8_t *data, const size_t len) {
+			clear();
+			append(data, len);
+		}
+
 		constexpr void setAPDURes(const uint16_t w) {
 			clear();
 			appendAPDUres(w);

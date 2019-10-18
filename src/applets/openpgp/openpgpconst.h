@@ -61,7 +61,7 @@ public:
 	static const size_t KDFDOMaxFileSize = 200U;
 	static const size_t MaxGetChallengeLen = 128U;
 	static const size_t MaxCardholderCertificateLen = 2048U;
-	static const size_t MaxSpecialDOLen = 240U;
+	static const size_t MaxSpecialDOLen = 255U;
 };
 
 enum OpenPGPKeyType {
