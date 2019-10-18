@@ -123,7 +123,7 @@ Test some critical parts of code
   - ECDSA
   - ~~reset card~~
   - ~~user DO (0101-0104) and check access rights~~
-  - add user DO length check
+  - ~~add user DO length check~~
   - add checking algorithm attributes. ECDSA curves and deny access ECDSA for decipher.
   - ~~PSO:ENCIPHER and DECIPHER with AES~~
   - Secure messaging????
