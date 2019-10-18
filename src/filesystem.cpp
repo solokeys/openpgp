@@ -118,24 +118,24 @@ Util::Error ConfigFileSystem::ReadFile(AppID_t AppId, KeyID_t FileID,
 
 	// AID
 	case 0x4f:
-		data.set("\xD2\x76\x00\x01\x24\x01\x02\x01\x00\x05\x00\x00\x31\x88\x00\x00"_bstr); // from 0x6e
+		data.set("\xD2\x76\x00\x01\x24\x01\x02\x01\x00\x05\x00\x00\x31\x88\x00\x00"_bstr); // group (0x6e) Application Related Data
 		return Util::Error::NoError;
 
 	// Historical bytes
 	case 0x5f52:
-		data.set("\x00\x31\xC5\x73\xC0\x01\x40\x05\x90\x00"_bstr); // from 0x6e
+		data.set("\x00\x31\xC5\x73\xC0\x01\x40\x05\x90\x00"_bstr); // group (0x6e)
 		return Util::Error::NoError;
 
 	// Extended Capabilities
 	case 0xc0:
-		data.set("\x74\x00\x00\x20\x08\x00\x00\xff\x01\x00"_bstr); // from 0x6e
+		data.set("\x74\x00\x00\x20\x08\x00\x00\xff\x01\x00"_bstr); // group (0x6e)
 		return Util::Error::NoError;
 
 	// Algorithm Attributes
 	case 0xc1:  // Sig
 	case 0xc2:  // Dec
 	case 0xc3:  // Auth
-		data.set("\x01\x08\x00\x00\x20\x00"_bstr); // from 0x6e
+		data.set("\x01\x08\x00\x00\x20\x00"_bstr); // group (0x6e)
 		return Util::Error::NoError;
 
 	// PW Status Bytes (binary)

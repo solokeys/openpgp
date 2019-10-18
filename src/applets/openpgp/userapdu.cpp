@@ -259,6 +259,28 @@ Util::Error APDUPutData::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 				return err_check;
 		}
 
+		// check cardholder certificate max length
+		if (data.length() > PGPConst::MaxCardholderCertificateLen && object_id == 0x7f21)
+			return Util::Error::WrongAPDUDataLength;
+
+		// check max length
+		if (data.length() > PGPConst::MaxSpecialDOLen &&
+			(object_id == 0x0101 || object_id == 0x0102 || object_id == 0x0103 || object_id == 0x0104 ||
+			 object_id == 0x5e ||
+			 object_id == 0xf50 ||
+			 object_id == 0xf9)
+		   )
+			return Util::Error::WrongAPDUDataLength;
+
+		// check if we set correct algorithm attributes
+		if (object_id == 0xc1 || object_id == 0xc2 || object_id == 0xc3) {
+			if (data.length() > PGPConst::MaxSpecialDOLen)
+				return Util::Error::WrongAPDUDataLength;
+
+			// TODO: add decode
+
+		}
+
 		auto area = security.DataObjectInSecureArea(object_id) ? File::Secure : File::File;
 		auto err = filesystem.WriteFile(File::AppletID::OpenPGP, object_id, area, data);
 		if (err != Util::Error::NoError)
