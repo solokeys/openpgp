@@ -103,6 +103,15 @@ class Test_Card_Personalize_Card(object):
         except ValueError:
             pass
 
+        if do == 0xc2:
+            try:
+                assert card.cmd_put_data(0x00, do, b'\x13\x2B\x24\x03\x03\x02\x08\x01\x01\x0D')
+                assert False
+            except ValueError:
+                pass
+        else:
+            assert card.cmd_put_data(0x00, do, b'\x13\x2B\x24\x03\x03\x02\x08\x01\x01\x0D')
+
         assert card.cmd_put_data(0x00, do, b'\x01\x08\x00\x00\x20\x00')
 
     def test_rsa_import_key_1(self, card):
