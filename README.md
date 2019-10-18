@@ -120,7 +120,7 @@ Test some critical parts of code
   - refactor some tests and change some "magic" values in them
   - ~~test RSA4096 generation and increase interface timeouts~~
 4. Add tests and functionality for:
-  - ECDSA
+  - ~~ECDSA~~
   - ~~reset card~~
   - ~~user DO (0101-0104) and check access rights~~
   - ~~add user DO length check~~
