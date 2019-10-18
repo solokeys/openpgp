@@ -75,10 +75,17 @@ def test_name_lang_sex(card):
 
 def test_app_data(card):
     app_data = get_data_object(card, 0x6e)
-    hist_len = app_data[20]
-    # FIXME: parse and check DO of C0, C1, C2, C3, C4, and C6
-    assert app_data[0:8] == b"\x4f\x10\xd2\x76\x00\x01\x24\x01" and \
-           app_data[18:18+2] == b"\x5f\x52"
+    atlv = TLV(app_data)
+    assert atlv.search(0x4f).data == b"\xd2\x76\x00\x01\x24\x01\x02\x01\x00\x05\x00\x00\x31\x88\x00\x00"
+    assert atlv.search(0x5f52).data == b"\x00\x31\xC5\x73\xC0\x01\x40\x05\x90\x00"
+    assert check_extended_capabilities(atlv.search(0xc0).data)
+    assert atlv.search(0xc1).data == b"\x01\x08\x00\x00\x20\x00"
+    assert atlv.search(0xc2).data == b"\x01\x08\x00\x00\x20\x00"
+    assert atlv.search(0xc3).data == b"\x01\x08\x00\x00\x20\x00"
+    assert check_pw_status(atlv.search(0xc4).data)
+    assert check_zeroes(atlv.search(0xc5).data)
+    assert check_zeroes(atlv.search(0xc6).data)
+    assert check_zeroes(atlv.search(0xcd).data)
 
 def test_url(card):
     url = get_data_object(card, 0x5f50)
@@ -90,7 +97,7 @@ def test_ds_counter(card):
 
 def test_pw1_status(card):
     s = get_data_object(card, 0xc4)
-    assert match(b'\x00...\x03[\x00\x03]\x03', s, DOTALL)
+    assert check_pw_status(s)
 
 def test_fingerprint_0(card):
     fprlist = get_data_object(card, 0xC5)
@@ -161,7 +168,7 @@ def test_historical_bytes(card):
 
 def test_extended_capabilities(card):
     a = get_data_object(card, 0xc0)
-    assert a == None or match(b'[\x70\x74\x75\x7f]\x00\x00[\x20\x40\x80][\x00\x04\x08\x10]\x00[\x00\x01]\xff\x01\x00', a)
+    assert a == None or check_extended_capabilities(a)
 
 def test_algorithm_attributes_1(card):
     a = get_data_object(card, 0xc1)

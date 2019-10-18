@@ -1,4 +1,5 @@
 from tlv import *
+from re import match, DOTALL
 
 
 def get_data_object(card, tag):
@@ -9,6 +10,13 @@ def get_data_object(card, tag):
 
 def check_null(data_object):
     return data_object == None or len(data_object) == 0
+
+
+def check_zeroes(data_object):
+    for c in data_object:
+        if c != 0x00:
+            return False
+    return True
 
 
 def get_pk_info(pk):
@@ -23,3 +31,11 @@ def get_pk_info(pk):
         return tag81.data, tag82.data
     else:
         return tag86.data, None
+
+
+def check_extended_capabilities(data):
+    return match(b'[\x70\x74\x75\x7f]\x00\x00[\x20\x40\x80][\x00\x04\x08\x10]\x00[\x00\x01]\xff\x01\x00', data)
+
+
+def check_pw_status(data):
+    return match(b'\x00...\x03[\x00\x03]\x03', data, DOTALL)

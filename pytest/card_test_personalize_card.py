@@ -163,16 +163,19 @@ class Test_Card_Personalize_Card(object):
         c = get_data_object(card, 0x7a)
         assert c == b'\x93\x03\x00\x00\x00'
 
-    def test_pw1_status(self, card):
+    def test_pw1_status2(self, card):
         s = get_data_object(card, 0xc4)
         assert match(b'\x01...\x03[\x00\x03]\x03', s, DOTALL)
 
     def test_app_data(self, card):
         app_data = get_data_object(card, 0x6e)
-        hist_len = app_data[20]
-        # FIXME: parse and check DO of C0, C1, C2, C3, C4, and C6
-        assert app_data[0:8] == b"\x4f\x10\xd2\x76\x00\x01\x24\x01" and \
-               app_data[18:18+2] == b"\x5f\x52"
+        atlv = TLV(app_data)
+        assert atlv.search(0x4f).data == b"\xd2\x76\x00\x01\x24\x01\x02\x01\x00\x05\x00\x00\x31\x88\x00\x00"
+        assert atlv.search(0x5f52).data == b"\x00\x31\xC5\x73\xC0\x01\x40\x05\x90\x00"
+        assert check_extended_capabilities(atlv.search(0xc0).data)
+        assert atlv.search(0xc1).data == b"\x01\x08\x00\x00\x20\x00"
+        assert atlv.search(0xc2).data == b"\x01\x08\x00\x00\x20\x00"
+        assert atlv.search(0xc3).data == b"\x01\x08\x00\x00\x20\x00"
 
     def test_public_key_1(self, card):
         pk = card.cmd_get_public_key(1)
