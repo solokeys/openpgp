@@ -85,6 +85,59 @@ std::array<CompositeTag_t, 24> CompositeTag = {{
  *	5B 00  5F 2D 02 65 6e  5F 35 01 39    5b name, 5f2d language = en, 5f35 sex = 9(n/a)
 */
 
+void ConfigFileSystem::FillExtendedCapatibilities(bstr &data) {
+	uint8_t *bdata = data.uint8Data();
+	data.clear();
+	// was "\x74\x00\x00\x20\x08\x00\x00\xff\x01\x00"
+	bdata[0] =
+			0x00 |  // Secure Messaging supported
+			0x40 |  // Support for GET CHALLENGE
+			0x20 |  // Support for Key Import
+			0x10 |  // PW Status changeable (DO C4 available for PUT DATA)
+			0x08 |  // Support for Private use DOs (0101-0104)
+			0x04 |  // Algorithm attributes changeable with PUT DATA
+			0x02 |  // PSO:DEC/ENC with AES
+			0x01;   // KDF-DO (F9) and related functionality available
+	// Secure Messaging Algorithm (SM)
+	// 00 = no SM or proprietary implementation
+	// 01 = AES 128 bit
+	// 02 = AES 256 bit
+	// 03 = SCP11b
+	bdata[1] = 0x00;
+	// Maximum length of a challenge supported by the command GET CHALLENGE (unsigned integer, Most Significant Bit ... Least Significant Bit)
+	bdata[2] = OpenPGP::PGPConst::MaxGetChallengeLen >> 8;
+	bdata[3] = OpenPGP::PGPConst::MaxGetChallengeLen & 0xff;
+	// Maximum length of Cardholder Certificates (DO 7F21, each for AUT, DEC and SIG)
+	bdata[4] = OpenPGP::PGPConst::MaxCardholderCertificateLen >> 8;
+	bdata[5] = OpenPGP::PGPConst::MaxCardholderCertificateLen & 0xff;
+	// Maximum length of special DOs with no precise length information given in the definition (Private Use, Login data, URL,
+	// Algorithm attributes, KDF etc.)
+	bdata[6] = OpenPGP::PGPConst::MaxSpecialDOLen >> 8;
+	bdata[7] = OpenPGP::PGPConst::MaxSpecialDOLen & 0xff;
+	// PIN block 2 format
+	// 0 = not supported, 1 = supported
+	bdata[8] = 0x01;
+	// MSE command for key numbers 2 (DEC) and 3 (AUT)
+	// 0 = not supported, 1 = supported
+	bdata[9] = 0x00;
+
+	data.set_length(10);
+}
+
+void ConfigFileSystem::FillFeatures(bstr &data) {
+	// was "\x81\x01\x28"
+	data.set("\x81\x01\x00"_bstr); // Button and LED
+	data.uint8Data()[2] =
+			0x00 | // Display (defined by ISO/IEC 7816-4)
+			0x00 | // Biometric input sensor (defined by ISO/IEC 7816-4)
+			0x20 | // Button
+			0x00 | // Keypad
+			0x08 | // LED
+			0x00 | // Loudspeaker
+			0x00 | // Microphone
+			0x00;  // Touchscreen
+}
+
 Util::Error ConfigFileSystem::ReadFile(AppID_t AppId, KeyID_t FileID,
 		FileType FileType, bstr& data) {
 
@@ -105,7 +158,6 @@ Util::Error ConfigFileSystem::ReadFile(AppID_t AppId, KeyID_t FileID,
 		}
 
 	// files
-	uint8_t ext_capatib[10] = {0};
 	switch (FileID) {
 	// EF.DIR. OpenPGP v 3.3.1 page 12.
 	case 0x2f00:
@@ -114,7 +166,7 @@ Util::Error ConfigFileSystem::ReadFile(AppID_t AppId, KeyID_t FileID,
 
 	// General feature management. OpenPGP v 3.3.1 page 14
 	case 0x7f74:
-		data.set("\x81\x01\x28"_bstr); // Button and LED
+		FillFeatures(data);
 		return Util::Error::NoError;
 
 	// AID
@@ -129,40 +181,7 @@ Util::Error ConfigFileSystem::ReadFile(AppID_t AppId, KeyID_t FileID,
 
 	// Extended Capabilities. Group (0x6e) Application Related Data
 	case 0xc0:
-		// was "\x74\x00\x00\x20\x08\x00\x00\xff\x01\x00"
-		ext_capatib[0] =
-				0x00 |  // Secure Messaging supported
-				0x40 |  // Support for GET CHALLENGE
-				0x20 |  // Support for Key Import
-				0x10 |  // PW Status changeable (DO C4 available for PUT DATA)
-				0x08 |  // Support for Private use DOs (0101-0104)
-				0x04 |  // Algorithm attributes changeable with PUT DATA
-				0x02 |  // PSO:DEC/ENC with AES
-				0x01;   // KDF-DO (F9) and related functionality available
-		// Secure Messaging Algorithm (SM)
-		// 00 = no SM or proprietary implementation
-		// 01 = AES 128 bit
-		// 02 = AES 256 bit
-		// 03 = SCP11b
-		ext_capatib[1] = 0x00;
-		// Maximum length of a challenge supported by the command GET CHALLENGE (unsigned integer, Most Significant Bit ... Least Significant Bit)
-		ext_capatib[2] = OpenPGP::PGPConst::MaxGetChallengeLen >> 8;
-		ext_capatib[3] = OpenPGP::PGPConst::MaxGetChallengeLen & 0xff;
-		// Maximum length of Cardholder Certificates (DO 7F21, each for AUT, DEC and SIG)
-		ext_capatib[4] = OpenPGP::PGPConst::MaxCardholderCertificateLen >> 8;
-		ext_capatib[5] = OpenPGP::PGPConst::MaxCardholderCertificateLen & 0xff;
-		// Maximum length of special DOs with no precise length information given in the definition (Private Use, Login data, URL,
-		// Algorithm attributes, KDF etc.)
-		ext_capatib[6] = OpenPGP::PGPConst::MaxSpecialDOLen >> 8;
-		ext_capatib[7] = OpenPGP::PGPConst::MaxSpecialDOLen & 0xff;
-		// PIN block 2 format
-		// 0 = not supported, 1 = supported
-		ext_capatib[8] = 0x01;
-		// MSE command for key numbers 2 (DEC) and 3 (AUT)
-		// 0 = not supported, 1 = supported
-		ext_capatib[9] = 0x00;
-
-		data.set(ext_capatib, sizeof(ext_capatib));
+		FillExtendedCapatibilities(data);
 		return Util::Error::NoError;
 
 	// Algorithm Attributes

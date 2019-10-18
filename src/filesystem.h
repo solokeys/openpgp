@@ -58,6 +58,8 @@ public:
 // Read only file system for system files. files lays in program flash.
 class ConfigFileSystem {
 private:
+	void FillExtendedCapatibilities(bstr &data);
+	void FillFeatures(bstr &data);
 public:
 	Util::Error ReadFile(AppID_t AppId, KeyID_t FileID, FileType FileType, bstr &data);
 };
