@@ -93,6 +93,9 @@ constexpr ECDSAaid AIDfromOID(const bstr oid) {
 	return ECDSAaid::none;
 }
 
+// EdDSA: ed25519    1.3.6.1.4.1.11591.15.1  "\x06\x09\x2B\x06\x01\x04\x01\xDA\x47\x0F\x01"
+// ECDH:  curve25519 1.3.6.1.4.1.3029.1.5.1  "\x06\x0A\x2B\x06\x01\x04\x01\x97\x55\x01\x05\x01"  MBEDTLS_ECP_DP_CURVE25519
+
 enum KeyType {
 	Symmetric,
 	FullAsymmetric,
