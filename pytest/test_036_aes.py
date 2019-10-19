@@ -37,11 +37,11 @@ class Test_AES(object):
 
         v = card.cmd_pso(0x86, 0x80, AESPlainText)
         assert v[0] == 0x02
-        aes = AES.new(fAES, AES.MODE_CBC, b"\x00" * 16)
+        aes = AES.new(fAES, AES.MODE_CBC, AESiv)
         assert v[1:] == aes.encrypt(AESPlainText)
 
     def test_AES_decode(self, card, fAES):
-        aes = AES.new(fAES, AES.MODE_CBC, b"\x00" * 16)
+        aes = AES.new(fAES, AES.MODE_CBC, AESiv)
         v = card.cmd_pso(0x80, 0x86, b"\x02" + aes.encrypt(AESPlainText))
         assert v == AESPlainText
 
@@ -49,7 +49,7 @@ class Test_AES(object):
         ct = card.cmd_pso(0x86, 0x80, AESPlainTextLong)
         assert ct[0] == 0x02
 
-        aes = AES.new(fAES, AES.MODE_CBC, b"\x00" * 16)
+        aes = AES.new(fAES, AES.MODE_CBC, AESiv)
         assert ct[1:] == aes.encrypt(AESPlainTextLong)
 
         v = card.cmd_pso(0x80, 0x86, ct)
