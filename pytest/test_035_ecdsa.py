@@ -32,14 +32,6 @@ class Test_ECDSA(object):
             r = card.cmd_put_data(0x00, 0xce, fpr_date[1])
         assert r
 
-    def test_keygen_2(self, card):
-        pk = card.cmd_genkey(2)
-        fpr_date = ecdsa_keys.calc_fpr_ecdsa(pk[0])
-        r = card.cmd_put_data(0x00, 0xc7, fpr_date[0])
-        if r:
-            r = card.cmd_put_data(0x00, 0xce, fpr_date[1])
-        assert r
-
     def test_keygen_3(self, card):
         pk = card.cmd_genkey(3)
         fpr_date = ecdsa_keys.calc_fpr_ecdsa(pk[0])
@@ -76,4 +68,5 @@ class Test_ECDSA(object):
 
     def test_verify_reset(self, card):
         assert card.cmd_verify_reset(1)
+        assert card.cmd_verify_reset(2)
         assert card.cmd_verify_reset(3)
