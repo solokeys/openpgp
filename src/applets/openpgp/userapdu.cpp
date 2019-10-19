@@ -284,6 +284,11 @@ Util::Error APDUPutData::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 
 		}
 
+		// check AES key correct length
+		if (object_id == 0xd5 &&
+			data.length() != 16 && data.length() != 24 && data.length() != 32)
+			return Util::Error::WrongAPDUDataLength;
+
 		auto area = security.DataObjectInSecureArea(object_id) ? File::Secure : File::File;
 		auto err = filesystem.WriteFile(File::AppletID::OpenPGP, object_id, area, data);
 		if (err != Util::Error::NoError)
