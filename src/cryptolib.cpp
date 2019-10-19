@@ -763,7 +763,6 @@ Util::Error KeyStorage::PutECDSAFullKey(AppID_t appID, KeyID_t keyID, ECDSAKey k
 	printf("key %x [%lu] saved.\n", keyID, tlv.GetDataLink().length());
 
 	return Util::Error::NoError;
-	return Util::Error::NoError;
 }
 
 Util::Error KeyStorage::GetKeyPart(bstr dataIn, Util::tag_t keyPart,
