@@ -651,7 +651,7 @@ Util::Error KeyStorage::GetAESKey(AppID_t appID, KeyID_t keyID, bstr &key) {
 	if (err != Util::Error::NoError)
 		return err;
 
-	if (prvStr.length() == 0 || prvStr.length() % 16)
+	if (prvStr.length() == 0 || (prvStr.length() != 16 && prvStr.length() != 24 && prvStr.length() != 32))
 		return Util::Error::StoredKeyError;
 
 	key = prvStr;
@@ -722,6 +722,47 @@ Util::Error KeyStorage::PutRSAFullKey(AppID_t appID, KeyID_t keyID, RSAKey key) 
 
 Util::Error KeyStorage::PutECDSAFullKey(AppID_t appID, KeyID_t keyID, ECDSAKey key) {
 
+	Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
+	File::FileSystem &filesystem = solo.GetFileSystem();
+	using namespace Util;
+
+	prvStr.clear();
+
+	TLVTree tlv;
+	tlv.Init(prvStr);
+	tlv.AddRoot(0x7f49);
+	tlv.AddChild(keyID);
+
+	uint8_t _dol[100] = {0};
+	bstr sdol(_dol, 0, sizeof(_dol));
+	DOL dol;
+	dol.Init(sdol);
+
+	dol.AddNextWithData(KeyPartsECDSA::PublicKey, key.Public.length());
+	dol.AddNextWithData(KeyPartsECDSA::PrivateKey, key.Private.length());
+
+	// insert dol
+	sdol = dol.GetData();
+	tlv.AddNext(0x7f48, &sdol);
+
+	// make tlv data element
+	tlv.AddNext(0x5f48);
+
+	// insert data
+	tlv.Search(0x5f48);
+	tlv.AppendCurrentData(key.Public);
+	tlv.AppendCurrentData(key.Private);
+
+	//printf("---------- ecdsa key ------------\n");
+	//tlv.PrintTree();
+
+	auto err = filesystem.WriteFile(appID, keyID, File::Secure, tlv.GetDataLink());
+	if (err != Util::Error::NoError)
+		return err;
+
+	printf("key %x [%lu] saved.\n", keyID, tlv.GetDataLink().length());
+
+	return Util::Error::NoError;
 	return Util::Error::NoError;
 }
 
