@@ -15,16 +15,34 @@ import ecdsa_keys
 from binascii import hexlify
 
 
+@pytest.fixture(
+    params=[
+        ECDSACurves.ansix9p256r1,
+        ECDSACurves.ansix9p384r1,
+        ECDSACurves.ansix9p521r1,
+        ECDSACurves.brainpoolP256r1,
+        ECDSACurves.brainpoolP384r1,
+        ECDSACurves.brainpoolP512r1],
+    ids=[
+        "ansix9p256r1",
+        "ansix9p384r1",
+        "ansix9p521r1",
+        "brainpoolP256r1",
+        "brainpoolP384r1",
+        "brainpoolP512r1"],
+    scope="class")
+def ECDSAcurve(request):
+    return request.param.value
+
+
 class Test_ECDSA(object):
-    def test_setup_ecdsa(self, card):
+    def test_setup_ecdsa(self, card, ECDSAcurve):
         assert card.verify(3, FACTORY_PASSPHRASE_PW3)
 
-        assert card.set_ecdsa_algorithm_attributes(
-            CryptoAlg.Signature.value, CryptoAlgType.ECDSA.value, ECDSACurves.ansix9p384r1.value)
-        assert card.set_ecdsa_algorithm_attributes(
-            CryptoAlg.Authentication.value, CryptoAlgType.ECDSA.value, ECDSACurves.ansix9p384r1.value)
+        assert card.set_ecdsa_algorithm_attributes(CryptoAlg.Signature.value, ECDSAcurve)
+        assert card.set_ecdsa_algorithm_attributes(CryptoAlg.Authentication.value, ECDSAcurve)
 
-    def test_keygen_1(self, card):
+    def test_keygen_1(self, card, ECDSAcurve):
         pk = card.cmd_genkey(1)
         fpr_date = ecdsa_keys.calc_fpr_ecdsa(pk[0])
         r = card.cmd_put_data(0x00, 0xc7, fpr_date[0])
@@ -32,7 +50,7 @@ class Test_ECDSA(object):
             r = card.cmd_put_data(0x00, 0xce, fpr_date[1])
         assert r
 
-    def test_keygen_3(self, card):
+    def test_keygen_3(self, card, ECDSAcurve):
         pk = card.cmd_genkey(3)
         fpr_date = ecdsa_keys.calc_fpr_ecdsa(pk[0])
         r = card.cmd_put_data(0x00, 0xc7, fpr_date[0])
@@ -40,11 +58,11 @@ class Test_ECDSA(object):
             r = card.cmd_put_data(0x00, 0xce, fpr_date[1])
         assert r
 
-    def test_verify_pw1(self, card):
+    def test_verify_pw1(self, card, ECDSAcurve):
         v = card.cmd_verify(1, FACTORY_PASSPHRASE_PW1)
         assert v
 
-    def test_signature_sigkey(self, card):
+    def test_signature_sigkey(self, card, ECDSAcurve):
         msg = b"Sign me please"
         pk = card.cmd_get_public_key(1)
         pk_info = get_pk_info(pk)
@@ -53,11 +71,11 @@ class Test_ECDSA(object):
         r = ecdsa_keys.verify_signature_ecdsa(pk_info[0], digest, sig)
         assert r
 
-    def test_verify_pw1_2(self, card):
+    def test_verify_pw1_2(self, card, ECDSAcurve):
         v = card.cmd_verify(2, FACTORY_PASSPHRASE_PW1)
         assert v
 
-    def test_signature_authkey(self, card):
+    def test_signature_authkey(self, card, ECDSAcurve):
         msg = b"Sign me please to authenticate"
         pk = card.cmd_get_public_key(3)
         pk_info = get_pk_info(pk)
@@ -66,7 +84,7 @@ class Test_ECDSA(object):
         r = ecdsa_keys.verify_signature_ecdsa(pk_info[0], digest, sig)
         assert r
 
-    def test_verify_reset(self, card):
+    def test_verify_reset(self, card, ECDSAcurve):
         assert card.cmd_verify_reset(1)
         assert card.cmd_verify_reset(2)
         assert card.cmd_verify_reset(3)
