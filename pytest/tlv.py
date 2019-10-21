@@ -52,6 +52,27 @@ def encode_len(length):
 
     return None
 
+def encode_taglen(tag, length):
+    return encode_tag(tag) + encode_len(length)
+
+
+ConstructedTagList = [
+    0x65,
+    0x6e,
+    0x73,
+    0x7a,
+    # 0x7f21, # Cardholder certificate
+    0x7f66,
+    0x7f74,
+    0xf4,
+    0xf9,
+
+    0x4d,
+
+    0x7f49 # key structure response
+]
+
+
 class TAG:
     def __init__(self, data=None, tags_db=None, content=True):
         self.childs = []
@@ -104,12 +125,16 @@ class TAG:
             self.data = data[i:i + self.size]
             i += self.size
 
-            if self.type == TAG_TYPE_CONSTRUCTED:
+            #if self.type == TAG_TYPE_CONSTRUCTED:
+            if self.code in ConstructedTagList:
+                self.type = TAG_TYPE_CONSTRUCTED
                 j = 0
                 while j < self.size:
                     tag = TAG(self.data[j:], tags_db)
                     self.childs.append(tag)
                     j += tag.total_size
+            else:
+                self.type = TAG_TYPE_PRIMITIVE
 
         key = '%x' % self.code
         if tags_db != None and tags_db.has_key(key):
@@ -169,7 +194,6 @@ class TAG:
 
     def append(self, tag, value):
         vstr = encode_tag(tag) + encode_len(len(value)) + value
-        print(vstr.hex())
         elm = TAG(encode_tag(tag) + encode_len(len(value)) + value)
         self.childs.append(elm)
         return elm
