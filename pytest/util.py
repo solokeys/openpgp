@@ -32,6 +32,17 @@ def get_pk_info(pk):
     else:
         return tag86.data, None
 
+def create_ecdsa_4D_key(KeyType, PrivateKey, PublicKey):
+    ktlv = TLV(b"\x4d\x00")
+    elm4d = ktlv.search(0x4d)
+
+    elm4d.append(KeyType, b"")
+    elm4d.append(0x92, PrivateKey)
+    elm4d.append(0x99, PublicKey)
+    ktlv.show()
+    return ktlv.encode()
+
+
 
 def check_extended_capabilities(data):
     return match(b'[\x70\x74\x75\x7f]\x00\x00[\x20\x40\x80][\x00\x04\x08\x10]\x00[\x00\x01]\xff\x01\x00', data)
