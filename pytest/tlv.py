@@ -61,7 +61,7 @@ ConstructedTagList = [
     0x6e,
     0x73,
     0x7a,
-    # 0x7f21, # Cardholder certificate
+    # 0x7f21,  # Cardholder certificate
     0x7f66,
     0x7f74,
     0xf4,
@@ -69,7 +69,7 @@ ConstructedTagList = [
 
     0x4d,
 
-    0x7f49 # key structure response
+    0x7f49,  # key structure response
 ]
 
 
@@ -77,7 +77,7 @@ class TAG:
     def __init__(self, data=None, tags_db=None, content=True):
         self.childs = []
         self.root = False
-        self.code = None
+        self.tag = None
         self.name = None
         self.type = None
         self._class = None
@@ -101,14 +101,20 @@ class TAG:
         else:
             self.extended = False
         self._class = (data[i] & 0b11000000) >> 6
-        self.type = (data[i] & 0b00100000) >> 5
 
         if self.extended:
-            self.code = 256 * data[i] + data[i + 1]
+            self.tag = 256 * data[i] + data[i + 1]
             i += 2
         else:
-            self.code = data[i]
+            self.tag = data[i]
             i += 1
+
+        # is constructed by list
+        #self.type = (data[i] & 0b00100000) >> 5
+        if self.tag in ConstructedTagList:
+            self.type = TAG_TYPE_CONSTRUCTED
+        else:
+            self.type = TAG_TYPE_PRIMITIVE
 
         # Recursive extended size
         if data[i] == TAG_SIZE_BIG_1:
@@ -125,18 +131,14 @@ class TAG:
             self.data = data[i:i + self.size]
             i += self.size
 
-            #if self.type == TAG_TYPE_CONSTRUCTED:
-            if self.code in ConstructedTagList:
-                self.type = TAG_TYPE_CONSTRUCTED
+            if self.type == TAG_TYPE_CONSTRUCTED:
                 j = 0
                 while j < self.size:
                     tag = TAG(self.data[j:], tags_db)
                     self.childs.append(tag)
                     j += tag.total_size
-            else:
-                self.type = TAG_TYPE_PRIMITIVE
 
-        key = '%x' % self.code
+        key = '%x' % self.tag
         if tags_db != None and tags_db.has_key(key):
             self.name = tags_db[key]['name']
             if tags_db[key].has_key('parser') and tags_db[key]['parser'] != None:
@@ -150,7 +152,7 @@ class TAG:
     def encode(self):
         if len(self.childs) == 0:
             self.size = len(self.data)
-            return encode_tag(self.code) + encode_len(len(self.data)) + self.data
+            return encode_tag(self.tag) + encode_len(len(self.data)) + self.data
         else:
             total_elm = b""
             for elm in self.childs:
@@ -158,16 +160,16 @@ class TAG:
 
             self.total_size = len(total_elm)
             self.data = total_elm
-            return encode_tag(self.code) + encode_len(len(total_elm)) + total_elm
+            return encode_tag(self.tag) + encode_len(len(total_elm)) + total_elm
 
 
 
-    def list_childs(self, code=None):
-        if code == None:
+    def list_childs(self, tag=None):
+        if tag == None:
             return self.childs
         ret = []
         for c in self.childs:
-            if c.code == code:
+            if c.tag == tag:
                 ret.append(c)
         return ret
 
@@ -177,7 +179,7 @@ class TAG:
                 c.show(deep)
         else:
             deep_str = deep * '   '
-            print('%s%.2x [%.2x] - %s' % (deep_str, self.code, self.size, self.name), end = '')
+            print('%s%.2x [%.2x] - %s' % (deep_str, self.tag, self.size, self.name), end ='')
             if self.type == TAG_TYPE_PRIMITIVE and self.data != None:
                 print('%s  ' % (deep_str), end = '')
                 for i in self.data:
@@ -220,7 +222,7 @@ class TLV(TAG):
             return None
 
         for c in node.childs:
-            if c.code == tag:
+            if c.tag == tag:
                 return c
             if not (c.childs is None):
                 res = self.node_search(tag, c)
@@ -228,7 +230,7 @@ class TLV(TAG):
                     return res
 
     def search(self, tag):
-        if self.code == tag:
+        if self.tag == tag:
             return self
 
         return self.node_search(tag, self)
