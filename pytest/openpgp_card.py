@@ -363,13 +363,15 @@ class OpenPGP_Card(object):
             else:
                 cmd_data = iso7816_compose(0x2a, p1, p2, data)
                 sw = self.__reader.send_cmd(cmd_data)
-                if len(sw) != 2:
+                if len(sw) <= 2:
                     raise ValueError(sw)
+                rdata = sw[:-2]
+                sw = sw[-2:]
                 if sw[0] == 0x90 and sw[1] == 0x00:
-                    return b""
+                    return rdata
                 elif sw[0] != 0x61:
                     raise ValueError("%02x%02x" % (sw[0], sw[1]))
-                return self.cmd_get_response(sw[1])
+                return rdata + self.cmd_get_response(sw[1])
 
     def cmd_internal_authenticate(self, data):
         if self.__reader.is_tpdu_reader():

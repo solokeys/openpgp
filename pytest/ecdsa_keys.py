@@ -92,13 +92,15 @@ def build_privkey_template_ecdsa(openpgp_keyno, ecdsa_curve):
     assert not(curve is None)
     PrivateKey = ecdsa.SigningKey.generate(curve, hashfunc=sha256)
     PublicKey = PrivateKey.get_verifying_key()
-    return create_ecdsa_4D_key(keyspec, PrivateKey.to_string(), PublicKey.to_string())
+    return create_ecdsa_4D_key(keyspec, PrivateKey.to_string(), b"\x04" + PublicKey.to_string())
 
 def compute_digestinfo_ecdsa(msg):
     digest = sha256(msg).digest()
     return digest
 
-def verify_signature_ecdsa(pk_info, digest, sig):
-    vk = ecdsa.VerifyingKey.from_string(pk_info[1:], curve=ecdsa.NIST384p, hashfunc=sha256)
+def verify_signature_ecdsa(pk_info, digest, sig, ecdsa_curve):
+    curve = find_curve_oid_hex(ecdsa_curve)
+    assert not(curve is None)
+    vk = ecdsa.VerifyingKey.from_string(pk_info[1:], curve=curve, hashfunc=sha256)
     return vk.verify_digest(sig, digest)
 
