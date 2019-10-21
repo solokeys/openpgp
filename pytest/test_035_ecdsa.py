@@ -84,24 +84,32 @@ class Test_ECDSA(object):
         r = ecdsa_keys.verify_signature_ecdsa(pk_info[0], digest, sig, ECDSAcurve)
         assert r
 
-    def deny_test_rsa_import_key_1(self, card, ECDSAcurve):
+    def test_rsa_import_key_1(self, card, ECDSAcurve):
         t = ecdsa_keys.build_privkey_template_ecdsa(1, ECDSAcurve)
         r = card.cmd_put_data_odd(0x3f, 0xff, t)
         assert r
 
-    def deny_test_signature_sigkey_uploaded(self, card, ECDSAcurve):
+    def test_signature_sigkey_uploaded(self, card, ECDSAcurve):
         msg = b"Sign me please"
         pk = card.cmd_get_public_key(1)
         pk_info = get_pk_info(pk)
-        print("sig key", pk_info[0].hex())
         digest = ecdsa_keys.compute_digestinfo_ecdsa(msg)
         sig = card.cmd_pso(0x9e, 0x9a, digest)
-        r = ecdsa_keys.verify_signature_ecdsa(pk_info[0], digest, sig)
+        r = ecdsa_keys.verify_signature_ecdsa(pk_info[0], digest, sig, ECDSAcurve)
         assert r
 
-    def deny_test_rsa_import_key_3(self, card, ECDSAcurve):
+    def test_rsa_import_key_3(self, card, ECDSAcurve):
         t = ecdsa_keys.build_privkey_template_ecdsa(3, ECDSAcurve)
         r = card.cmd_put_data_odd(0x3f, 0xff, t)
+        assert r
+
+    def test_signature_authkey_uploaded(self, card, ECDSAcurve):
+        msg = b"Sign me please to authenticate"
+        pk = card.cmd_get_public_key(3)
+        pk_info = get_pk_info(pk)
+        digest = ecdsa_keys.compute_digestinfo_ecdsa(msg)
+        sig = card.cmd_internal_authenticate(digest)
+        r = ecdsa_keys.verify_signature_ecdsa(pk_info[0], digest, sig, ECDSAcurve)
         assert r
 
     def test_verify_reset(self, card, ECDSAcurve):
