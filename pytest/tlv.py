@@ -22,6 +22,36 @@ TAG_SIZE_BIG_1 = 0x81
 TAG_SIZE_BIG_2 = 0x82
 
 
+def encode_tag(tag):
+    res = b""
+    if tag > 0xffffff:
+        res += bytes([(tag & 0xff000000) >> 24])
+
+    if tag > 0xffff:
+        res += bytes([(tag & 0xff0000) >> 16])
+
+    if tag > 0xff:
+        res += bytes([(tag &0xff00) >> 8])
+
+    res += bytes([tag & 0xff])
+    return res
+
+
+def encode_len(length):
+    if length < 0x80:
+        return bytes([length])
+
+    if length < 0x100:
+        return bytes([0x81, length])
+
+    if length < 0x10000:
+        return bytes([0x82, (length >> 8) & 0xff, length & 0xff])
+
+    if length < 0x1000000:
+        return bytes([0x83, (length >> 16) & 0xff, (length >> 8) & 0xff, length & 0xff])
+
+    return None
+
 class TAG:
     def __init__(self, data=None, tags_db=None, content=True):
         self.childs = []
@@ -92,6 +122,21 @@ class TAG:
 
         self.total_size = i
 
+    def encode(self):
+        if len(self.childs) == 0:
+            self.size = len(self.data)
+            return encode_tag(self.code) + encode_len(len(self.data)) + self.data
+        else:
+            total_elm = b""
+            for elm in self.childs:
+                total_elm += elm.encode()
+
+            self.total_size = len(total_elm)
+            self.data = total_elm
+            return encode_tag(self.code) + encode_len(len(total_elm)) + total_elm
+
+
+
     def list_childs(self, code=None):
         if code == None:
             return self.childs
@@ -122,6 +167,12 @@ class TAG:
             for tag in self.childs:
                 tag.show(deep)
 
+    def append(self, tag, value):
+        vstr = encode_tag(tag) + encode_len(len(value)) + value
+        print(vstr.hex())
+        elm = TAG(encode_tag(tag) + encode_len(len(value)) + value)
+        self.childs.append(elm)
+        return elm
 
 class TLV(TAG):
     def parse(self, data, tags_db=None, content=True):
@@ -133,6 +184,12 @@ class TLV(TAG):
             tag = TAG(data[i:], tags_db, content)
             self.childs.append(tag)
             i += tag.total_size
+
+    def encode(self):
+        ret = b""
+        for c in self.childs:
+            ret += c.encode()
+        return ret
 
     def node_search(self, tag, node):
         if node is None:
