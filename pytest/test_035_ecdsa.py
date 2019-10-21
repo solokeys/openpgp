@@ -84,6 +84,11 @@ class Test_ECDSA(object):
         r = ecdsa_keys.verify_signature_ecdsa(pk_info[0], digest, sig)
         assert r
 
+    def test_rsa_import_key_1(self, card, ECDSAcurve):
+        t = ecdsa_keys.build_privkey_template_ecdsa(1, ECDSAcurve)
+        r = card.cmd_put_data_odd(0x3f, 0xff, t)
+        assert r
+
     def test_verify_reset(self, card, ECDSAcurve):
         assert card.cmd_verify_reset(1)
         assert card.cmd_verify_reset(2)
