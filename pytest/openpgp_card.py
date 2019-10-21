@@ -363,7 +363,7 @@ class OpenPGP_Card(object):
             else:
                 cmd_data = iso7816_compose(0x2a, p1, p2, data)
                 sw = self.__reader.send_cmd(cmd_data)
-                if len(sw) <= 2:
+                if len(sw) < 2:
                     raise ValueError(sw)
                 rdata = sw[:-2]
                 sw = sw[-2:]
