@@ -58,7 +58,7 @@ namespace Applet {
 		PutData2				= 0xdb,
 		GenerateAsymmKeyPair	= 0x47,
 		PSO						= 0x2a,
-		Internalauthenticate	= 0x88,
+		InternalAuthenticate	= 0x88,
 		GetChallenge			= 0x84,
 		ManageSecurityEnv		= 0x22,
 		TerminateDF				= 0xe6,

@@ -62,7 +62,7 @@ std::string_view APDUGetChallenge::GetName() {
 Util::Error APDUInternalAuthenticate::Check(uint8_t cla, uint8_t ins,
 		uint8_t p1, uint8_t p2) {
 
-	if (ins != Applet::APDUcommands::Internalauthenticate)
+	if (ins != Applet::APDUcommands::InternalAuthenticate)
 		return Util::Error::WrongCommand;
 
 	if (cla != 0x00)

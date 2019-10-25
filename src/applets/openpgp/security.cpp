@@ -188,21 +188,21 @@ Util::Error Security::CommandAccessCheck(
 		switch (p1) {
 		// signature
 		case 0x9e:
-			if (GetAuth(Password::PSOCDS))
+			if (GetAuth(Password::PSOCDS)) // PW+81
 				return Util::Error::NoError;
 			else
 				return Util::Error::AccessDenied;
 
 		// decipher
 		case 0x80:
-			if (GetAuth(Password::PW1))
+			if (GetAuth(Password::PW1))   // PW+82
 				return Util::Error::NoError;
 			else
 				return Util::Error::AccessDenied;
 
 		// encipher
 		case 0x86:
-			if (GetAuth(Password::PW1))
+			if (GetAuth(Password::PW1))   // PW+82
 				return Util::Error::NoError;
 			else
 				return Util::Error::AccessDenied;
@@ -210,6 +210,16 @@ Util::Error Security::CommandAccessCheck(
 			break;
 		};
 
+	// Internal authenticate
+	if (ins == Applet::APDUcommands::InternalAuthenticate) {
+		if (GetAuth(Password::PW1)) {
+			return Util::Error::NoError;
+		} else {
+			return Util::Error::AccessDenied;
+		}
+	}
+
+	// Generate asymmetric key pair
 	if (ins == Applet::APDUcommands::GenerateAsymmKeyPair)
 		switch (p1) {
 		// 0x80 - Generation of key pair

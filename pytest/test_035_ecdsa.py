@@ -38,6 +38,8 @@ def ECDSAcurve(request):
 class Test_ECDSA(object):
     def test_setup_ecdsa(self, card, ECDSAcurve):
         assert card.verify(3, FACTORY_PASSPHRASE_PW3)
+        #  PW1 valid for several PSO:CDS commands
+        assert card.cmd_put_data(0x00, 0xc4, b"\x01")
 
         assert card.set_ecdsa_algorithm_attributes(CryptoAlg.Signature.value, ECDSAcurve)
         assert card.set_ecdsa_algorithm_attributes(CryptoAlg.Authentication.value, ECDSAcurve)
@@ -59,8 +61,7 @@ class Test_ECDSA(object):
         assert r
 
     def test_verify_pw1(self, card, ECDSAcurve):
-        v = card.cmd_verify(1, FACTORY_PASSPHRASE_PW1)
-        assert v
+        assert card.verify(1, FACTORY_PASSPHRASE_PW1)
 
     def test_signature_sigkey(self, card, ECDSAcurve):
         msg = b"Sign me please"
@@ -71,9 +72,8 @@ class Test_ECDSA(object):
         r = ecdsa_keys.verify_signature_ecdsa(pk_info[0], digest, sig, ECDSAcurve)
         assert r
 
-    def test_verify_pw1_2(self, card, ECDSAcurve):
-        v = card.cmd_verify(2, FACTORY_PASSPHRASE_PW1)
-        assert v
+    def test_verify_pw1_82(self, card, ECDSAcurve):
+        assert card.verify(2, FACTORY_PASSPHRASE_PW1)
 
     def test_signature_authkey(self, card, ECDSAcurve):
         msg = b"Sign me please to authenticate"
