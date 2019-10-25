@@ -58,6 +58,7 @@ class ECDSACurves(Enum):
     brainpoolP256r1 = b"\x2B\x24\x03\x03\x02\x08\x01\x01\x07"
     brainpoolP384r1 = b"\x2B\x24\x03\x03\x02\x08\x01\x01\x0B"
     brainpoolP512r1 = b"\x2B\x24\x03\x03\x02\x08\x01\x01\x0D"
+    secp256k1 = b"\x2B\x81\x04\x00\x0a"
 
 
 def iso7816_compose(ins, p1, p2, data, cls=0x00, le=None):

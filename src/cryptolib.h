@@ -61,6 +61,18 @@ enum ECDSAaid {
 	secp256k1,
 };
 
+
+constexpr static const char* const ECDSAaidStr[8] = {
+	"none",
+	"ansix9p256r1",
+	"ansix9p384r1",
+	"ansix9p521r1",
+	"brainpoolP256r1",
+	"brainpoolP384r1",
+	"brainpoolP512r1",
+	"secp256k1",
+};
+
 struct ECDSAalgParams {
 	ECDSAaid aid;
 	bstr oid;
@@ -173,6 +185,7 @@ struct ECDSAKey {
 		Public.set_length(0);
 	}
 	constexpr void Print() {
+		printf("Curve %s\n", ECDSAaidStr[CurveId]);
 		printf("Public  [%lu] ", Public.length());  dump_hex(Public,  48);
 		printf("Private [%lu] ", Private.length()); dump_hex(Private, 48);
 	}
