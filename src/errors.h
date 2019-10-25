@@ -40,6 +40,7 @@ namespace Util {
 
 		PasswordLocked,
 		StoredKeyError,
+		StoredKeyParamsError,
 		AccessDenied,
 		CryptoDataError,
 		CryptoOperationError,
@@ -81,6 +82,7 @@ namespace Util {
 
 		"Password locked",
 		"Stored key error",
+		"Stored key parameters error",
 		"Access denied",
 		"Crypto data error",
 		"Crypto operation error",
