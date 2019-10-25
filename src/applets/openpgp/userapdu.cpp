@@ -278,7 +278,7 @@ Util::Error APDUPutData::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 				return Util::Error::WrongAPDUDataLength;
 
 			AlgoritmAttr aa;
-			auto err = aa.Decode(data, object_id);
+			auto err = aa.DecodeData(data, object_id);
 			if (err != Util::Error::NoError)
 				return err;
 

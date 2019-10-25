@@ -134,7 +134,6 @@ Util::Error APDUGenerateAsymmetricKeyPair::Process(uint8_t cla,
 	if (err_check != Util::Error::NoError)
 		return err_check;
 
-	printf("as key p - %lu\n", data.length());
 	if (data.length() != 2)
 		return Util::Error::WrongAPDUDataLength;
 
@@ -167,6 +166,7 @@ Util::Error APDUGenerateAsymmetricKeyPair::Process(uint8_t cla,
 	if (file_id == 0)
 		return Util::Error::DataNotFound;
 
+	printf("fileid = 0x%02x\n", file_id);
 	OpenPGP::AlgoritmAttr alg;
 	auto err = alg.Load(filesystem, file_id);
 	if (err != Util::Error::NoError || alg.AlgorithmID == 0)
@@ -177,6 +177,7 @@ Util::Error APDUGenerateAsymmetricKeyPair::Process(uint8_t cla,
 	// 0x81 - Reading of actual public key template
 	if (p1 == 0x80) {
 		if (alg.AlgorithmID == Crypto::AlgoritmID::RSA) {
+			printf("RSA\n");
 			Crypto::RSAKey rsa_key;
 			err = cryptolib.RSAGenKey(rsa_key, alg.RSAa.NLen);
 			if (err != Util::Error::NoError)
@@ -194,8 +195,9 @@ Util::Error APDUGenerateAsymmetricKeyPair::Process(uint8_t cla,
 		}
 
 		if (alg.AlgorithmID == Crypto::AlgoritmID::ECDSAforCDSandIntAuth) {
+			printf("ECDSA\n");
 			Crypto::ECDSAKey ecdsa_key;
-			err = cryptolib.ECDSAGenKey(ecdsa_key);
+			err = cryptolib.ECDSAGenKey(key_storage.GetECDSACurveID(File::AppletID::OpenPGP, file_id), ecdsa_key);
 			if (err != Util::Error::NoError)
 				return err;
 
@@ -212,6 +214,7 @@ Util::Error APDUGenerateAsymmetricKeyPair::Process(uint8_t cla,
 
 		return Util::Error::DataNotFound;
 	} else {
+		printf("GetKey only\n");
 		err = key_storage.GetPublicKey7F49(
 				File::AppletID::OpenPGP,
 				key_type,

@@ -70,6 +70,12 @@ struct  RSAAlgorithmAttr {
 	uint16_t NLen;      // modulus length in bit
 	uint16_t PubExpLen; // public exponent length in bits
 	uint8_t KeyFormat;  // Crypto::RSAKeyImportFormat. Import-Format of private key
+
+	void clear() {
+		NLen = 0x0000;
+		PubExpLen = 0x0000;
+		KeyFormat = 0x00;
+	}
 };
 
 // Open PGP 3.3.1 page 31
@@ -77,6 +83,11 @@ struct  ECDSAAlgorithmAttr {
 	uint8_t bOID[PGPConst::AlgoritmAttrMaxOIDSize];
 	bstr OID{bOID, sizeof(bOID)};
 	uint8_t KeyFormat; // Import-Format of private key, optional. if Format byte is not present `FF` = standard with public key
+
+	void clear() {
+		OID.clear();
+		KeyFormat = 0x00;
+	}
 };
 
 // Open PGP 3.3.1 page 31
@@ -88,7 +99,9 @@ struct  AlgoritmAttr {
 	RSAAlgorithmAttr RSAa;
 	ECDSAAlgorithmAttr ECDSAa;
 
-	Util::Error Decode(bstr &data, KeyID_t key_id);
+	void Clear();
+	Util::Error DecodeData(bstr &vdata, KeyID_t key_id);
+	Util::Error Decode(KeyID_t key_id);
 	Util::Error Load(File::FileSystem &fs, KeyID_t file_id);
 };
 

@@ -48,6 +48,7 @@ enum RSAKeyImportFormat {
 // brainpoolP256r1, OID={1.3.36.3.3.2.8.1.1.7} = ´2B2403030208010107´     MBEDTLS_ECP_DP_BP256R1
 // brainpoolP384r1, OID={1.3.36.3.3.2.8.1.1.11} = ´2B240303020801010B´    MBEDTLS_ECP_DP_BP384R1
 // brainpoolP512r1, OID={1.3.36.3.3.2.8.1.1.13} = ´2B240303020801010D´    MBEDTLS_ECP_DP_BP512R1
+// secp256k1,       OID={1.3.132.0.10}  = '2B8104000a'                    MBEDTLS_ECP_DP_SECP256K1 (http://www.secg.org/sec2-v2.pdf)
 // max OID length 9 bytes
 enum ECDSAaid {
 	none,
@@ -56,7 +57,8 @@ enum ECDSAaid {
 	ansix9p521r1,
 	brainpoolP256r1,
 	brainpoolP384r1,
-	brainpoolP512r1
+	brainpoolP512r1,
+	secp256k1,
 };
 
 struct ECDSAalgParams {
@@ -65,15 +67,25 @@ struct ECDSAalgParams {
 	mbedtls_ecp_group_id mbedtlsGroup;
 };
 
-static const std::array<ECDSAalgParams, 7> ECDSAalgParamsList = {{
+static const std::array<ECDSAalgParams, 8> ECDSAalgParamsList = {{
 		{none,            ""_bstr,                                     MBEDTLS_ECP_DP_NONE},
 		{ansix9p256r1,    "\x2A\x86\x48\xCE\x3D\x03\x01\x07"_bstr,     MBEDTLS_ECP_DP_SECP256R1},
-		{ansix9p384r1,    "\x2B\x81\x04\x00\x22"_bstr,                 MBEDTLS_ECP_DP_SECP256R1},
-		{ansix9p521r1,    "\x2B\x81\x04\x00\x23"_bstr,                 MBEDTLS_ECP_DP_SECP256R1},
-		{brainpoolP256r1, "\x2B\x24\x03\x03\x02\x08\x01\x01\x07"_bstr, MBEDTLS_ECP_DP_SECP256R1},
-		{brainpoolP384r1, "\x2B\x24\x03\x03\x02\x08\x01\x01\x0B"_bstr, MBEDTLS_ECP_DP_SECP256R1},
-		{brainpoolP512r1, "\x2B\x24\x03\x03\x02\x08\x01\x01\x0D"_bstr, MBEDTLS_ECP_DP_SECP256R1}
+		{ansix9p384r1,    "\x2B\x81\x04\x00\x22"_bstr,                 MBEDTLS_ECP_DP_SECP384R1},
+		{ansix9p521r1,    "\x2B\x81\x04\x00\x23"_bstr,                 MBEDTLS_ECP_DP_SECP521R1},
+		{brainpoolP256r1, "\x2B\x24\x03\x03\x02\x08\x01\x01\x07"_bstr, MBEDTLS_ECP_DP_BP256R1},
+		{brainpoolP384r1, "\x2B\x24\x03\x03\x02\x08\x01\x01\x0B"_bstr, MBEDTLS_ECP_DP_BP384R1},
+		{brainpoolP512r1, "\x2B\x24\x03\x03\x02\x08\x01\x01\x0D"_bstr, MBEDTLS_ECP_DP_BP512R1},
+		{secp256k1,       "\x2B\x81\x04\x00\x0a"_bstr,                 MBEDTLS_ECP_DP_SECP256K1}
 }};
+
+constexpr mbedtls_ecp_group_id MbedtlsCurvefromAid(const ECDSAaid aid) {
+	for(const auto& algp: ECDSAalgParamsList) {
+    	if (algp.aid == aid) {
+    		return algp.mbedtlsGroup;
+    	}
+    }
+	return MBEDTLS_ECP_DP_NONE;
+}
 
 constexpr mbedtls_ecp_group_id MbedtlsCurvefromOID(const bstr oid) {
 	for(const auto& algp: ECDSAalgParamsList) {
@@ -151,10 +163,12 @@ struct RSAKey {
 };
 
 struct ECDSAKey {
+	ECDSAaid CurveId;
 	bstr Private;
 	bstr Public;
 
 	void clear(){
+		CurveId = ECDSAaid::none;
 		Private.set_length(0);
 		Public.set_length(0);
 	}
@@ -194,8 +208,8 @@ public:
 	Util::Error RSADecipher(RSAKey key, bstr data, bstr &dataOut);
 	Util::Error RSAVerify(bstr publicKey, bstr data, bstr signature);
 
-	Util::Error ECDSAGenKey(ECDSAKey &keyOut);
-	Util::Error ECDSACalcPublicKey(bstr privateKey, bstr &publicKey);
+	Util::Error ECDSAGenKey(ECDSAaid curveID, ECDSAKey &keyOut);
+	Util::Error ECDSACalcPublicKey(ECDSAaid curveID, bstr privateKey, bstr &publicKey);
 	Util::Error ECDSASign(ECDSAKey key, bstr data, bstr &signature);
 	Util::Error ECDSAVerify(ECDSAKey key, bstr data, bstr signature);
 };
@@ -216,6 +230,7 @@ public:
 	Util::Error GetPublicKey7F49(AppID_t appID, KeyID_t keyID, uint8_t AlgoritmID, bstr &tlvKey);
 
 	Util::Error GetRSAKey(AppID_t appID, KeyID_t keyID, RSAKey &key);
+	ECDSAaid GetECDSACurveID(AppID_t appID, KeyID_t keyID);
 	Util::Error GetECDSAKey(AppID_t appID, KeyID_t keyID, ECDSAKey &key);
 	Util::Error GetAESKey(AppID_t appID, KeyID_t keyID, bstr &key);
 	Util::Error PutRSAFullKey(AppID_t appID, KeyID_t keyID, RSAKey key);

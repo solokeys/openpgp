@@ -147,7 +147,20 @@ void PWStatusBytes::Print() {
 	);
 }
 
-Util::Error AlgoritmAttr::Decode(bstr &data, KeyID_t key_id) {
+void AlgoritmAttr::Clear() {
+	data.clear();
+	AlgorithmID = 0x00;
+	RSAa.clear();
+	ECDSAa.clear();
+}
+
+Util::Error AlgoritmAttr::DecodeData(bstr &vdata, KeyID_t key_id) {
+	Clear();
+	data.append(vdata);
+	return Decode(key_id);
+}
+
+Util::Error AlgoritmAttr::Decode(KeyID_t key_id) {
 	if ((data.length() < 2) ||
 		(data[0] == Crypto::AlgoritmID::RSA && data.length() != 6))
 		return Util::Error::InternalError;
@@ -196,7 +209,7 @@ Util::Error AlgoritmAttr::Load(File::FileSystem& fs, KeyID_t file_id) {
 	if (err != Util::Error::NoError)
 		return err;
 
-	return Decode(data, file_id);
+	return Decode(file_id);
 }
 
 Util::Error DSCounter::Load(File::FileSystem& fs) {

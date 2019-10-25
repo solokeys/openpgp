@@ -386,15 +386,14 @@ static int ecdsa_init(mbedtls_ecdsa_context *ctx, mbedtls_ecp_group_id curveID, 
 	return 0;
 };
 
-Util::Error CryptoLib::ECDSAGenKey(ECDSAKey& keyOut) {
+Util::Error CryptoLib::ECDSAGenKey(ECDSAaid curveID, ECDSAKey& keyOut) {
 	ClearKeyBuffer();
 	keyOut.clear();
 
-	mbedtls_ecp_group_id curveID = MBEDTLS_ECP_DP_SECP384R1;
+	if (curveID == ECDSAaid::none)
+		return  Util::Error::StoredKeyParamsError;
 
 	mbedtls_ecdsa_context ctx;
-	ecdsa_init(&ctx, curveID, NULL, NULL);
-
 
 	mbedtls_entropy_context entropy;
 	mbedtls_ctr_drbg_context ctr_drbg;
@@ -404,14 +403,19 @@ Util::Error CryptoLib::ECDSAGenKey(ECDSAKey& keyOut) {
 	mbedtls_ctr_drbg_init(&ctr_drbg);
 
 	Util::Error err = Util::Error::InternalError;
+	mbedtls_ecp_group_id groupid = MbedtlsCurvefromAid(curveID);
 
 	while (true) {
+		if (ecdsa_init(&ctx, groupid, NULL, NULL))
+			break;
+
 		if (mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy, (const unsigned char *)pers, strlen(pers)))
 			break;
 
-		if (mbedtls_ecdsa_genkey(&ctx, curveID, mbedtls_ctr_drbg_random, &ctr_drbg))
+		if (mbedtls_ecdsa_genkey(&ctx, groupid, mbedtls_ctr_drbg_random, &ctr_drbg))
 			break;
 
+		keyOut.CurveId = curveID;
 	    AppendKeyPart(KeyBuffer, keyOut.Private, &ctx.d);
 	    AppendKeyPartEcpPoint(KeyBuffer, keyOut.Public,  &ctx.grp, &ctx.Q);
 
@@ -428,12 +432,10 @@ Util::Error CryptoLib::ECDSAGenKey(ECDSAKey& keyOut) {
 
 Util::Error CryptoLib::ECDSASign(ECDSAKey key, bstr data, bstr& signature) {
 	signature.clear();
-	mbedtls_ecp_group_id curveID = MBEDTLS_ECP_DP_SECP384R1;
 
 	mbedtls_mpi r, s;
 	mbedtls_ecdsa_context ctx;
 
-	ecdsa_init(&ctx, curveID, NULL, NULL);
 	mbedtls_mpi_init(&r);
 	mbedtls_mpi_init(&s);
 
@@ -453,7 +455,7 @@ Util::Error CryptoLib::ECDSASign(ECDSAKey key, bstr data, bstr& signature) {
 			break;
 		}
 
-		if (ecdsa_init(&ctx, curveID, key.Private.uint8Data(), key.Public.uint8Data())) {
+		if (ecdsa_init(&ctx, MbedtlsCurvefromAid(key.CurveId), key.Private.uint8Data(), key.Public.uint8Data())) {
 			ret = Util::Error::CryptoDataError;
 			break;
 		}
@@ -542,10 +544,8 @@ Util::Error CryptoLib::RSACalcPublicKey(bstr strP, bstr strQ, bstr &strN) {
 	return ret;
 }
 
-Util::Error ECDSACalcPublicKey(bstr privateKey, bstr &publicKey) {
+Util::Error CryptoLib::ECDSACalcPublicKey(ECDSAaid curveID, bstr privateKey, bstr &publicKey) {
 	Util::Error ret = Util::Error::NoError;
-
-	mbedtls_ecp_group_id curveID = MBEDTLS_ECP_DP_SECP384R1;
 
 	mbedtls_ecdsa_context ctx;
 	mbedtls_entropy_context entropy;
@@ -561,7 +561,7 @@ Util::Error ECDSACalcPublicKey(bstr privateKey, bstr &publicKey) {
 			break;
 		}
 
-		if (ecdsa_init(&ctx, curveID, privateKey.uint8Data(), NULL)) {
+		if (ecdsa_init(&ctx, MbedtlsCurvefromAid(curveID), privateKey.uint8Data(), NULL)) {
 			ret = Util::Error::CryptoDataError;
 			break;
 		}
@@ -611,18 +611,55 @@ bool KeyStorage::KeyExists(AppID_t appID, KeyID_t keyID) {
 	return gf.FileExist(appID, keyID, File::FileType::Secure);
 }
 
+Util::Error LoadKeyParameters(AppID_t appID, KeyID_t keyID, OpenPGP::AlgoritmAttr& keyParams) {
+
+	keyParams.Clear();
+
+	Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
+	File::FileSystem &filesystem = solo.GetFileSystem();
+
+	return keyParams.Load(filesystem, keyID);
+}
+
+ECDSAaid KeyStorage::GetECDSACurveID(AppID_t appID, KeyID_t keyID) {
+	OpenPGP::AlgoritmAttr keyParams;
+	auto err = LoadKeyParameters(appID, keyID, keyParams);
+	if (err != Util::Error::NoError)
+		return ECDSAaid::none;
+
+	if (keyParams.AlgorithmID != AlgoritmID::ECDSAforCDSandIntAuth &&
+		keyParams.AlgorithmID != AlgoritmID::ECDHforDEC)
+		return ECDSAaid::none;
+
+	return AIDfromOID(keyParams.ECDSAa.OID);
+}
 
 Util::Error KeyStorage::GetECDSAKey(AppID_t appID, KeyID_t keyID, ECDSAKey& key) {
 
 	Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
 	File::FileSystem &filesystem = solo.GetFileSystem();
+	CryptoLib &cryptolib = cryptoEngine.getCryptoLib();
 
 	// clear key storage
 	prvStr.clear();
-
 	auto err = filesystem.ReadFile(appID, keyID, File::Secure, prvStr);
 	if (err != Util::Error::NoError)
 		return err;
+
+	KeyID_t fileID = 0;
+	if (keyID == OpenPGP::OpenPGPKeyType::DigitalSignature)
+		fileID = 0xc1;
+	if (keyID == OpenPGP::OpenPGPKeyType::Confidentiality)
+		fileID = 0xc2;
+	if (keyID == OpenPGP::OpenPGPKeyType::Authentication)
+		fileID = 0xc3;
+
+	if (fileID == 0x00)
+		return Util::Error::StoredKeyParamsError;
+
+	key.CurveId = GetECDSACurveID(appID, fileID);
+	if (key.CurveId == ECDSAaid::none)
+		return Util::Error::StoredKeyParamsError;
 
 	GetKeyPart(prvStr, KeyPartsECDSA::PublicKey, key.Public);
 	GetKeyPart(prvStr, KeyPartsECDSA::PrivateKey, key.Private);
@@ -630,7 +667,7 @@ Util::Error KeyStorage::GetECDSAKey(AppID_t appID, KeyID_t keyID, ECDSAKey& key)
 	if (key.Public.length() == 0 && key.Private.length() > 0) {
 
 		key.Public = bstr(prvStr.uint8Data() + prvStr.length(), 0, prvStr.free_space());
-		err = ECDSACalcPublicKey(key.Private, key.Public);
+		auto err = cryptolib.ECDSACalcPublicKey(key.CurveId, key.Private, key.Public);
 		if (err != Util::Error::NoError)
 			return err;
 	}
