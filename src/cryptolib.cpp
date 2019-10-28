@@ -692,6 +692,7 @@ Util::Error CryptoLib::ECDHComputeShared(ECDSAKey key, bstr anotherPublicKey, bs
 			break;
 		}
 
+		// save z
 		size_t mpi_len = mbedtls_mpi_size(&z);
 		if (mbedtls_mpi_write_binary(&z, sharedSecret.uint8Data(), mpi_len)) {
 			ret = Util::Error::CryptoOperationError;
