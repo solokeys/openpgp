@@ -15,6 +15,7 @@
 #include <mbedtls/havege.h>
 #include <mbedtls/entropy.h>
 #include <mbedtls/ctr_drbg.h>
+#include "mbedtls/ecdh.h"
 
 #include <string.h>
 
@@ -460,6 +461,11 @@ Util::Error CryptoLib::ECDSASign(ECDSAKey key, bstr data, bstr& signature) {
 			break;
 		}
 
+		if (mbedtls_ecp_check_privkey(&ctx.grp, &ctx.d)) {
+			ret = Util::Error::CryptoDataError;
+			break;
+		}
+
 		if (mbedtls_ecdsa_sign(
 				&ctx.grp,
 				&r,
@@ -595,6 +601,7 @@ Util::Error CryptoLib::ECDSACalcPublicKey(ECDSAaid curveID, bstr privateKey, bst
 			ret = Util::Error::CryptoDataError;
 			break;
 		}
+
 		publicKey.set_length(point_len);
 		break;
 	}
@@ -608,6 +615,100 @@ Util::Error CryptoLib::ECDSACalcPublicKey(ECDSAaid curveID, bstr privateKey, bst
 Util::Error CryptoLib::ECDSAVerify(ECDSAKey key, bstr data,
 		bstr signature) {
 	return Util::Error::InternalError;
+}
+
+Util::Error CryptoLib::ECDHComputeShared(ECDSAKey key, bstr anotherPublicKey, bstr &sharedSecret) {
+
+	sharedSecret.clear();
+
+	mbedtls_ecdh_context ctx;
+	mbedtls_ecp_point anotherQ;
+	mbedtls_mpi z;
+	mbedtls_entropy_context entropy;
+	mbedtls_ctr_drbg_context ctr_drbg;
+	const char *pers = "ecdsa solokeys ecdh";
+
+	mbedtls_ecdh_init(&ctx);
+	mbedtls_entropy_init(&entropy);
+	mbedtls_ctr_drbg_init(&ctr_drbg);
+	mbedtls_ecp_point_init(&anotherQ);
+	mbedtls_mpi_init(&z);
+
+	Util::Error ret = Util::Error::InternalError;
+
+	while (true) {
+		// init random
+		if (mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy, (const unsigned char *)pers, strlen(pers))) {
+			ret = Util::Error::CryptoOperationError;
+			break;
+		}
+
+		// load keys
+		if (mbedtls_ecp_group_load(&ctx.grp, MbedtlsCurvefromAid(key.CurveId))) {
+			ret = Util::Error::StoredKeyError;
+			break;
+		}
+
+		if (mbedtls_mpi_read_binary(&ctx.d, key.Private.uint8Data(), key.Private.length())) {
+			ret = Util::Error::StoredKeyError;
+			break;
+		}
+
+		if (mbedtls_ecp_point_read_binary(&ctx.grp, &ctx.Q, key.Public.uint8Data(), key.Public.length())) {
+			ret = Util::Error::StoredKeyError;
+			break;
+		}
+
+		if (mbedtls_ecp_point_read_binary(&ctx.grp, &anotherQ, anotherPublicKey.uint8Data(), anotherPublicKey.length())) {
+			ret = Util::Error::StoredKeyError;
+			break;
+		}
+
+		// check all
+		if (mbedtls_ecp_check_pubkey(&ctx.grp, &anotherQ)) {
+			ret = Util::Error::StoredKeyError;
+			break;
+		}
+
+		if (mbedtls_ecp_check_pubkey(&ctx.grp, &ctx.Q)) {
+			ret = Util::Error::StoredKeyError;
+			break;
+		}
+
+		if (mbedtls_ecp_check_privkey(&ctx.grp, &ctx.d)) {
+			ret = Util::Error::StoredKeyError;
+			break;
+		}
+
+		// calc
+		if (mbedtls_ecdh_compute_shared(
+				&ctx.grp,
+				&z,
+				&ctx.Q,
+				&ctx.d,
+				mbedtls_ctr_drbg_random,
+				&ctr_drbg) ) {
+			ret = Util::Error::CryptoOperationError;
+			break;
+		}
+
+		size_t mpi_len = mbedtls_mpi_size(&z);
+		if (mbedtls_mpi_write_binary(&z, sharedSecret.uint8Data(), mpi_len)) {
+			ret = Util::Error::CryptoOperationError;
+			break;
+		}
+		sharedSecret.set_length(mpi_len);
+
+		ret = Util::Error::NoError;
+		break;
+	}
+
+	mbedtls_entropy_free(&entropy);
+	mbedtls_ctr_drbg_free(&ctr_drbg);
+	mbedtls_mpi_free(&z);
+	mbedtls_ecp_point_free(&anotherQ);
+	mbedtls_ecdh_free(&ctx);
+	return ret;
 }
 
 bool KeyStorage::KeyExists(AppID_t appID, KeyID_t keyID) {

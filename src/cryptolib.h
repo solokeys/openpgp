@@ -225,6 +225,7 @@ public:
 	Util::Error ECDSACalcPublicKey(ECDSAaid curveID, bstr privateKey, bstr &publicKey);
 	Util::Error ECDSASign(ECDSAKey key, bstr data, bstr &signature);
 	Util::Error ECDSAVerify(ECDSAKey key, bstr data, bstr signature);
+	Util::Error ECDHComputeShared(ECDSAKey key, bstr anotherPublicKey, bstr &sharedSecret);
 };
 
 class KeyStorage {
