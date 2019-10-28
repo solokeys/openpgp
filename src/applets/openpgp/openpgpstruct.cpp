@@ -187,8 +187,7 @@ Util::Error AlgoritmAttr::Decode(KeyID_t key_id) {
 		}
 		ECDSAa.OID = data.substr(1, data.length() - 1 - keyFormatLen);
 
-		if (Crypto::MbedtlsCurvefromOID(ECDSAa.OID) == MBEDTLS_ECP_DP_NONE ||
-			key_id == 0xc2)
+		if (Crypto::MbedtlsCurvefromOID(ECDSAa.OID) == MBEDTLS_ECP_DP_NONE)
 			return Util::Error::WrongData;
 
 		return Util::Error::NoError;
