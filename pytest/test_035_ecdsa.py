@@ -94,10 +94,8 @@ class Test_ECDSA(object):
         pk_info = get_pk_info(pk)
 
         mySharedSecret = ecdsa_keys.ecdh(ECDSAcurve, myPrivateKey.to_string(), pk_info[0])
-        print("mySharedSecret", mySharedSecret.hex())
 
         sharedSecret = card.cmd_pso(0x80, 0x86, myPublicKeyTLV)
-        print("sharedSecret", sharedSecret.hex())
 
         assert sharedSecret == mySharedSecret
 
