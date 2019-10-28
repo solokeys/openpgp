@@ -129,6 +129,10 @@ def ecdh(ecdsa_curve, PrivateKey, PublicKey):
         # double
         acc = acc.double()
         pk_mul >>= 1
-    return ecdsa.ecdsa.int_to_string(result.x())
+    res = ecdsa.ecdsa.int_to_string(result.x())
+    delta = curve.baselen - len(res)
+    if delta > 0:
+        res = b"\x00" * delta + res
+    return res
 
 
