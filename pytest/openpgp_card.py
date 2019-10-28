@@ -383,19 +383,12 @@ class OpenPGP_Card(object):
             data = b'\xb8\x00'
         else:
             data = b'\xa4\x00'
+
         if self.__reader.is_tpdu_reader():
-            cmd_data = iso7816_compose(0x47, 0x80, 0, data, le=512)
+            pk = self.send_apdu(0x47, 0x80, 0, data, le=256)
         else:
-            cmd_data = iso7816_compose(0x47, 0x80, 0, data)
-        sw = self.__reader.send_cmd(cmd_data)
-        if len(sw) < 2:
-            raise ValueError(sw)
-        if sw[-2] == 0x61:
-            pk = self.cmd_get_response(sw[1])
-        elif sw[-2] == 0x90 and sw[-1] == 0x00:
-            pk = sw
-        else:
-            raise ValueError("%02x%02x" % (sw[0], sw[1]))
+            pk = self.send_apdu(0x47, 0x80, 0, data)
+
         return get_pk_info(pk)
 
     def cmd_get_public_key(self, keyno):
@@ -405,22 +398,12 @@ class OpenPGP_Card(object):
             data = b'\xb8\x00'
         else:
             data = b'\xa4\x00'
+
         if self.__reader.is_tpdu_reader():
-            cmd_data = iso7816_compose(0x47, 0x81, 0, data, le=512)
+            return self.send_apdu(0x47, 0x81, 0, data, le=256)
         else:
-            cmd_data = iso7816_compose(0x47, 0x81, 0, data)
-        r = self.__reader.send_cmd(cmd_data)
-        if len(r) < 2:
-            raise ValueError(r)
-        sw = r[-2:]
-        r = r[0:-2]
-        if sw[0] == 0x61:
-            pk = self.cmd_get_response(sw[1])
-        elif sw[0] == 0x90 and sw[1] == 0x00:
-            pk = r
-        else:
-            raise ValueError("%02x%02x" % (sw[0], sw[1]))
-        return pk
+            return self.send_apdu(0x47, 0x81, 0, data)
+
 
     def cmd_put_data_remove(self, tagh, tagl):
         cmd_data = iso7816_compose(0xda, tagh, tagl, b"")
