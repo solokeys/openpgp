@@ -695,7 +695,7 @@ Util::Error CryptoLib::ECDHComputeShared(ECDSAKey key, bstr anotherPublicKey, bs
 		// save z
 		size_t mpi_len = mbedtls_mpi_size(&z);
 		if (mbedtls_mpi_write_binary(&z, sharedSecret.uint8Data(), mpi_len)) {
-			ret = Util::Error::CryptoOperationError;
+			ret = Util::Error::CryptoDataError;
 			break;
 		}
 		sharedSecret.set_length(mpi_len);
@@ -1161,9 +1161,6 @@ Util::Error CryptoEngine::ECDSASign(AppID_t appID, KeyID_t keyID,
 	printf("------------ key ------------\n");
 	key.Print();
 
-	dump_hex(key.Private);
-	dump_hex(key.Public);
-
 	return cryptoLib.ECDSASign(key, data, signature);
 }
 
@@ -1171,6 +1168,19 @@ Util::Error CryptoEngine::ECDSAVerify(AppID_t appID, KeyID_t keyID,
 		bstr data, bstr signature) {
 	return Util::Error::InternalError;
 }
+
+Util::Error CryptoEngine::ECDHComputeShared(AppID_t appID, KeyID_t keyID, bstr anotherPublicKey, bstr &sharedSecret) {
+	ECDSAKey key;
+	auto err = keyStorage.GetECDSAKey(appID, keyID, key);
+	if (err != Util::Error::NoError)
+		return err;
+
+	printf("------------ key ------------\n");
+	key.Print();
+
+	return cryptoLib.ECDHComputeShared(key, anotherPublicKey, sharedSecret);
+}
+
 
 } // namespace Crypto
 

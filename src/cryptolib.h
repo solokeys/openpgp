@@ -268,6 +268,7 @@ public:
 
 	Util::Error ECDSASign(AppID_t appID, KeyID_t keyID, bstr data, bstr &signature);
 	Util::Error ECDSAVerify(AppID_t appID, KeyID_t keyID, bstr data, bstr signature);
+	Util::Error ECDHComputeShared(AppID_t appID, KeyID_t keyID, bstr anotherPublicKey, bstr &sharedSecret);
 
 	CryptoLib &getCryptoLib() {
 		return cryptoLib;
