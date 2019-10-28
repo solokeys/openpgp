@@ -80,6 +80,13 @@ def calc_fpr_ecdsa(n):
     fpr = sha1(m).digest()
     return fpr, timestamp_data
 
+def generate_key_ecdsa(ecdsa_curve):
+    curve = find_curve_oid_hex(ecdsa_curve)
+    assert not(curve is None)
+    PrivateKey = ecdsa.SigningKey.generate(curve, hashfunc=sha256)
+    PublicKey = PrivateKey.get_verifying_key()
+    return PublicKey, PrivateKey
+
 def build_privkey_template_ecdsa(openpgp_keyno, ecdsa_curve):
     if openpgp_keyno == 1:
         keyspec = 0xb6
@@ -88,10 +95,7 @@ def build_privkey_template_ecdsa(openpgp_keyno, ecdsa_curve):
     else:
         keyspec = 0xa4
 
-    curve = find_curve_oid_hex(ecdsa_curve)
-    assert not(curve is None)
-    PrivateKey = ecdsa.SigningKey.generate(curve, hashfunc=sha256)
-    PublicKey = PrivateKey.get_verifying_key()
+    PublicKey, PrivateKey = generate_key_ecdsa(ecdsa_curve)
     return create_ecdsa_4D_key(keyspec, PrivateKey.to_string(), b"\x04" + PublicKey.to_string())
 
 def compute_digestinfo_ecdsa(msg):
@@ -103,4 +107,28 @@ def verify_signature_ecdsa(pk_info, digest, sig, ecdsa_curve):
     assert not(curve is None)
     vk = ecdsa.VerifyingKey.from_string(pk_info[1:], curve=curve, hashfunc=sha256)
     return vk.verify_digest(sig, digest)
+
+def ecdh(ecdsa_curve, PrivateKey, PublicKey):
+    curve = find_curve_oid_hex(ecdsa_curve)
+    assert not(curve is None)
+
+    pub = ecdsa.VerifyingKey.from_string(PublicKey[1:], curve=curve, hashfunc=sha256)
+    prv = ecdsa.SigningKey.from_string(PrivateKey, curve=curve, hashfunc=sha256)
+
+    result = None
+    acc = pub.pubkey.point
+    pk_mul = prv.privkey.secret_multiplier
+
+    while pk_mul:
+        if pk_mul & 1:
+            # add
+            if result is None:
+                result = acc
+            else:
+                result = acc.__add__(result)
+        # double
+        acc = acc.double()
+        pk_mul >>= 1
+    return ecdsa.ecdsa.int_to_string(result.x())
+
 

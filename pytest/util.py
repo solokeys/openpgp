@@ -44,6 +44,17 @@ def create_ecdsa_4D_key(KeyType, PrivateKey, PublicKey):
     return ktlv.encode()
 
 
+def ecdh_public_key_encode(PublicKey):
+    ktlv = TLV(b"\xa6\x00")
+    elm = ktlv.search(0xa6)
+
+    elm.append(0x7f49, b"")
+    elm = ktlv.search(0x7f49)
+    elm.append(0x86, PublicKey)
+    #ktlv.show()
+    return ktlv.encode()
+
+
 def check_extended_capabilities(data):
     return match(b'[\x70\x74\x75\x7f]\x00\x00[\x20\x40\x80][\x00\x04\x08\x10]\x00[\x00\x01]\xff\x01\x00', data)
 

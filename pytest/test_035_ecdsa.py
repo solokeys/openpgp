@@ -44,10 +44,19 @@ class Test_ECDSA(object):
         assert card.cmd_put_data(0x00, 0xc4, b"\x01")
 
         assert card.set_ecdsa_algorithm_attributes(CryptoAlg.Signature.value, ECDSAcurve)
+        assert card.set_ecdsa_algorithm_attributes(CryptoAlg.Decryption.value, ECDSAcurve) # ECDH
         assert card.set_ecdsa_algorithm_attributes(CryptoAlg.Authentication.value, ECDSAcurve)
 
     def test_keygen_1(self, card, ECDSAcurve):
         pk = card.cmd_genkey(1)
+        fpr_date = ecdsa_keys.calc_fpr_ecdsa(pk[0])
+        r = card.cmd_put_data(0x00, 0xc7, fpr_date[0])
+        if r:
+            r = card.cmd_put_data(0x00, 0xce, fpr_date[1])
+        assert r
+
+    def test_keygen_2(self, card, ECDSAcurve):
+        pk = card.cmd_genkey(2)
         fpr_date = ecdsa_keys.calc_fpr_ecdsa(pk[0])
         r = card.cmd_put_data(0x00, 0xc7, fpr_date[0])
         if r:
@@ -76,6 +85,21 @@ class Test_ECDSA(object):
 
     def test_verify_pw1_82(self, card, ECDSAcurve):
         assert card.verify(2, FACTORY_PASSPHRASE_PW1)
+
+    def test_authkey_ecdh(self, card, ECDSAcurve):
+        myPublicKey, myPrivateKey = ecdsa_keys.generate_key_ecdsa(ECDSAcurve)
+        myPublicKeyTLV = ecdh_public_key_encode(b"\x04" + myPublicKey.to_string())
+
+        pk = card.cmd_get_public_key(2)
+        pk_info = get_pk_info(pk)
+
+        mySharedSecret = ecdsa_keys.ecdh(ECDSAcurve, myPrivateKey.to_string(), pk_info[0])
+        print("mySharedSecret", mySharedSecret.hex())
+
+        sharedSecret = card.cmd_pso(0x80, 0x86, myPublicKeyTLV)
+        print("sharedSecret", sharedSecret.hex())
+
+        assert sharedSecret == mySharedSecret
 
     def test_signature_authkey(self, card, ECDSAcurve):
         msg = b"Sign me please to authenticate"
@@ -114,7 +138,7 @@ class Test_ECDSA(object):
         r = ecdsa_keys.verify_signature_ecdsa(pk_info[0], digest, sig, ECDSAcurve)
         assert r
 
-    def test_verify_reset(self, card, ECDSAcurve):
+    def ppptest_verify_reset(self, card, ECDSAcurve):
         assert card.cmd_verify_reset(1)
         assert card.cmd_verify_reset(2)
         assert card.cmd_verify_reset(3)
