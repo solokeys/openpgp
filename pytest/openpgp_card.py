@@ -346,18 +346,12 @@ class OpenPGP_Card(object):
             if len(res) < 2:
                 raise ValueError(res)
             sw = res[-2:]
-            if not (sw[0] == 0x90 and sw[1] == 0x00):
+            if not (sw[0] == 0x61) and not (sw[0] == 0x90 and sw[1] == 0x00):
                 raise ValueError("%02x%02x" % (sw[0], sw[1]))
             result += res[:-2]
 
-        while sw[0] == 0x61:
-            res = self.cmd_get_response(sw[1] if sw[1] != 0 else 0xff)
-            if len(res) < 2:
-                raise ValueError(res)
-            sw = res[-2:]
-            if not (sw[0] == 0x90 and sw[1] == 0x00):
-                raise ValueError("out chaining %02x%02x" % (sw[0], sw[1]))
-            result += res[:-2]
+        if sw[0] == 0x61:
+            result = result + self.cmd_get_response(sw[1] if sw[1] != 0 else 0xff)
 
         return result
 
