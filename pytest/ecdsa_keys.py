@@ -115,20 +115,9 @@ def ecdh(ecdsa_curve, PrivateKey, PublicKey):
     pub = ecdsa.VerifyingKey.from_string(PublicKey[1:], curve=curve, hashfunc=sha256)
     prv = ecdsa.SigningKey.from_string(PrivateKey, curve=curve, hashfunc=sha256)
 
-    result = None
-    acc = pub.pubkey.point
-    pk_mul = prv.privkey.secret_multiplier
+    # shared secret = PUBtheirs * PRIVATEours
+    result = pub.pubkey.point * prv.privkey.secret_multiplier
 
-    while pk_mul:
-        if pk_mul & 1:
-            # add
-            if result is None:
-                result = acc
-            else:
-                result = acc.__add__(result)
-        # double
-        acc = acc.double()
-        pk_mul >>= 1
     res = ecdsa.ecdsa.int_to_string(result.x())
     delta = curve.baselen - len(res)
     if delta > 0:
