@@ -19,7 +19,7 @@ from binascii import hexlify
     params=[
         ECDSACurves.ansix9p256r1,
         ECDSACurves.ansix9p384r1,
-        #ECDSACurves.ansix9p521r1,
+        ECDSACurves.ansix9p521r1,
         ECDSACurves.brainpoolP256r1,
         ECDSACurves.brainpoolP384r1,
         ECDSACurves.brainpoolP512r1,
@@ -27,7 +27,7 @@ from binascii import hexlify
     ids=[
         "ansix9p256r1",
         "ansix9p384r1",
-        #"ansix9p521r1",
+        "ansix9p521r1",
         "brainpoolP256r1",
         "brainpoolP384r1",
         "brainpoolP512r1",

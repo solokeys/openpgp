@@ -359,7 +359,7 @@ Util::Error CryptoLib::RSAVerify(bstr publicKey, bstr data, bstr signature) {
 	return Util::Error::InternalError;
 }
 
-static int ecdsa_init(mbedtls_ecdsa_context *ctx, mbedtls_ecp_group_id curveID, uint8_t *key_d, uint8_t *key_xy) {
+static int ecdsa_init(mbedtls_ecdsa_context *ctx, mbedtls_ecp_group_id curveID, bstr *key_d, bstr *key_xy) {
 	if (!ctx)
 		return 1;
 
@@ -370,15 +370,14 @@ static int ecdsa_init(mbedtls_ecdsa_context *ctx, mbedtls_ecp_group_id curveID, 
 	if (res)
 		return res;
 
-	size_t keylen = (ctx->grp.nbits + 7 ) / 8;
-	if (key_d) {
-		res = mbedtls_mpi_read_binary(&ctx->d, key_d, keylen);
+	if (key_d && key_d->length() > 0) {
+		res = mbedtls_mpi_read_binary(&ctx->d, key_d->uint8Data(), key_d->length());
 		if (res)
 			return res;
 	}
 
-	if (key_xy) {
-		res = mbedtls_ecp_point_read_binary(&ctx->grp, &ctx->Q, key_xy, keylen * 2 + 1);
+	if (key_xy && key_xy->length() > 0) {
+		res = mbedtls_ecp_point_read_binary(&ctx->grp, &ctx->Q, key_xy->uint8Data(), key_xy->length());
 		if (res)
 			return res;
 	}
@@ -418,6 +417,7 @@ Util::Error CryptoLib::ECDSAGenKey(ECDSAaid curveID, ECDSAKey& keyOut) {
 		keyOut.CurveId = curveID;
 	    AppendKeyPart(KeyBuffer, keyOut.Private, &ctx.d);
 	    AppendKeyPartEcpPoint(KeyBuffer, keyOut.Public,  &ctx.grp, &ctx.Q);
+	    keyOut.Print();
 
 		err =  Util::Error::NoError;
 		break;
@@ -455,7 +455,7 @@ Util::Error CryptoLib::ECDSASign(ECDSAKey key, bstr data, bstr& signature) {
 			break;
 		}
 
-		if (ecdsa_init(&ctx, MbedtlsCurvefromAid(key.CurveId), key.Private.uint8Data(), key.Public.uint8Data())) {
+		if (ecdsa_init(&ctx, MbedtlsCurvefromAid(key.CurveId), &key.Private, &key.Public)) {
 			ret = Util::Error::CryptoDataError;
 			break;
 		}
@@ -473,19 +473,26 @@ Util::Error CryptoLib::ECDSASign(ECDSAKey key, bstr data, bstr& signature) {
 			break;
 		}
 
-		size_t mpi_len = mbedtls_mpi_size(&r);
-		if (mbedtls_mpi_write_binary(&r, signature.uint8Data(), mpi_len)) {
+		size_t alg_len = (ctx.grp.nbits + 7) / 8;
+		if (alg_len < mbedtls_mpi_size(&r)) {
+			ret =  Util::Error::CryptoOperationError;
+			break;
+		}
+		if (mbedtls_mpi_write_binary(&r, signature.uint8Data() + signature.length(), alg_len)) {
 			ret = Util::Error::CryptoDataError;
 			break;
 		}
-		signature.set_length(mpi_len);
+		signature.set_length(signature.length() + alg_len);
 
-		mpi_len = mbedtls_mpi_size(&s);
-		if (mbedtls_mpi_write_binary(&s, signature.uint8Data() + signature.length(), mpi_len)) {
+		if (alg_len < mbedtls_mpi_size(&s)) {
+			ret =  Util::Error::CryptoOperationError;
+			break;
+		}
+		if (mbedtls_mpi_write_binary(&s, signature.uint8Data() + signature.length(), alg_len)) {
 			ret = Util::Error::CryptoDataError;
 			break;
 		}
-		signature.set_length(signature.length() + mpi_len);
+		signature.set_length(signature.length() + alg_len);
 
 		ret =  Util::Error::NoError;
 		break;
@@ -561,7 +568,7 @@ Util::Error CryptoLib::ECDSACalcPublicKey(ECDSAaid curveID, bstr privateKey, bst
 			break;
 		}
 
-		if (ecdsa_init(&ctx, MbedtlsCurvefromAid(curveID), privateKey.uint8Data(), NULL)) {
+		if (ecdsa_init(&ctx, MbedtlsCurvefromAid(curveID), &privateKey, NULL)) {
 			ret = Util::Error::CryptoDataError;
 			break;
 		}
@@ -665,11 +672,12 @@ Util::Error KeyStorage::GetECDSAKey(AppID_t appID, KeyID_t keyID, ECDSAKey& key)
 	GetKeyPart(prvStr, KeyPartsECDSA::PrivateKey, key.Private);
 
 	if (key.Public.length() == 0 && key.Private.length() > 0) {
-
+		printf("Generate public key from private.\n");
 		key.Public = bstr(prvStr.uint8Data() + prvStr.length(), 0, prvStr.free_space());
 		auto err = cryptolib.ECDSACalcPublicKey(key.CurveId, key.Private, key.Public);
 		if (err != Util::Error::NoError)
 			return err;
+		prvStr.set_length(prvStr.length() + key.Public.length());
 	}
 
 	return Util::Error::NoError;
@@ -804,16 +812,14 @@ Util::Error KeyStorage::PutECDSAFullKey(AppID_t appID, KeyID_t keyID, ECDSAKey k
 
 Util::Error KeyStorage::GetKeyPart(bstr dataIn, Util::tag_t keyPart,
 		bstr& dataOut) {
-	dataOut.set_length(0);
+	dataOut.clear();
 
 	using namespace Util;
 
 	TLVTree tlv;
 	auto err = tlv.Init(dataIn);
-	if (err != Util::Error::NoError) {
-		dataIn.clear();
+	if (err != Util::Error::NoError)
 		return err;
-	}
 
 	TLVElm *eheader = tlv.Search(0x7f48);
 	if (!eheader || eheader->Length() == 0)
@@ -823,10 +829,8 @@ Util::Error KeyStorage::GetKeyPart(bstr dataIn, Util::tag_t keyPart,
 
 	DOL dol;
 	err = dol.Init(header);
-	if (err != Util::Error::NoError) {
-		dataIn.clear();
+	if (err != Util::Error::NoError)
 		return err;
-	}
 
 	TLVElm *edata = tlv.Search(0x5f48);
 	if (!edata || edata->Length() == 0)
@@ -1054,6 +1058,9 @@ Util::Error CryptoEngine::ECDSASign(AppID_t appID, KeyID_t keyID,
 
 	printf("------------ key ------------\n");
 	key.Print();
+
+	dump_hex(key.Private);
+	dump_hex(key.Public);
 
 	return cryptoLib.ECDSASign(key, data, signature);
 }
