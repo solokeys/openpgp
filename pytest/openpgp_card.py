@@ -333,11 +333,14 @@ class OpenPGP_Card(object):
         return True
 
     def send_apdu(self, ins, p1, p2, data, le=0):
+        if len(data) == 0:
+            return None
+
         senddata = data
         result = b""
         sw = b""
         while senddata != b"":
-            cmd_res = iso7816_compose(0x2a, p1, p2, senddata[:128], 0x10 if len(senddata) >= 128 else 0x00)
+            cmd_res = iso7816_compose(ins, p1, p2, senddata[:128], 0x10 if len(senddata) >= 128 else 0x00)
             senddata = senddata[128:]
             res = self.__reader.send_cmd(cmd_res)
             if len(res) < 2:
@@ -367,26 +370,11 @@ class OpenPGP_Card(object):
 
 
     def cmd_internal_authenticate(self, data):
-        #if self.__reader.is_tpdu_reader():
-        #    return self.send_apdu(0x88, 0, 0, data, le=256)
-        #else:
-        #    return self.send_apdu(0x88, 0, 0, data)
-
         if self.__reader.is_tpdu_reader():
-            cmd_data = iso7816_compose(0x88, 0, 0, data, le=256)
+            return self.send_apdu(0x88, 0, 0, data, le=256)
         else:
-            cmd_data = iso7816_compose(0x88, 0, 0, data)
-        r = self.__reader.send_cmd(cmd_data)
-        if len(r) < 2:
-            raise ValueError(r)
-        sw = r[-2:]
-        r = r[0:-2]
-        if sw[0] == 0x61:
-            return self.cmd_get_response(sw[1])
-        elif sw[0] == 0x90 and sw[1] == 0x00:
-            return r
-        else:
-            raise ValueError("%02x%02x" % (sw[0], sw[1]))
+            return self.send_apdu(0x88, 0, 0, data)
+
 
     def cmd_genkey(self, keyno):
         if keyno == 1:
