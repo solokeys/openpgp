@@ -118,10 +118,7 @@ def ecdh(ecdsa_curve, PrivateKey, PublicKey):
     # shared secret = PUBtheirs * PRIVATEours
     result = pub.pubkey.point * prv.privkey.secret_multiplier
 
-    res = ecdsa.ecdsa.int_to_string(result.x())
-    delta = curve.baselen - len(res)
-    if delta > 0:
-        res = b"\x00" * delta + res
-    return res
+    shared_secret = ecdsa.util.number_to_string(result.x(), curve.order)
+    return shared_secret
 
 
