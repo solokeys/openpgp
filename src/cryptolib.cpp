@@ -684,7 +684,7 @@ Util::Error CryptoLib::ECDHComputeShared(ECDSAKey key, bstr anotherPublicKey, bs
 		if (mbedtls_ecdh_compute_shared(
 				&ctx.grp,
 				&z,
-				&ctx.Q,
+				&anotherQ,
 				&ctx.d,
 				mbedtls_ctr_drbg_random,
 				&ctr_drbg) ) {
@@ -693,12 +693,12 @@ Util::Error CryptoLib::ECDHComputeShared(ECDSAKey key, bstr anotherPublicKey, bs
 		}
 
 		// save z
-		size_t mpi_len = mbedtls_mpi_size(&z);
-		if (mbedtls_mpi_write_binary(&z, sharedSecret.uint8Data(), mpi_len)) {
+		size_t alg_len = (ctx.grp.nbits + 7) / 8;
+		if (mbedtls_mpi_write_binary(&z, sharedSecret.uint8Data(), alg_len)) {
 			ret = Util::Error::CryptoDataError;
 			break;
 		}
-		sharedSecret.set_length(mpi_len);
+		sharedSecret.set_length(alg_len);
 
 		ret = Util::Error::NoError;
 		break;

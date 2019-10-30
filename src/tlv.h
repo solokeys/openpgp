@@ -19,7 +19,7 @@ namespace Util {
 
 using tag_t = uint32_t;
 
-static const std::array<tag_t, 10> ConstructedTagsList = {
+static const std::array<tag_t, 11> ConstructedTagsList = {
 	0x65,
 	0x6e,
 	0x73,
@@ -32,6 +32,7 @@ static const std::array<tag_t, 10> ConstructedTagsList = {
 
 	0x4d,
 
+	0xa6,
 	0x7f49  // key structure response
 };
 

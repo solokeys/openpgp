@@ -9,6 +9,7 @@
 
 #include <applets/openpgp/security.h>
 #include "cryptoapdu.h"
+#include "tlv.h"
 #include "applets/apduconst.h"
 #include "solofactory.h"
 #include "applets/openpgp/openpgpfactory.h"
@@ -312,10 +313,7 @@ Util::Error APDUPSO::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 			if (alg.AlgorithmID == Crypto::AlgoritmID::RSA) {
 				err = crypto_e.RSADecipher(File::AppletID::OpenPGP, OpenPGPKeyType::Confidentiality, data.substr(1, data.length() - 1), dataOut);
 			} else {
-				// decipher not possible for ECDSA
 				return Util::Error::ConditionsNotSatisfied;
-
-				// TODO: decipher for ECDH
 			}
 		}
 
@@ -332,7 +330,23 @@ Util::Error APDUPSO::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 
 		// ECDH. OpenPGP 3.3.1 page 59
 		if (data[0] == 0xa6) {
-			return Util::Error::CryptoOperationError;
+			// data - a6 - 7f49 - 86
+			using namespace Util;
+
+			TLVTree tlv;
+			auto err = tlv.Init(data);
+			if (err != Util::Error::NoError)
+				return err;
+
+			TLVElm *tlvpk = tlv.Search(0x86);
+			if (!tlvpk || tlvpk->Length() == 0)
+				return Util::Error::CryptoDataError;
+
+			err = crypto_e.ECDHComputeShared(File::AppletID::OpenPGP, OpenPGPKeyType::Confidentiality, tlvpk->GetData(), dataOut);
+			if (err != Util::Error::NoError)
+				return err;
+
+			return Util::Error::NoError;
 		}
 
 		if (err != Util::Error::NoError)
