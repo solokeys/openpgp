@@ -84,6 +84,10 @@ class Test_Card_Personalize_Card(object):
         assert match(b'\x01...\x03[\x00\x03]\x03', s, DOTALL)
 
     @mark.parametrize('do', [0xc1, 0xc2, 0xc3])
+    def test_algorithm_attributes_ecdsa(self, card, do):
+        assert card.cmd_put_data(0x00, do, b'\x13\x2B\x24\x03\x03\x02\x08\x01\x01\x0D')
+
+    @mark.parametrize('do', [0xc1, 0xc2, 0xc3])
     def test_algorithm_attributes_fail(self, card, do):
         try:
             card.cmd_put_data(0x00, do, b'\x02\x08\x00\x00\x20\x00')
@@ -102,15 +106,6 @@ class Test_Card_Personalize_Card(object):
             assert False
         except ValueError:
             pass
-
-        if do == 0xc2:
-            try:
-                assert card.cmd_put_data(0x00, do, b'\x13\x2B\x24\x03\x03\x02\x08\x01\x01\x0D')
-                assert False
-            except ValueError:
-                pass
-        else:
-            assert card.cmd_put_data(0x00, do, b'\x13\x2B\x24\x03\x03\x02\x08\x01\x01\x0D')
 
         assert card.cmd_put_data(0x00, do, b'\x01\x08\x00\x00\x20\x00')
 
