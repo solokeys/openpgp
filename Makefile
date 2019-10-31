@@ -1,6 +1,7 @@
 CC = g++
 RM = rm -rf
 
+
 rwildcard=$(wildcard $1$2) $(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2))
 
 OBJ_DIR := ./obj
@@ -12,21 +13,26 @@ SRC_FILES := $(sort $(foreach var, $(SRC_DIRS), $(wildcard $(var)/*.cpp)))
 OBJ_FILES := $(patsubst %.cpp, $(OBJ_DIR)/%.o, $(notdir $(SRC_FILES)))
 DEP_FILES = $(OBJ_FILES:.o=.d)
 
+
 INC = -I. -Ipc/ -Isrc/
 
-CPPFLAGS = -std=c++17 -O2 -Wall -g3 $(INC)
-LDFLAGS = -lmbedtls -lmbedcrypto -lmbedx509
+CPPFLAGS = -std=c++17 -Os -Wall -g3 $(INC)
+LDFLAGS = -Wl,-Bdynamic -lpthread
+
+LIBS=mbedtls.a
 
 TARGET=main
 
 $(OBJ_DIR)/%.o:  
 	$(CC) $(CPPFLAGS) -c -o $@ $(filter %/$(strip $(patsubst %.o, %.cpp, $(notdir $@))), $(SRC_FILES))
 
-all:  $(OBJ_FILES)
+all:  $(OBJ_FILES) $(LIBS)
 	$(CC) -o $(TARGET) $^ $(LDFLAGS)
 
+include mbedtls.mk
+
 clean:
-	$(RM) $(OBJ_FILES) $(DEP_FILES) $(TARGET)
+	$(RM) $(OBJ_FILES) $(DEP_FILES) $(TARGET) $(MBEDTLS_OBJ) mbedtls.a
 	
 testpy:
 	#cd ./pytest
