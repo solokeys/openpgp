@@ -14,11 +14,12 @@ _SRCS=aes.c asn1parse.c asn1write.c \
 MBEDTLS_SRCS := $(foreach var, $(_SRCS), $(MBEDTLS_DIR)$(var))
 
 MBEDTLS_INCLUDE= -Imbedtls/include/   -Imbedtls/include/mbedtls
+MBEDTLS_CONFIG= -I. -DMBEDTLS_CONFIG_FILE=\"mbedtls_config.h\"
 
 MBEDTLS_OBJ = $(MBEDTLS_SRCS:.c=.o)
 
 $(MBEDTLS_DIR)%.o:  $(MBEDTLS_DIR)%.c
-	gcc  $^ -o $@ $(MBEDTLS_INCLUDE) -c -Os -fdata-sections -ffunction-sections
+	gcc  $^ -o $@ $(MBEDTLS_INCLUDE) $(MBEDTLS_CONFIG) -c -Os -fdata-sections -ffunction-sections
 
 
 mbedtls.a: $(MBEDTLS_DIR) $(MBEDTLS_OBJ)
