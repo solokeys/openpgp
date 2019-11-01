@@ -7,7 +7,7 @@ _SRCS=aes.c asn1parse.c asn1write.c \
             ecp_curves.c entropy.c entropy_poll.c \
             havege.c md.c md2.c md4.c md5.c \
             md_wrap.c oid.c \
-            rsa_internal.c \
+            rsa_internal.c platform_util.c \
             sha1.c rsa.c sha256.c sha512.c
 
 # MBEDTLS_SRCS := $(patsubst %.cpp, $(OBJ_DIR)/%.cpp, $(notdir $(_SRCS)))
