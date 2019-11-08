@@ -14,12 +14,12 @@ OBJ_FILES := $(patsubst %.cpp, $(OBJ_DIR)/%.o, $(notdir $(SRC_FILES)))
 DEP_FILES = $(OBJ_FILES:.o=.d)
 
 
-INC = -I. -Ipc/ -Isrc/
+INC = -I. -Ipc/ -Isrc/ -Ilibs/mbedtls/ -Ilibs/mbedtls/mbedtls/crypto/include/
 
 CPPFLAGS = -std=c++17 -Os -Wall -g3 $(INC)
 LDFLAGS = -Wl,-Bdynamic -lpthread
 
-LIBS=mbedtls.a
+LIBS=libs/mbedtls/mbedtls.a
 
 TARGET=main
 
@@ -32,7 +32,7 @@ all:  $(OBJ_FILES) $(LIBS)
 include libs/mbedtls/mbedtls.mk
 
 clean:
-	$(RM) $(OBJ_FILES) $(DEP_FILES) $(TARGET) $(MBEDTLS_OBJ) mbedtls.a
+	$(RM) $(OBJ_FILES) $(DEP_FILES) $(TARGET) $(MBEDTLS_OBJ) $(MBEDTLS_A)
 	
 testpy:
 	#cd ./pytest
