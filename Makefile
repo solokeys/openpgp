@@ -29,7 +29,7 @@ $(OBJ_DIR)/%.o:
 all:  $(OBJ_FILES) $(LIBS)
 	$(CC) -o $(TARGET) $^ $(LDFLAGS)
 
-include mbedtls.mk
+include libs/mbedtls/mbedtls.mk
 
 clean:
 	$(RM) $(OBJ_FILES) $(DEP_FILES) $(TARGET) $(MBEDTLS_OBJ) mbedtls.a
