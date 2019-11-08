@@ -1,5 +1,5 @@
 
-MBEDTLS_DIR=mbedtls/library/
+MBEDTLS_DIR=./mbedtls/
 _SRCS=aes.c asn1parse.c asn1write.c \
             bignum.c \
             ccm.c cipher.c cipher_wrap.c ctr_drbg.c \
