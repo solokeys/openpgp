@@ -14,6 +14,13 @@
 #include <dirent.h>
 #include <fnmatch.h>
 
+#define SPIFFS_MODE
+
+#ifdef SPIFFS_MODE
+#include <spiffs.h>
+static spiffs fs;
+#endif
+
 int udp_server()
 {
     static int run_already = 0;
