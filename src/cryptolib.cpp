@@ -16,8 +16,10 @@
 #include <mbedtls/entropy.h>
 #include <mbedtls/ctr_drbg.h>
 #include "mbedtls/ecdh.h"
+#include "mbedtls/platform.h"
 
 #include <string.h>
+#include <stdlib.h>
 
 #include "tlv.h"
 #include "solofactory.h"
@@ -38,10 +40,14 @@ Util::Error CryptoLib::GenerateRandom(size_t length, bstr& dataOut) {
 	if (length > dataOut.max_size())
 		return Util::Error::OutOfMemory;
 
-	mbedtls_havege_state state;
-	mbedtls_havege_init(&state);
-	mbedtls_havege_random(nullptr, dataOut.uint8Data(), length);
-	mbedtls_havege_free(&state);
+	//mbedtls_havege_state state;
+	//mbedtls_havege_init(&state);
+	//mbedtls_havege_random(nullptr, dataOut.uint8Data(), length);
+	//mbedtls_havege_free(&state);
+	size_t i;
+	for (i=0; i<= length; i++){
+		dataOut.uint8Data()[i]	= rand();
+	}
 
 	dataOut.set_length(length);
 
@@ -368,6 +374,7 @@ static int ecdsa_init(mbedtls_ecdsa_context *ctx, mbedtls_ecp_group_id curveID, 
 
 	mbedtls_ecdsa_init(ctx);
 	res = mbedtls_ecp_group_load(&ctx->grp, curveID);
+
 	if (res)
 		return res;
 
@@ -406,14 +413,20 @@ Util::Error CryptoLib::ECDSAGenKey(ECDSAaid curveID, ECDSAKey& keyOut) {
 	mbedtls_ecp_group_id groupid = MbedtlsCurvefromAid(curveID);
 
 	while (true) {
-		if (ecdsa_init(&ctx, groupid, NULL, NULL))
+		if (ecdsa_init(&ctx, groupid, NULL, NULL)){
 			break;
+		}
+			
 
-		if (mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy, (const unsigned char *)pers, strlen(pers)))
-			break;
+		if (mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy, (const unsigned char *)pers, strlen(pers))) {
+			break;	
+		}
+			
 
-		if (mbedtls_ecdsa_genkey(&ctx, groupid, mbedtls_ctr_drbg_random, &ctr_drbg))
+		if (mbedtls_ecdsa_genkey(&ctx, groupid, mbedtls_ctr_drbg_random, &ctr_drbg)){
 			break;
+		}
+			
 
 		keyOut.CurveId = curveID;
 	    AppendKeyPart(KeyBuffer, keyOut.Private, &ctx.d);
@@ -627,14 +640,14 @@ Util::Error CryptoLib::ECDHComputeShared(ECDSAKey key, bstr anotherPublicKey, bs
 	mbedtls_entropy_context entropy;
 	mbedtls_ctr_drbg_context ctr_drbg;
 	const char *pers = "ecdsa solokeys ecdh";
+	Util::Error ret = Util::Error::InternalError;
 
 	mbedtls_ecdh_init(&ctx);
+
 	mbedtls_entropy_init(&entropy);
 	mbedtls_ctr_drbg_init(&ctr_drbg);
 	mbedtls_ecp_point_init(&anotherQ);
 	mbedtls_mpi_init(&z);
-
-	Util::Error ret = Util::Error::InternalError;
 
 	while (true) {
 		// init random
@@ -703,12 +716,16 @@ Util::Error CryptoLib::ECDHComputeShared(ECDSAKey key, bstr anotherPublicKey, bs
 		ret = Util::Error::NoError;
 		break;
 	}
+	
+	mbedtls_ecp_group_free(&ctx.grp);
+	mbedtls_ecdh_free(&ctx);
+
 
 	mbedtls_entropy_free(&entropy);
 	mbedtls_ctr_drbg_free(&ctr_drbg);
 	mbedtls_mpi_free(&z);
 	mbedtls_ecp_point_free(&anotherQ);
-	mbedtls_ecdh_free(&ctx);
+	
 	return ret;
 }
 
