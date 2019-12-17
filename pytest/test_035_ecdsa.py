@@ -18,19 +18,19 @@ from binascii import hexlify
 @pytest.fixture(
     params=[
         ECDSACurves.ansix9p256r1,
-        ECDSACurves.ansix9p384r1,
-        ECDSACurves.ansix9p521r1,
-        ECDSACurves.brainpoolP256r1,
-        ECDSACurves.brainpoolP384r1,
-        ECDSACurves.brainpoolP512r1,
+        # ECDSACurves.ansix9p384r1,
+        # ECDSACurves.ansix9p521r1,
+        # ECDSACurves.brainpoolP256r1,
+        # ECDSACurves.brainpoolP384r1,
+        # ECDSACurves.brainpoolP512r1,
         ECDSACurves.secp256k1],
     ids=[
         "ansix9p256r1",
-        "ansix9p384r1",
-        "ansix9p521r1",
-        "brainpoolP256r1",
-        "brainpoolP384r1",
-        "brainpoolP512r1",
+        # "ansix9p384r1",
+        # "ansix9p521r1",
+        # "brainpoolP256r1",
+        # "brainpoolP384r1",
+        # "brainpoolP512r1",
         "secp256k1"],
     scope="class")
 def ECDSAcurve(request):
