@@ -217,6 +217,36 @@ TEST(tlvTest, AddChildAddNextDel) {
     EXPECT_TRUE(tlv.GetDataLink() == "\x7f\x49\x0e\xf4\x08\x83\x00\x84\x04\x31\x32\x33\x34\x82\x02\x39\x38"_bstr);
 }
 
+TEST(tlvTest, AddChildAddNexBig) {
+    uint8_t _data[1024] = {0};
+    auto data = bstr(_data, 0, sizeof(_data));
+
+    TLVTree tlv;
+    auto err = tlv.Init(data);
+    EXPECT_TRUE(err != Error::NoError);
+
+    tlv.AddRoot(0x7f49);
+    EXPECT_EQ(tlv.CurrentElm().Tag(), 0x7f49);
+
+    //bstr test = "1234567890123456789012345678901234567890"_bstr;
+    bstr test = "1234"_bstr;
+    tlv.AddChild(0xf4);
+    tlv.AddChild(0x82, &test);
+
+    uint8_t _testlarge[0x7f];
+    memset(_testlarge, 0x11, sizeof(_testlarge));
+    auto testlarge = bstr(_testlarge, sizeof(_testlarge), sizeof(_testlarge));
+    tlv.AddNext(0x83, &testlarge);
+    
+    tlv.PrintTree();
+    
+    tlv.Search(0xf4);
+    EXPECT_EQ(tlv.CurrentElm().Tag(), 0xf4);
+    EXPECT_EQ(tlv.CurrentElm().Length(), 1 + 1 + testlarge.length() + 1 + 1 + test.length());
+    
+}
+
+
 TEST(tlvTest, DeleteCurrent) {
     uint8_t _data[50] = {0};
     auto data = bstr(_data, 0, sizeof(_data));
