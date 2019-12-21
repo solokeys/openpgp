@@ -21,6 +21,57 @@
 static spiffs fs;
 #endif
 
+#define LOG_PAGE_SIZE 64
+
+static u8_t spiffs_work_buf[LOG_PAGE_SIZE * 2];
+static u8_t spiffs_fds[32 * 4];
+static u8_t spiffs_cache_buf[(LOG_PAGE_SIZE + 32) * 4];
+
+static s32_t hw_spiffs_read(u32_t addr, u32_t size, u8_t *dst) {
+  //my_spi_read(addr, size, dst);
+  return SPIFFS_OK;
+}
+
+static s32_t hw_spiffs_write(u32_t addr, u32_t size, u8_t *src) {
+  //my_spi_write(addr, size, src);
+  return SPIFFS_OK;
+}
+
+static s32_t hw_spiffs_erase(u32_t addr, u32_t size) {
+  //my_spi_erase(addr, size);
+  return SPIFFS_OK;
+}
+
+void hw_spiffs_mount() {
+  spiffs_config cfg;
+  cfg.phys_size = 10*2048; // use all spi flash
+  cfg.phys_addr = 0;       // start spiffs at start of spi flash
+  cfg.phys_erase_block = 2048; // according to datasheet
+  cfg.log_block_size = 2048;   // let us not complicate things
+  cfg.log_page_size = LOG_PAGE_SIZE; // as we said
+
+  cfg.hal_read_f = hw_spiffs_read;
+  cfg.hal_write_f = hw_spiffs_write;
+  cfg.hal_erase_f = hw_spiffs_erase;
+
+  int res = SPIFFS_mount(&fs,
+    &cfg,
+    spiffs_work_buf,
+    spiffs_fds,
+    sizeof(spiffs_fds),
+    spiffs_cache_buf,
+    sizeof(spiffs_cache_buf),
+    0);
+  printf("mount res: %i\n", res);
+}
+
+int hwinit() {
+	hw_spiffs_mount();
+
+	return 0;
+}
+
+
 int udp_server()
 {
     static int run_already = 0;
