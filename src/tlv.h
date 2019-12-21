@@ -361,6 +361,7 @@ public:
 
 			// needs to move string's tail
 			if (header_length != new_len) {
+				//_data.moveTail(cur_elm_end_offset + delta_header_len, cdata.length());
 				uint8_t *elm_end = _elm[lvl].GetPtr() + header_length;
 				size_t elm_end_offset = _elm[lvl].GetPtr() - _data.uint8Data();
 				size_t move_data_len = _data.length() - elm_end_offset;
@@ -368,6 +369,7 @@ public:
 				//printf("elm_length %lu, new_len %lu, delta_size %d, move_data_len %lu\n",header_length, new_len, delta_size, move_data_len);
 				_data.set_length(_data.length() + delta_size);
 				memmove(elm_end + delta_size, elm_end, move_data_len);
+				offset += delta_size;
 			};
 			memmove(_elm[lvl].GetPtr(), _strdata, new_len);
 		}

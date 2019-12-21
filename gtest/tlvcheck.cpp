@@ -238,8 +238,6 @@ TEST(tlvTest, AddChildAddNexBig) {
     auto testlarge = bstr(_testlarge, sizeof(_testlarge), sizeof(_testlarge));
     tlv.AddNext(0x83, &testlarge);
     
-    tlv.PrintTree();
-    
     tlv.Search(0xf4);
     EXPECT_EQ(tlv.CurrentElm().Tag(), 0xf4);
     EXPECT_EQ(tlv.CurrentElm().Length(), 1 + 1 + testlarge.length() + 1 + 1 + test.length());
