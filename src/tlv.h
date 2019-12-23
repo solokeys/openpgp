@@ -369,58 +369,22 @@ public:
 		}
 	}
 	constexpr void AddChild(tag_t tag, bstr *data = nullptr) {
+
 		size_t datalen = 0;
 		if (data)
 			datalen = data->length();
 
-		//_data.append(0xaa); // test
+		size_t new_header_len = 0;
+		uint8_t _header[8] = {0};
+		bstr header(_header, 0, sizeof(_header));
+		EncodeTag(header, new_header_len, tag);
+		EncodeLength(header, new_header_len, datalen);
 
-		tag_t old_parent_tag = CurrentElm().Tag();
-		size_t need_buf_len = 8 + 8 + datalen; // maxT = 4, maxL = 4. parent tag + child tag
-		size_t old_elm_len = CurrentElm().ElmLength();
-		size_t old_data_len = _data.length();
-		uint8_t *current_ptr = CurrentElm().GetPtr();
-		size_t current_offset = current_ptr - _data.uint8Data();
+		AppendCurrentData(header);
+		if (datalen)
+			AppendCurrentData(*data);
 
-		// needs to move memory
-		size_t move_data_len = old_data_len - current_offset - old_elm_len;
-		uint8_t *move_data_ptr = current_ptr + old_elm_len;
-		memmove(current_ptr + need_buf_len, move_data_ptr, move_data_len);
-
-		if (old_elm_len < need_buf_len) { // test only!!!!
-			_data.set_length(old_data_len + need_buf_len - old_elm_len);
-		}
-
-		bstr child_place(_data.uint8Data() + current_offset + 8, 0, 8 + datalen); // base address + current elm start offset + 4T + 4L
-		size_t child_size = 0;
-		EncodeTag(child_place, child_size, tag);
-		EncodeLength(child_place, child_size, datalen);
-		if (data) {
-			child_place.append(*data);
-			child_size += datalen;
-		}
-
-		bstr parent_place(_data.substr(current_offset, 0), 8); // base address + current elm start offset
-		size_t parent_size = 0;
-		EncodeTag(parent_place, parent_size, CurrentElm().Tag());
-		EncodeLength(parent_place, parent_size, child_size);
-		//dump_hex(_data);
-
-		// memmove child
-		memmove(current_ptr + parent_size, current_ptr + 8, child_size);
-		// memmove rest
-		memmove(current_ptr + parent_size + child_size, current_ptr + need_buf_len, move_data_len);
-		// set real length
-		_data.set_length(old_data_len - old_elm_len + parent_size + child_size);
-
-		// normalize parent lengths
-		NormalizeParents(child_size - CurrentElm().Length());
-
-		Init(_data);
-
-		// because the tag is unique.
-		if (Search(old_parent_tag))
-			GoChild();
+		Search(tag);
 	}
 	constexpr void AddNext(tag_t tag, bstr *data = nullptr) {
 		size_t datalen = 0;

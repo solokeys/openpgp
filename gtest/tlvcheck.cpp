@@ -195,12 +195,15 @@ TEST(tlvTest, AddChildAddNextDel) {
     bstr test = "1234"_bstr;
     bstr test2 = "98"_bstr;
     tlv.AddChild(0xf4, &test);
+    EXPECT_EQ(tlv.CurrentElm().Length(), test.length());
     tlv.AddNext(0x82, &test2);
     
     tlv.Search(0xf4);
     EXPECT_EQ(tlv.CurrentElm().Tag(), 0xf4);
     EXPECT_TRUE(tlv.GetDataLink() == "\x7f\x49\x0a\xf4\x04\x31\x32\x33\x34\x82\x02\x39\x38"_bstr);
     
+    tlv.ClearCurrentData();
+    EXPECT_EQ(tlv.CurrentElm().Length(), 0);
     tlv.AddChild(0x83);
     tlv.AddNext(0x84, &test);
     tlv.AddNext(0x85, &test2);
