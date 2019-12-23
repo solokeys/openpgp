@@ -10,6 +10,7 @@
 #include "filesystem.h"
 #include <array>
 #include "device.h"
+#include "tlv.h"
 #include "applets/openpgp/openpgpconst.h"
 
 namespace File {
@@ -311,6 +312,7 @@ Util::Error FileSystem::ReadFile(AppID_t AppId, KeyID_t FileID,
 	if (isTagComposite(FileID)) {
 		uint8_t _vdata[1024] = {0};
 		bstr vdata(_vdata, 0, sizeof(_vdata));
+		Util::TLVTree tlv;
 		for(const auto& ctag: CompositeTag) {
 	    	if (ctag.TagGroup == FileID) {
 	    		vdata.clear();
@@ -322,13 +324,18 @@ Util::Error FileSystem::ReadFile(AppID_t AppId, KeyID_t FileID,
 	    		}
 
 	    		if (ctag.WithTag) {
-	    			// TODO: move code to tlvelm!
-					if (ctag.TagElm > 0xff)
-						data.appendAPDUres(ctag.TagElm);
-					else
-						data.append(ctag.TagElm);
-					data.append(vdata.length());
-					data.append(vdata);
+	    			if (data.length() == 0) {
+	    				tlv.Init(data);
+	    				if (WRAP_GROUP_TAGS) {
+		    				tlv.AddRoot(FileID);
+		    				tlv.AddChild(ctag.TagElm, &vdata);
+	    				} else {
+		    				tlv.AddRoot(ctag.TagElm, &vdata);
+	    				}
+	    			} else {
+	    				tlv.AddNext(ctag.TagElm, &vdata);
+	    			}
+	    			data.set_length(tlv.GetDataLink().length());
 	    		} else {
 	    			if (ctag.TagLength == vdata.length()) {
 	    				data.append(vdata);

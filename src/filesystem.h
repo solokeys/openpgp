@@ -43,6 +43,9 @@ enum AppletID {
 	OpenPGP = 2,
 };
 
+// settings for wrapping multiple tlv tags with tag itself in response.
+constexpr bool WRAP_GROUP_TAGS = false;
+
 class FileSystem;
 
 class SettingsFileSystem {
