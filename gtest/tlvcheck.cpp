@@ -181,6 +181,46 @@ TEST(tlvTest, AddRoot) {
     EXPECT_TRUE(tlv.GetDataLink() == "\x7f\x49\x02sd"_bstr);
 }
 
+TEST(tlvTest, AddChild) {
+    uint8_t _data[50] = {0};
+    auto data = bstr(_data, 0, sizeof(_data));
+    
+    TLVTree tlv;
+    auto err = tlv.Init(data);
+    EXPECT_TRUE(err != Error::NoError);
+    
+    tlv.AddRoot(0x7f49);
+    EXPECT_EQ(tlv.CurrentElm().Tag(), 0x7f49);
+
+    bstr test = "1234"_bstr;
+    tlv.AddChild(0xf4, &test);
+    EXPECT_EQ(tlv.CurrentElm().Length(), test.length());
+    EXPECT_TRUE(tlv.GetDataLink() == "\x7f\x49\x06\xf4\x04\x31\x32\x33\x34"_bstr);
+}
+
+TEST(tlvTest, AddNext) {
+    uint8_t _data[50] = {0};
+    auto data = bstr(_data, 0, sizeof(_data));
+    
+    TLVTree tlv;
+    auto err = tlv.Init(data);
+    EXPECT_TRUE(err != Error::NoError);
+    
+    tlv.AddRoot(0x7f49);
+    EXPECT_EQ(tlv.CurrentElm().Tag(), 0x7f49);
+
+    tlv.AddChild(0xf4, nullptr);
+    EXPECT_EQ(tlv.CurrentElm().Length(), 0);
+    EXPECT_TRUE(tlv.GetDataLink() == "\x7f\x49\x02\xf4\x00"_bstr);
+
+    bstr test = "1234"_bstr;
+    tlv.AddNext(0x84, &test);
+
+    EXPECT_EQ(tlv.CurrentElm().Tag(), 0x84);
+    EXPECT_EQ(tlv.CurrentElm().Length(), test.length());
+    EXPECT_TRUE(tlv.GetDataLink() == "\x7f\x49\x08\xf4\x00\x84\x04\x31\x32\x33\x34"_bstr);
+}
+
 TEST(tlvTest, AddChildAddNextDel) {
     uint8_t _data[50] = {0};
     auto data = bstr(_data, 0, sizeof(_data));
