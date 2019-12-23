@@ -32,10 +32,13 @@ int main(int argc, char * argv[])
 {
 	uint8_t ccidbuf[350];
     uint32_t sz;
+    printf("------------------\n");
     printf("Hello CCID/OpenPGP\n");
 
-    ccid_init();
+    hwinit();
+    printf("Init hardware ok\n");
 
+    ccid_init();
     printf("Init CCID\n");
 
     Factory::SoloFactory &factory = Factory::SoloFactory::GetSoloFactory();
