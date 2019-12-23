@@ -346,6 +346,7 @@ public:
 		}
 		Init(_data);
 	}
+
 	constexpr void NormalizeParents(int offset) {
 		if (offset == 0 || currLevel == 0)
 			return;
@@ -372,6 +373,7 @@ public:
 			memmove(_elm[lvl].GetPtr(), _strdata, new_len);
 		}
 	}
+
 	constexpr void AddChild(tag_t tag, bstr *data = nullptr) {
 
 		size_t datalen = 0;
@@ -390,6 +392,7 @@ public:
 
 		Search(tag);
 	}
+
 	constexpr void AddNext(tag_t tag, bstr *data = nullptr) {
 		size_t datalen = 0;
 		if (data)
@@ -414,48 +417,8 @@ public:
 
 		// because the tag is unique.
 		Search(tag);
-
-		return;
-
-
-		size_t need_buf_len = 8 + 8 + datalen; // maxT = 4, maxL = 4. parent tag + child tag
-
-		// current element params
-		uint8_t *start_ptr = _data.uint8Data();
-		uint8_t *current_ptr = CurrentElm().GetPtr();
-		size_t cur_elm_offset = current_ptr - start_ptr;
-		size_t cur_elm_len = CurrentElm().ElmLength();
-		size_t cur_elm_end_offset = cur_elm_offset + cur_elm_len;
-
-		size_t old_data_len = _data.length();
-
-		// needs to move memory
-		size_t move_data_len = old_data_len - cur_elm_end_offset;
-		memmove(start_ptr + cur_elm_end_offset + need_buf_len, start_ptr + cur_elm_end_offset, move_data_len);
-
-		_data.set_length(old_data_len + need_buf_len + 4); // 4-test
-
-		bstr elm_place(_data.uint8Data() + cur_elm_end_offset, 0, 8 + datalen); // base address + current elm end offset + 4T + 4L
-		size_t elm_size = 0;
-		EncodeTag(elm_place, elm_size, tag);
-		EncodeLength(elm_place, elm_size, datalen);
-		if (data) {
-			elm_place.append(*data);
-			elm_size += datalen;
-		}
-
-		memmove(start_ptr + cur_elm_end_offset + elm_size, start_ptr + cur_elm_end_offset + need_buf_len, move_data_len);
-		_data.set_length(old_data_len + elm_size);
-		//dump_hex(_data);
-
-		// normalize parent lengths
-		NormalizeParents(elm_size);
-
-		Init(_data);
-
-		// because the tag is unique.
-		Search(tag);
 	}
+
 	constexpr void DeleteCurrent() {
 		// current element params
 		size_t cur_elm_offset = CurrentElm().GetPtr() - _data.uint8Data();
