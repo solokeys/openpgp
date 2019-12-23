@@ -243,7 +243,7 @@ public:
 		return _elm[0].Init(_data);
 	};
 
-	constexpr bool isTopLevel() {
+	constexpr bool isRootLevel() {
 		return currLevel == 0;
 	}
 
@@ -404,7 +404,7 @@ public:
 		EncodeTag(header, new_header_len, tag);
 		EncodeLength(header, new_header_len, datalen);
 
-		if (!isTopLevel()) {
+		if (!isRootLevel()) {
 			GoParent();
 			AppendCurrentData(header);
 			if (datalen)
