@@ -243,6 +243,10 @@ public:
 		return _elm[0].Init(_data);
 	};
 
+	constexpr bool isTopLevel() {
+		return currLevel == 0;
+	}
+
 	constexpr bool GoFirst() {
 		return Init(_data) == Error::NoError;
 	}
@@ -390,6 +394,29 @@ public:
 		size_t datalen = 0;
 		if (data)
 			datalen = data->length();
+
+		size_t new_header_len = 0;
+		uint8_t _header[8] = {0};
+		bstr header(_header, 0, sizeof(_header));
+		EncodeTag(header, new_header_len, tag);
+		EncodeLength(header, new_header_len, datalen);
+
+		if (!isTopLevel()) {
+			GoParent();
+			AppendCurrentData(header);
+			if (datalen)
+				AppendCurrentData(*data);
+		} else {
+			_data.append(header);
+			if (datalen)
+				_data.append(*data);
+		}
+
+		// because the tag is unique.
+		Search(tag);
+
+		return;
+
 
 		size_t need_buf_len = 8 + 8 + datalen; // maxT = 4, maxL = 4. parent tag + child tag
 
