@@ -24,16 +24,18 @@ LIBS=libs/mbedtls/mbedtls.a
 
 TARGET=main
 
+include libs/spiffs/spiffs.mk
+
 $(OBJ_DIR)/%.o:  
 	$(CC) $(CPPFLAGS) -c -o $@ $(filter %/$(strip $(patsubst %.o, %.cpp, $(notdir $@))), $(SRC_FILES))
 
-all:  $(OBJ_FILES) $(LIBS)
+all:  $(SPIFFS_OBJ) $(OBJ_FILES) $(LIBS)
 	$(CC) -o $(TARGET) $^ $(LDFLAGS)
 
 include libs/mbedtls/mbedtls.mk
 
 clean:
-	$(RM) $(OBJ_FILES) $(DEP_FILES) $(TARGET) $(MBEDTLS_OBJ) $(MBEDTLS_A)
+	$(RM) $(OBJ_FILES) $(DEP_FILES) $(TARGET) $(MBEDTLS_OBJ) $(MBEDTLS_A) $(SPIFFS_OBJ)
 	
 testpy:
 	#cd ./pytest
