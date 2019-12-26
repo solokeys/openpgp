@@ -108,6 +108,7 @@ venv.bak/
 main
 ptest
 *.o
+*.a
 .cproject
 .project
 .settings
