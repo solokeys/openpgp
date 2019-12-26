@@ -27,6 +27,8 @@ static char *SpiffsFileName = (char *)"filesystem.spiffs";
 
 bool ifileexist(char* name);
 int ireadfile(char* name, uint8_t * buf, size_t max_size, size_t *size);
+int iwritefile(char* name, uint8_t * buf, size_t size);
+int sprintfs();
 
 static u8_t spiffs_work_buf[LOG_PAGE_SIZE * 2];
 static u8_t spiffs_fds[32 * 4];
@@ -78,6 +80,7 @@ void hw_spiffs_mount() {
 	uint32_t used = 0;
 	SPIFFS_info(&fs, &total, &used);
 	printf("Mounted OK. Memory total: %d used: %d\n", total, used);
+	sprintfs();
 }
 
 int hwinit() {
@@ -89,12 +92,18 @@ int hwinit() {
 		ireadfile(SpiffsFileName, fsbuf, sizeof(fsbuf), &size);
 		if (size != sizeof(fsbuf))
 			memset(fsbuf, 0xff, sizeof(fsbuf));
+
+		printf("Loaded OK\n");
 	}
 
 	hw_spiffs_mount();
 #endif
 
 	return 0;
+}
+
+int spiffs_save() {
+	return iwritefile(SpiffsFileName, fsbuf, sizeof(fsbuf));
 }
 
 
@@ -206,7 +215,6 @@ bool ifileexist(char* name) {
 	strcpy(fname, dir);
 	strcat(fname, name);
 
-	printf("is exist: %s\n", fname);
 	// check if it exist and have read permission
 	if (access(fname, R_OK) != 0)
 		return false;
@@ -245,7 +253,6 @@ int ireadfile(char* name, uint8_t * buf, size_t max_size, size_t *size) {
 	strcpy(fname, dir);
 	strcat(fname, name);
 
-	printf("read: %s\n", fname);
 	// check if it exist and have read permission
 	if (access(fname, R_OK) != 0)
 		return 1;
@@ -293,7 +300,6 @@ int iwritefile(char* name, uint8_t * buf, size_t size) {
 	strcpy(fname, dir);
 	strcat(fname, name);
 
-	printf("write: %s\n", fname);
 	FILE *f  = fopen(fname, "w");
 	if (f <= 0)
 		return 2;
@@ -318,6 +324,9 @@ int swritefile(char* name, uint8_t * buf, size_t size) {
 	if (cres < 0)
 		return cres;
 
+	// debug only!
+	spiffs_save();
+
 	return (res >= 0) ? 0 : res;
 }
 
@@ -337,7 +346,6 @@ int ideletefile(char* name) {
 	strcpy(fname, dir);
 	strcat(fname, name);
 
-	printf("delete: %s\n", fname);
 	remove(fname);
 	return 0;
 }
@@ -361,7 +369,6 @@ int ideletefiles(char* name) {
     {
 	    if((fnmatch(name, dp->d_name,0)) == 0)
 	    {
-	 	    printf("delete: %s\n",dp->d_name);
  		    strcpy(fname, dir);
 		    strcat(fname, dp->d_name);
 		    remove(fname);
@@ -387,7 +394,7 @@ int sprintfs() {
 
 	SPIFFS_opendir(&fs, "/", &d);
 	while ((pe = SPIFFS_readdir(&d, pe))) {
-		printf("  [%d] %s\n", pe->size, pe->name);
+		printf("  [%4d] %s\n", pe->size, pe->name);
 	}
 	SPIFFS_closedir(&d);
 	return 0;
