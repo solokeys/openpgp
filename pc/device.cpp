@@ -33,19 +33,16 @@ static u8_t spiffs_fds[32 * 4];
 static u8_t spiffs_cache_buf[(LOG_PAGE_SIZE + 32) * 4];
 
 static s32_t hw_spiffs_read(u32_t addr, u32_t size, u8_t *dst) {
-	printf("~~read a=%x s=%d\n", addr, size);
 	memcpy(dst, fsbuf + addr, size);
 	return SPIFFS_OK;
 }
 
 static s32_t hw_spiffs_write(u32_t addr, u32_t size, u8_t *src) {
-	printf("~~write\n");
 	memcpy(fsbuf + addr, src, size);
 	return SPIFFS_OK;
 }
 
 static s32_t hw_spiffs_erase(u32_t addr, u32_t size) {
-	printf("~~erase\n");
 	memset(fsbuf + addr, 0xff, size);
 	return SPIFFS_OK;
 }
@@ -79,8 +76,8 @@ void hw_spiffs_mount() {
 
 	uint32_t total = 0;
 	uint32_t used = 0;
-	if (SPIFFS_info(&fs, &total, &used))
-		printf("Mounted OK. Memory total: %d used: %d", total, used);
+	SPIFFS_info(&fs, &total, &used);
+	printf("Mounted OK. Memory total: %d used: %d\n", total, used);
 }
 
 int hwinit() {
@@ -382,16 +379,15 @@ int sprintfs() {
 	spiffs_DIR d;
 	struct spiffs_dirent e;
 	struct spiffs_dirent *pe = &e;
-	int res;
 
 	uint32_t total = 0;
 	uint32_t used = 0;
 	SPIFFS_info(&fs, &total, &used);
-	printf("Memory total: %d used: %d", total, used);
+	printf("Memory total: %d used: %d\n", total, used);
 
 	SPIFFS_opendir(&fs, "/", &d);
 	while ((pe = SPIFFS_readdir(&d, pe))) {
-		printf("  [%d] %s", pe->size, pe->name);
+		printf("  [%d] %s\n", pe->size, pe->name);
 	}
 	SPIFFS_closedir(&d);
 	return 0;
@@ -409,24 +405,14 @@ int sdeletefiles(char* name) {
 	while ((pe = SPIFFS_readdir(&d, pe))) {
 		if ((fnmatch(name, (char *)pe->name, 0)) == 0) {
 			fd = SPIFFS_open_by_dirent(&fs, pe, SPIFFS_RDWR, 0);
-			if (fd < 0) {
-				printf("errno %i\n", SPIFFS_errno(&fs));
+			if (fd < 0)
 				return SPIFFS_errno(&fs);
-			}
 			res = SPIFFS_fremove(&fs, fd);
-			if (res < 0) {
-				printf("errno %i\n", SPIFFS_errno(&fs));
+			if (res < 0)
 				return SPIFFS_errno(&fs);
-			}
-			res = SPIFFS_close(&fs, fd);
-			if (res < 0) {
-				printf("errno %i\n", SPIFFS_errno(&fs));
-				return SPIFFS_errno(&fs);
-			}
 		}
 	}
 	SPIFFS_closedir(&d);
-	exit(100);
 	return 0;
 }
 
