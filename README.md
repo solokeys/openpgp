@@ -11,13 +11,13 @@ Clone Gnuk to get their testing suite.  Note, there are symlinks in the repo, so
 make sure you clone using a \*nix environment!
 
 ```
-git clone https://github.com/solokeys/openpgp.git
+git clone --recurse-submodules https://github.com/solokeys/openpgp.git
 ```
 
 Install Python test tools to run Gnuk tests.
 
 ```
-sudo apt install python3-pytest python3-usb python3-cffi libmbedtls-dev
+sudo apt install python3-pytest python3-usb python3-cffi libmbedtls-dev linux-tools-common linux-tools-generic linux-cloud-tools-generic
 ```
 
 Build our `CCID/OpenPGP` application
