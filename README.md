@@ -11,7 +11,7 @@ Clone Gnuk to get their testing suite.  Note, there are symlinks in the repo, so
 make sure you clone using a \*nix environment!
 
 ```
-git clone https://github.com/solokeys/openpgp.git
+git clone --recurse-submodules https://github.com/solokeys/openpgp.git
 ```
 
 Install Python test tools to run Gnuk tests.
