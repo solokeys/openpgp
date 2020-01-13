@@ -21,6 +21,10 @@
 #define MAX(a,b) (((a) > (b)) ? (a) : (b))
 #endif
 
+#ifndef OPTIMIZATION_O2
+#define OPTIMIZATION_O2 __attribute__((optimize("O2")))
+#endif
+
 namespace std {
 	template<typename _CharT, typename _Traits = std::char_traits<_CharT>>
     class w_basic_string_view : public basic_string_view<_CharT, _Traits> {

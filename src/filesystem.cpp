@@ -367,9 +367,9 @@ Util::Error FileSystem::ReadFile(AppID_t AppId, KeyID_t FileID,
 	return Util::Error::FileNotFound;
 }
 
-Util::Error FileSystem::WriteFile(AppID_t AppId, KeyID_t FileID,
+OPTIMIZATION_O2 Util::Error FileSystem::WriteFile(AppID_t AppId, KeyID_t FileID,
 		FileType FileType, bstr& data, bool adminMode) {
-printf("* Os error here\n");
+
 	// to settings file system
 	auto err = settingsFiles.WriteFile(AppId, FileID, FileType, data, adminMode);
 	if (err != Util::Error::FileNotFound)
@@ -382,7 +382,6 @@ printf("* Os error here\n");
 
 	return Util::Error::FileNotFound;
 }
-
 
 Util::Error FileSystem::DeleteFile(AppID_t AppId, KeyID_t FileID,
 		FileType FileType) {
