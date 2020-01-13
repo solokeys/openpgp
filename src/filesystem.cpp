@@ -369,7 +369,7 @@ Util::Error FileSystem::ReadFile(AppID_t AppId, KeyID_t FileID,
 
 Util::Error FileSystem::WriteFile(AppID_t AppId, KeyID_t FileID,
 		FileType FileType, bstr& data, bool adminMode) {
-
+printf("* Os error here\n");
 	// to settings file system
 	auto err = settingsFiles.WriteFile(AppId, FileID, FileType, data, adminMode);
 	if (err != Util::Error::FileNotFound)
