@@ -10,6 +10,7 @@
 #include "filesystem.h"
 #include <array>
 #include "device.h"
+#include "logger.h"
 #include "tlv.h"
 #include "applets/openpgp/openpgpconst.h"
 

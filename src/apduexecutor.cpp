@@ -8,6 +8,7 @@
  */
 
 #include "apduexecutor.h"
+#include "logger.h"
 #include "applets/apduconst.h"
 #include "applets/applet.h"
 #include "solofactory.h"
@@ -143,7 +144,7 @@ Util::Error APDUExecutor::Execute(bstr apdu, bstr& result) {
 
     	Util::Error err = applet->APDUExchange(decapdu, sresult);
     	SetResultError(sresult, err);
-      	printf("appdu result: %s\n", Util::GetStrError(err));
+    	Logger::printflogAPDU("appdu result: %s\n", Util::GetStrError(err));
 
       	// clear apdu buffer
 		sapdu.clear();
@@ -159,7 +160,7 @@ Util::Error APDUExecutor::Execute(bstr apdu, bstr& result) {
       	}
 
     } else {
-    	printf("applet not selected.\n");
+    	Logger::printflogAPDU("applet not selected.\n");
     	result.setAPDURes(APDUResponse::ConditionsUseNotSatisfied);
     }
 
