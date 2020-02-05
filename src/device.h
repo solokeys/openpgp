@@ -4,6 +4,8 @@
 #include <cstdint>
 #include <cstdlib>
 
+void printf_device(const char *fmt, ...);
+
 void ccid_init();
 
 uint32_t ccid_recv(uint8_t * buf);

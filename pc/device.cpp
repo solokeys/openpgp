@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -104,6 +105,13 @@ int hwinit() {
 
 int spiffs_save() {
 	return iwritefile(SpiffsFileName, fsbuf, sizeof(fsbuf));
+}
+
+void printf_device(const char *fmt, ...) {
+	va_list vl;
+	va_start(vl, fmt);
+	printf(fmt, vl);
+	va_end(vl);
 }
 
 
