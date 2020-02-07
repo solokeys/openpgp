@@ -1,35 +1,15 @@
 #include <sys/time.h>
 #include <stdint.h>
-#include <stdio.h>
 #include <stdlib.h>
-#include <stdarg.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <netinet/in.h>
-#include <time.h>
 #include <string.h>
 #include <unistd.h>
-#include <signal.h>
-#include <fcntl.h>
-#include <dirent.h>
-#include <fnmatch.h>
 #include "device.h"
 
-#define SPIFFS_MODE
-
-#ifdef SPIFFS_MODE
 #include <spiffs.h>
 static spiffs fs;
-static uint8_t fsbuf[2048*10] = {0};
-static char *SpiffsFileName = (char *)"filesystem.spiffs";
-#endif
 
 #define LOG_PAGE_SIZE 64
 
-bool ifileexist(char* name);
-int ireadfile(char* name, uint8_t * buf, size_t max_size, size_t *size);
-int iwritefile(char* name, uint8_t * buf, size_t size);
 int sprintfs();
 
 static u8_t spiffs_work_buf[LOG_PAGE_SIZE * 2];
@@ -37,17 +17,17 @@ static u8_t spiffs_fds[32 * 4];
 static u8_t spiffs_cache_buf[(LOG_PAGE_SIZE + 32) * 4];
 
 static s32_t hw_spiffs_read(u32_t addr, u32_t size, u8_t *dst) {
-	memcpy(dst, fsbuf + addr, size);
+	//memcpy(dst, fsbuf + addr, size);
 	return SPIFFS_OK;
 }
 
 static s32_t hw_spiffs_write(u32_t addr, u32_t size, u8_t *src) {
-	memcpy(fsbuf + addr, src, size);
+	//memcpy(fsbuf + addr, src, size);
 	return SPIFFS_OK;
 }
 
 static s32_t hw_spiffs_erase(u32_t addr, u32_t size) {
-	memset(fsbuf + addr, 0xff, size);
+	//memset(fsbuf + addr, 0xff, size);
 	return SPIFFS_OK;
 }
 
@@ -71,17 +51,17 @@ void hw_spiffs_mount() {
 		spiffs_cache_buf,
 		sizeof(spiffs_cache_buf),
 		0);
-	printf("mount res: %i\n", res);
+	printf_device("mount res: %i\n", res);
 
 	if (res || !SPIFFS_mounted(&fs)) {
 		res = SPIFFS_format(&fs);
-		printf("format res: %i\n", res);
+		printf_device("format res: %i\n", res);
 	}
 
 	uint32_t total = 0;
 	uint32_t used = 0;
 	SPIFFS_info(&fs, &total, &used);
-	printf("Mounted OK. Memory total: %d used: %d\n", total, used);
+	printf_device("Mounted OK. Memory total: %d used: %d\n", total, used);
 	sprintfs();
 }
 
@@ -95,7 +75,7 @@ int hwinit() {
 		if (size != sizeof(fsbuf))
 			memset(fsbuf, 0xff, sizeof(fsbuf));
 
-		printf("Loaded OK\n");
+		printf_device("Loaded OK\n");
 	}
 
 	hw_spiffs_mount();
@@ -104,12 +84,6 @@ int hwinit() {
 	return 0;
 }
 
-int spiffs_save() {
-	return iwritefile(SpiffsFileName, fsbuf, sizeof(fsbuf));
-}
-
-
-static int fd = 0;
 void ccid_init()
 {
 //    fd = udp_server();
@@ -172,9 +146,6 @@ int writefile(char* name, uint8_t * buf, size_t size) {
 	int cres = SPIFFS_close(&fs, fd) < 0;
 	if (cres < 0)
 		return cres;
-
-	// debug only!
-	spiffs_save();
 
 	return (res >= 0) ? 0 : res;
 }
