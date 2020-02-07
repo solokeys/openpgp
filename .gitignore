@@ -106,6 +106,7 @@ venv.bak/
 
 
 main
+openpgp_test
 ptest
 *.o
 *.a

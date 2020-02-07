@@ -22,7 +22,7 @@ LDFLAGS = -Wl,-Bdynamic -lpthread
 
 LIBS=libs/mbedtls/mbedtls.a
 
-TARGET=main
+TARGET=openpgp_test
 
 include libs/spiffs/spiffs.mk
 
