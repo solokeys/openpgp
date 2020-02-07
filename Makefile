@@ -17,7 +17,7 @@ DEP_FILES = $(OBJ_FILES:.o=.d)
 INC = -I. -Ipc/ -Isrc/ -Ilibs/mbedtls/ -Ilibs/mbedtls/mbedtls/crypto/include/\
 	-Ilibs/spiffs/ -Ilibs/spiffs/spiffs/src/
 
-CPPFLAGS = -std=c++17 -O0 -Wall -g3 $(INC)
+CPPFLAGS = -std=c++17 -Os -Wall -g3 $(INC)
 LDFLAGS = -Wl,-Bdynamic -lpthread
 
 LIBS=libs/mbedtls/mbedtls.a
