@@ -8,6 +8,7 @@
  */
 
 #include <applets/openpgp/security.h>
+#include "device.h"
 #include "openpgpapplet.h"
 #include "apduconst.h"
 #include "solofactory.h"
@@ -69,7 +70,7 @@ Util::Error OpenPGPApplet::APDUExchange(APDUStruct &apdu, bstr &result) {
 		return Util::Error::WrongCommand;
 
 	auto name = cmd->GetName();
-	printf("======== %.*s\n", static_cast<int>(name.size()), name.data());
+	printf_device("======== %.*s\n", static_cast<int>(name.size()), name.data());
 
 	auto cmderr = cmd->Process(apdu.cla, apdu.ins, apdu.p1, apdu.p2, apdu.data, apdu.le, result);
 	if (cmderr != Util::Error::NoError)

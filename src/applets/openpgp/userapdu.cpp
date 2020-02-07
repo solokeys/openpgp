@@ -8,6 +8,7 @@
  */
 
 #include <applets/openpgp/security.h>
+#include "device.h"
 #include "userapdu.h"
 #include "applets/apduconst.h"
 #include "solofactory.h"
@@ -209,7 +210,7 @@ Util::Error APDUGetData::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 		return err_check;
 
 	uint16_t object_id = (p1 << 8) + p2;
-	printf("read object id = 0x%04x\n", object_id);
+	printf_device("read object id = 0x%04x\n", object_id);
 
 	filesystem.ReadFile(File::AppletID::OpenPGP, object_id, File::File, dataOut);
 
@@ -251,7 +252,7 @@ Util::Error APDUPutData::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 
 	if (ins == Applet::APDUcommands::PutData) {
 		uint16_t object_id = (p1 << 8) + p2;
-		printf("write object id = 0x%04x\n", object_id);
+		printf_device("write object id = 0x%04x\n", object_id);
 
 		if (OpenPGP::PGPConst::ReadWriteOnlyAllowedFiles) {
 			err_check = security.DataObjectInAllowedList(object_id);
@@ -299,7 +300,7 @@ Util::Error APDUPutData::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 		if (err != Util::Error::NoError)
 			return err;
 	} else {
-		printf("write KeyExtHeader\n");
+		printf_device("write KeyExtHeader\n");
 		key_storage.SetKeyExtHeader(File::AppletID::OpenPGP, data);
 	}
 

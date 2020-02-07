@@ -16,6 +16,7 @@
 #include <cstdio>
 #include "util.h"
 #include "error.h"
+#include "device.h"
 
 namespace Applet {
 
@@ -199,17 +200,17 @@ namespace Applet {
 	    }
 
 	    constexpr void printEx(const size_t maxdatalen) {
-	        printf("APDU: %scase=0x%02x cla=0x%02x ins=0x%02x p1=0x%02x p2=0x%02x Lc=0x%02x(%d) Le=0x%02x(%d)",
+	    	printf_device("APDU: %scase=0x%02x cla=0x%02x ins=0x%02x p1=0x%02x p2=0x%02x Lc=0x%02x(%d) Le=0x%02x(%d)",
 	               extended_apdu ? "[e]" : "", case_type, cla, ins, p1, p2, lc, lc, le, le);
 	        if (maxdatalen > 0) {
 	        	if (lc > 0) {
-	        		printf(" data: ");
+	        		printf_device(" data: ");
 	        		dump_hex(data, maxdatalen);
 	        	} else {
-	        		printf("\n");
+	        		printf_device("\n");
 	        	}
 	        } else {
-	        	printf("\n");
+	        	printf_device("\n");
 	        }
 	    }
 	};

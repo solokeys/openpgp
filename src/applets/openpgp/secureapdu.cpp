@@ -56,7 +56,7 @@ Util::Error APDUActivateFile::Process(uint8_t cla, uint8_t ins,
 	if (lcstate == LifeCycleState::Init && !security.isTerminated()) { // isTerminated==false: `terminate df` and then reset
 	    resetprovider.ResetCard();
 	    security.Init();
-	    printf("Card was CLEARED\n");
+	    printf_device("Card was CLEARED\n");
 	}
 
 	err = security.SetLifeCycleState(LifeCycleState::Operational);

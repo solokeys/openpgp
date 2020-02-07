@@ -3,8 +3,21 @@
 
 #include <cstdint>
 #include <cstdlib>
+#include <stdio.h>
 
-void printf_device(const char *fmt, ...);
+#define OPGP_DEBUG
+
+template <class ... Args>
+constexpr void printf_device(const char *fmt, Args ... args) {
+#ifdef OPGP_DEBUG
+	printf(fmt, args...);
+#endif
+}
+constexpr void printf_device(const char *fmt) {
+#ifdef OPGP_DEBUG
+    printf("%s", fmt);
+#endif
+}
 
 void ccid_init();
 

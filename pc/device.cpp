@@ -107,14 +107,6 @@ int spiffs_save() {
 	return iwritefile(SpiffsFileName, fsbuf, sizeof(fsbuf));
 }
 
-void printf_device(const char *fmt, ...) {
-	va_list vl;
-	va_start(vl, fmt);
-	printf(fmt, vl);
-	va_end(vl);
-}
-
-
 int udp_server()
 {
     static int run_already = 0;
