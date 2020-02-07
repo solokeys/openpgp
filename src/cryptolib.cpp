@@ -21,6 +21,7 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include "device.h"
 #include "tlv.h"
 #include "solofactory.h"
 #include "filesystem.h"
@@ -226,13 +227,13 @@ Util::Error CryptoLib::RSAFillPrivateKey(mbedtls_rsa_context *context,
 		}
 
 		if (int res=mbedtls_rsa_complete(context)) {
-			printf("error: cant complete key %d %x\n",res,-res);
+			printf_device("error: cant complete key %d %x\n",res,-res);
 			ret = Util::Error::CryptoDataError;
 			break;
 		}
 
 		if (mbedtls_rsa_check_privkey(context)) {
-			printf("error: cant check key\n");
+			printf_device("error: cant check key\n");
 			ret = Util::Error::CryptoDataError;
 			break;
 		}
@@ -272,7 +273,7 @@ Util::Error CryptoLib::RSASign(RSAKey key, bstr data, bstr& signature) {
 		// OpenPGP 3.3.1 page 54. PKCS#1
 		// command data field is not longer than 40% of the length of the modulus
 		if (keylen * 0.4 < data.length()) {
-			printf("pkcs#1 data length error!\n");
+			printf_device("pkcs#1 data length error!\n");
 			ret = Util::Error::CryptoDataError;
 			break;
 		}
@@ -287,7 +288,7 @@ Util::Error CryptoLib::RSASign(RSAKey key, bstr data, bstr& signature) {
 
 		int res = mbedtls_rsa_private(&rsa, nullptr, nullptr, vdata, signature.uint8Data());
 		if (res) {
-			printf("crypto oper error: %d\n", res);
+			printf_device("crypto oper error: %d\n", res);
 			ret = Util::Error::CryptoOperationError;
 			break;
 		}
@@ -327,7 +328,7 @@ Util::Error CryptoLib::RSADecipher(RSAKey key, bstr data, bstr &dataOut) {
 
 		int res = mbedtls_rsa_private(&rsa, nullptr, nullptr, data.uint8Data(), dataOut.uint8Data());
 		if (res) {
-			printf("crypto oper error: %d\n", res);
+			printf_device("crypto oper error: %d\n", res);
 			ret = Util::Error::CryptoOperationError;
 			break;
 		}
@@ -791,7 +792,7 @@ Util::Error KeyStorage::GetECDSAKey(AppID_t appID, KeyID_t keyID, ECDSAKey& key)
 	GetKeyPart(prvStr, KeyPartsECDSA::PrivateKey, key.Private);
 
 	if (key.Public.length() == 0 && key.Private.length() > 0) {
-		printf("Generate public key from private.\n");
+		printf_device("Generate public key from private.\n");
 		key.Public = bstr(prvStr.uint8Data() + prvStr.length(), 0, prvStr.free_space());
 		auto err = cryptolib.ECDSACalcPublicKey(key.CurveId, key.Private, key.Public);
 		if (err != Util::Error::NoError)
@@ -871,7 +872,7 @@ Util::Error KeyStorage::PutRSAFullKey(AppID_t appID, KeyID_t keyID, RSAKey key) 
 	tlv.AppendCurrentData(key.DQ1);
 	tlv.AppendCurrentData(key.N);
 
-	//printf("---------- key ------------\n");
+	//printf_device("---------- key ------------\n");
 	//tlv.PrintTree();
 
 
@@ -879,7 +880,7 @@ Util::Error KeyStorage::PutRSAFullKey(AppID_t appID, KeyID_t keyID, RSAKey key) 
 	if (err != Util::Error::NoError)
 		return err;
 
-	printf("key %x [%lu] saved.\n", keyID, tlv.GetDataLink().length());
+	printf_device("key %x [%lu] saved.\n", keyID, tlv.GetDataLink().length());
 
 	return Util::Error::NoError;
 }
@@ -917,14 +918,14 @@ Util::Error KeyStorage::PutECDSAFullKey(AppID_t appID, KeyID_t keyID, ECDSAKey k
 	tlv.AppendCurrentData(key.Public);
 	tlv.AppendCurrentData(key.Private);
 
-	//printf("---------- ecdsa key ------------\n");
+	//printf_device("---------- ecdsa key ------------\n");
 	//tlv.PrintTree();
 
 	auto err = filesystem.WriteFile(appID, keyID, File::Secure, tlv.GetDataLink());
 	if (err != Util::Error::NoError)
 		return err;
 
-	printf("key %x [%lu] saved.\n", keyID, tlv.GetDataLink().length());
+	printf_device("key %x [%lu] saved.\n", keyID, tlv.GetDataLink().length());
 
 	return Util::Error::NoError;
 }
@@ -957,7 +958,7 @@ Util::Error KeyStorage::GetKeyPart(bstr dataIn, Util::tag_t keyPart,
 
 	bstr data = edata->GetData();
 
-	//printf("key %lu %lu\n ------------ dol --------------\n", header.length(), data.length());
+	//printf_device("key %lu %lu\n ------------ dol --------------\n", header.length(), data.length());
 	//dol.Print();
 
 	size_t offset = 0;
@@ -1001,7 +1002,7 @@ Util::Error KeyStorage::GetPublicKey(AppID_t appID, KeyID_t keyID, uint8_t Algor
 		pubKey = ecdsa_key.Public;
 	}
 
-	printf("GetPublicKey key %x [%lu] loaded.\n", keyID, prvStr.length());
+	printf_device("GetPublicKey key %x [%lu] loaded.\n", keyID, prvStr.length());
 
 	return Util::Error::NoError;
 }
@@ -1015,7 +1016,7 @@ Util::Error KeyStorage::GetPublicKey7F49(AppID_t appID, KeyID_t keyID,
 	if (err != Util::Error::NoError)
 		return err;
 
-	printf("pubKey: %lu\n", pubKey.length());
+	printf_device("pubKey: %lu\n", pubKey.length());
 	dump_hex(pubKey);
 
 	using namespace Util;
@@ -1056,7 +1057,7 @@ Util::Error KeyStorage::GetRSAKey(AppID_t appID, KeyID_t keyID, RSAKey& key) {
 	if (err != Util::Error::NoError)
 		return err;
 
-	printf("key %x [%lu] loaded.\n", keyID, prvStr.length());
+	printf_device("key %x [%lu] loaded.\n", keyID, prvStr.length());
 
 	GetKeyPart(prvStr, KeyPartsRSA::PublicExponent, key.Exp);
 	GetKeyPart(prvStr, KeyPartsRSA::P, key.P);
@@ -1088,7 +1089,7 @@ Util::Error KeyStorage::SetKeyExtHeader(AppID_t appID, bstr keyData) {
 	if (err != Util::Error::NoError)
 		return err;
 
-	printf("-------------- tlv -----------------\n");
+	printf_device("-------------- tlv -----------------\n");
 	tlv.PrintTree();
 
 	// check wrong format
@@ -1113,7 +1114,7 @@ Util::Error KeyStorage::SetKeyExtHeader(AppID_t appID, bstr keyData) {
 	if (type == OpenPGPKeyType::DigitalSignature)
 		filesystem.DeleteFile(appID, 0x7a, File::File);
 
-	printf("save key data [%02x] len:%lu\n", type, keyData.length());
+	printf_device("save key data [%02x] len:%lu\n", type, keyData.length());
 	return filesystem.WriteFile(appID, type, File::Secure, keyData);
 }
 
@@ -1145,7 +1146,7 @@ Util::Error CryptoEngine::RSASign(AppID_t appID, KeyID_t keyID,
 	if (err != Util::Error::NoError)
 		return err;
 
-	printf("------------ key ------------\n");
+	printf_device("------------ key ------------\n");
 	key.Print();
 
 	return cryptoLib.RSASign(key, data, signature);
@@ -1175,7 +1176,7 @@ Util::Error CryptoEngine::ECDSASign(AppID_t appID, KeyID_t keyID,
 	if (err != Util::Error::NoError)
 		return err;
 
-	printf("------------ key ------------\n");
+	printf_device("------------ key ------------\n");
 	key.Print();
 
 	return cryptoLib.ECDSASign(key, data, signature);
@@ -1192,7 +1193,7 @@ Util::Error CryptoEngine::ECDHComputeShared(AppID_t appID, KeyID_t keyID, bstr a
 	if (err != Util::Error::NoError)
 		return err;
 
-	printf("------------ key ------------\n");
+	printf_device("------------ key ------------\n");
 	key.Print();
 
 	return cryptoLib.ECDHComputeShared(key, anotherPublicKey, sharedSecret);

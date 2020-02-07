@@ -8,6 +8,7 @@
  */
 
 #include "openpgpstruct.h"
+#include "device.h"
 
 namespace OpenPGP {
 
@@ -131,7 +132,7 @@ void PWStatusBytes::PasswdSetRemains(Password passwdId, uint8_t rem) {
 }
 
 void PWStatusBytes::Print() {
-	printf("-------------- PW status Bytes --------------\n"\
+	printf_device("-------------- PW status Bytes --------------\n"\
 			"valid several CDS: %s maxlen PW1: %d format pw1: %s \n"\
 			"maxlen RC: %d maxlen PW3: %d format pw3: %s \n"\
 			"Error counters: PW1: %d RC: %d PW3: %d\n",
@@ -351,18 +352,18 @@ Util::Error KDFDO::SaveInitPasswordsToPWFiles(File::FileSystem& fs) {
 }
 
 void KDFDO::Print() {
-	printf("-------------- KDF-DO --------------\n");
-	printf("Algorithm:        0x%02x\n", bKDFAlgorithm);
+	printf_device("-------------- KDF-DO --------------\n");
+	printf_device("Algorithm:        0x%02x\n", bKDFAlgorithm);
 	if (bKDFAlgorithm != 0x03)
 		return;
 
-	printf("Hash alg:         0x%02x\n", bHashAlgorithm);
-	printf("Iteration count:  %d\n", IterationCount);
-	printf("SaltPW1:    "); dump_hex(SaltPW1, 16);
-	printf("SaltRC:     "); dump_hex(SaltRC, 16);
-	printf("SaltPW3:    "); dump_hex(SaltPW3, 16);
-	printf("InitialPW1: "); dump_hex(InitialPW1, 16);
-	printf("InitialPW3: "); dump_hex(InitialPW3, 16);
+	printf_device("Hash alg:         0x%02x\n", bHashAlgorithm);
+	printf_device("Iteration count:  %d\n", IterationCount);
+	printf_device("SaltPW1:    "); dump_hex(SaltPW1, 16);
+	printf_device("SaltRC:     "); dump_hex(SaltRC, 16);
+	printf_device("SaltPW3:    "); dump_hex(SaltPW3, 16);
+	printf_device("InitialPW1: "); dump_hex(InitialPW1, 16);
+	printf_device("InitialPW3: "); dump_hex(InitialPW3, 16);
 }
 
 

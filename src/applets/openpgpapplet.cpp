@@ -61,7 +61,7 @@ Util::Error OpenPGPApplet::APDUExchange(APDUStruct &apdu, bstr &result) {
 
 	auto err = security.CommandAccessCheck(apdu.cla, apdu.ins, apdu.p1, apdu.p2);
 	if (err != Util::Error::NoError) {
-		printf("Security error. Access denied.\n");
+		printf_device("Security error. Access denied.\n");
 		return err;
 	}
 

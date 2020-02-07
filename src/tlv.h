@@ -11,6 +11,7 @@
 #define SRC_TLV_H_
 
 #include "util.h"
+#include "device.h"
 #include "errors.h"
 #include <array>
 #include <string.h>
@@ -496,7 +497,7 @@ public:
 	constexpr void PrintTree() {
 		GoFirst();
 		while (true) {
-			printf("%.*s [%03d] %x [%d] ",
+			printf_device("%.*s [%03d] %x [%d] ",
 					(currLevel + 1) * 2, "------------",
 					CurrentElm().ElmLength(),
 					CurrentElm().Tag(),
@@ -624,7 +625,7 @@ public:
 	constexpr void Print() {
 		GoFirst();
 		while (true) {
-			printf("== [%03d] %x [%d] \n",
+			printf_device("== [%03d] %x [%d] \n",
 					CurrentElm().ElmLength(),
 					CurrentElm().Tag(),
 					CurrentElm().Length());

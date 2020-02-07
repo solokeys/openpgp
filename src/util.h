@@ -12,6 +12,7 @@
 #include <cstdint>
 #include <string_view>
 #include <cstring>
+#include "device.h"
 
 #ifndef MIN
 #define MIN(a,b) (((a) < (b)) ? (a) : (b))
@@ -169,14 +170,14 @@ constexpr void dump_hex(uint8_t * buf, int size, size_t maxlen = 0) {
 		maxlen = size + 1;
 
     while(size-- && maxlen) {
-        printf("%02x ", *buf++);
+    	printf_device("%02x ", *buf++);
     	maxlen--;
     }
 
     if (maxlen == 0 && size != 0)
-    	printf("...");
+    	printf_device("...");
 
-    printf("\n");
+    printf_device("\n");
 }
 
 constexpr void dump_hex(bstr data, size_t maxlen = 0) {

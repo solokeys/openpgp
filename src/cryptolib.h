@@ -164,13 +164,13 @@ struct RSAKey {
 	}
 
 	constexpr void Print() {
-		printf("Exp [%lu] ", Exp.length()); dump_hex(Exp, 32);
-		printf("P [%lu] ",   P.length());   dump_hex(P, 32);
-		printf("Q [%lu] ",   Q.length());   dump_hex(Q, 32);
-		printf("PQ [%lu] ",  PQ.length());  dump_hex(PQ, 32);
-		printf("DP1 [%lu] ", DP1.length()); dump_hex(DP1, 32);
-		printf("DQ1 [%lu] ", DQ1.length()); dump_hex(DQ1, 32);
-		printf("N [%lu] ",   N.length());   dump_hex(N, 32);
+		printf_device("Exp [%lu] ", Exp.length()); dump_hex(Exp, 32);
+		printf_device("P [%lu] ",   P.length());   dump_hex(P, 32);
+		printf_device("Q [%lu] ",   Q.length());   dump_hex(Q, 32);
+		printf_device("PQ [%lu] ",  PQ.length());  dump_hex(PQ, 32);
+		printf_device("DP1 [%lu] ", DP1.length()); dump_hex(DP1, 32);
+		printf_device("DQ1 [%lu] ", DQ1.length()); dump_hex(DQ1, 32);
+		printf_device("N [%lu] ",   N.length());   dump_hex(N, 32);
 	}
 };
 
@@ -185,9 +185,9 @@ struct ECDSAKey {
 		Public.set_length(0);
 	}
 	constexpr void Print() {
-		printf("Curve %s\n", ECDSAaidStr[CurveId]);
-		printf("Public  [%lu] ", Public.length());  dump_hex(Public,  48);
-		printf("Private [%lu] ", Private.length()); dump_hex(Private, 48);
+		printf_device("Curve %s\n", ECDSAaidStr[CurveId]);
+		printf_device("Public  [%lu] ", Public.length());  dump_hex(Public,  48);
+		printf_device("Private [%lu] ", Private.length()); dump_hex(Private, 48);
 	}
 };
 

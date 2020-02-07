@@ -19,10 +19,10 @@ void exchangeFunc(uint8_t *datain, size_t datainlen, uint8_t *dataout, size_t *o
 	auto resstr = bstr(apdu_result, 0, sizeof(apdu_result) - 10);
 	auto apdu = bstr(datain, datainlen);
 
-	printf("================\n");
-	printf("a>> "); dump_hex(apdu);
+	printf_device("================\n");
+	printf_device("a>> "); dump_hex(apdu);
     fexecutor->Execute(apdu, resstr);
-    printf("a<< "); dump_hex(resstr);
+    printf_device("a<< "); dump_hex(resstr);
 
     *outlen = resstr.length();
     memcpy(dataout, apdu_result, *outlen);

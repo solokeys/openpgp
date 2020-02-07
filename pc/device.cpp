@@ -14,6 +14,7 @@
 #include <fcntl.h>
 #include <dirent.h>
 #include <fnmatch.h>
+#include "device.h"
 
 #define SPIFFS_MODE
 
@@ -284,7 +285,7 @@ int sreadfile(char* name, uint8_t * buf, size_t max_size, size_t *size) {
 	return (res >= 0) ? 0 : res;
 }
 
-bool readfile(char* name, uint8_t * buf, size_t max_size, size_t *size) {
+int readfile(char* name, uint8_t * buf, size_t max_size, size_t *size) {
 #ifdef SPIFFS_MODE
 	return sreadfile(name, buf, max_size, size);
 #else
@@ -390,11 +391,11 @@ int sprintfs() {
 	uint32_t total = 0;
 	uint32_t used = 0;
 	SPIFFS_info(&fs, &total, &used);
-	printf("Memory total: %d used: %d\n", total, used);
+	printf_device("Memory total: %d used: %d\n", total, used);
 
 	SPIFFS_opendir(&fs, "/", &d);
 	while ((pe = SPIFFS_readdir(&d, pe))) {
-		printf("  [%4d] %s\n", pe->size, pe->name);
+		printf_device("  [%4d] %s\n", pe->size, pe->name);
 	}
 	SPIFFS_closedir(&d);
 	return 0;
