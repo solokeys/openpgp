@@ -1,5 +1,5 @@
-#ifndef _DEVICE_H_
-#define _DEVICE_H_
+#ifndef _OPGPDEVICE_H_
+#define _OPGPDEVICE_H_
 
 #include <cstdint>
 #include <cstdlib>

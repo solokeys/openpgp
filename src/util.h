@@ -12,7 +12,7 @@
 #include <cstdint>
 #include <string_view>
 #include <cstring>
-#include "device.h"
+#include "opgpdevice.h"
 
 #ifndef MIN
 #define MIN(a,b) (((a) < (b)) ? (a) : (b))

@@ -10,8 +10,8 @@
 #ifndef SRC_TLV_H_
 #define SRC_TLV_H_
 
+#include <opgpdevice.h>
 #include "util.h"
-#include "device.h"
 #include "errors.h"
 #include <array>
 #include <string.h>

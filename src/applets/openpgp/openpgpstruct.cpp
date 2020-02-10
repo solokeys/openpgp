@@ -8,7 +8,7 @@
  */
 
 #include "openpgpstruct.h"
-#include "device.h"
+#include "opgpdevice.h"
 
 namespace OpenPGP {
 

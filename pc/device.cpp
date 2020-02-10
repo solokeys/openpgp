@@ -14,7 +14,7 @@
 #include <fcntl.h>
 #include <dirent.h>
 #include <fnmatch.h>
-#include "device.h"
+#include "opgpdevice.h"
 
 #define SPIFFS_MODE
 

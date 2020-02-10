@@ -16,7 +16,7 @@
 #include "applets/openpgpapplet.h"
 #include "applets/openpgp/openpgpconst.h"
 #include "applets/openpgp/openpgpstruct.h"
-#include "device.h"
+#include "opgpdevice.h"
 
 namespace OpenPGP {
 

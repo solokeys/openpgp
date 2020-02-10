@@ -21,7 +21,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "device.h"
+#include "opgpdevice.h"
 #include "tlv.h"
 #include "solofactory.h"
 #include "filesystem.h"

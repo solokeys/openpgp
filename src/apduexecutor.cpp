@@ -8,7 +8,7 @@
  */
 
 #include "apduexecutor.h"
-#include "device.h"
+#include "opgpdevice.h"
 #include "applets/apduconst.h"
 #include "applets/applet.h"
 #include "solofactory.h"

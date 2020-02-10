@@ -1,9 +1,9 @@
+#include <opgpdevice.h>
 #include <stdio.h>
 #include <cstdlib>
 #include <chrono>
 #include <thread>
 
-#include "device.h"
 #include "solofactory.h"
 #include "util.h"
 #include "applets/apduconst.h"

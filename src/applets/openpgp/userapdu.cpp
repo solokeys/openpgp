@@ -8,7 +8,7 @@
  */
 
 #include <applets/openpgp/security.h>
-#include "device.h"
+#include "opgpdevice.h"
 #include "userapdu.h"
 #include "applets/apduconst.h"
 #include "solofactory.h"

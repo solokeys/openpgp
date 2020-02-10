@@ -9,7 +9,7 @@
 
 #include "filesystem.h"
 #include <array>
-#include "device.h"
+#include "opgpdevice.h"
 #include "tlv.h"
 #include "applets/openpgp/openpgpconst.h"
 

@@ -9,7 +9,7 @@
 
 #include "resetprovider.h"
 
-#include "device.h"
+#include "opgpdevice.h"
 #include "solofactory.h"
 #include "util.h"
 

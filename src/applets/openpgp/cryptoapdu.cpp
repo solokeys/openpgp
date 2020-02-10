@@ -10,7 +10,7 @@
 #include <applets/openpgp/security.h>
 #include "cryptoapdu.h"
 #include "tlv.h"
-#include "device.h"
+#include "opgpdevice.h"
 #include "applets/apduconst.h"
 #include "solofactory.h"
 #include "applets/openpgp/openpgpfactory.h"
