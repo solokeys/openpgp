@@ -12,7 +12,6 @@
 #include <mbedtls/config.h>
 #include <mbedtls/rsa.h>
 #include <mbedtls/aes.h>
-#include <mbedtls/havege.h>
 #include <mbedtls/entropy.h>
 #include <mbedtls/ctr_drbg.h>
 #include "mbedtls/ecdh.h"
