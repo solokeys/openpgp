@@ -33,7 +33,6 @@
 
 /* System support */
 #define MBEDTLS_HAVE_ASM
-//#define MBEDTLS_HAVE_TIME
 
 /* mbed TLS feature support */
 #define MBEDTLS_CIPHER_MODE_CBC
@@ -68,9 +67,6 @@
 #define MBEDTLS_X509_USE_C
 
 #define MBEDTLS_GENPRIME
-
-//#define MBEDTLS_TIMING_C
-//#define MBEDTLS_HAVEGE_C
 
 #define MBEDTLS_ECP_DP_SECP256R1_ENABLED
 #define MBEDTLS_ECP_DP_SECP256K1_ENABLED
