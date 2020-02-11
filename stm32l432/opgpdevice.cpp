@@ -1,9 +1,15 @@
-#include <sys/time.h>
+/*
+ Copyright 2019 SoloKeys Developers
+
+ Licensed under the Apache License, Version 2.0, <LICENSE-APACHE or
+ http://apache.org/licenses/LICENSE-2.0> or the MIT license <LICENSE-MIT or
+ http://opensource.org/licenses/MIT>, at your option. This file may not be
+ copied, modified, or distributed except according to those terms.
+ */
+
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
-#include "device.h"
 
 #include <spiffs.h>
 static spiffs fs;
@@ -33,10 +39,10 @@ static s32_t hw_spiffs_erase(u32_t addr, u32_t size) {
 
 void hw_spiffs_mount() {
 	spiffs_config cfg;
-	cfg.phys_size = 10*2048; // use all spi flash
-	cfg.phys_addr = 0;       // start spiffs at start of spi flash
-	cfg.phys_erase_block = 2048; // according to datasheet
-	cfg.log_block_size = 2048;   // let us not complicate things
+	cfg.phys_size = 10*2048;           // use all spi flash
+	cfg.phys_addr = 0;                 // start spiffs at start of spi flash
+	cfg.phys_erase_block = 2048;       // according to the datasheet
+	cfg.log_block_size = 2048;         // let us not complicate things
 	cfg.log_page_size = LOG_PAGE_SIZE; // as we said
 
 	cfg.hal_read_f = hw_spiffs_read;
@@ -66,20 +72,7 @@ void hw_spiffs_mount() {
 }
 
 int hwinit() {
-#ifdef SPIFFS_MODE
-	memset(fsbuf, 0xff, sizeof(fsbuf));
-
-	if (ifileexist(SpiffsFileName)) {
-		size_t size = 0;
-		ireadfile(SpiffsFileName, fsbuf, sizeof(fsbuf), &size);
-		if (size != sizeof(fsbuf))
-			memset(fsbuf, 0xff, sizeof(fsbuf));
-
-		printf_device("Loaded OK\n");
-	}
-
 	hw_spiffs_mount();
-#endif
 
 	return 0;
 }
