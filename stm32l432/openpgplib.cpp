@@ -8,7 +8,7 @@
  */
 
 #include "openpgplib.h"
-#include "device.h"
+#include "opgpdevice.h"
 
 Applet::APDUExecutor *fexecutor = nullptr;
 void OpenpgpExchange(uint8_t *datain, size_t datainlen, uint8_t *dataout, size_t *outlen) {

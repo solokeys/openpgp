@@ -7,6 +7,9 @@
  copied, modified, or distributed except according to those terms.
  */
 
+#include "stdint.h"
+#include "stddef.h"
+
 extern "C" {
 
 	void OpenpgpInit();
