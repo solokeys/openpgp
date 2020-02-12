@@ -7,6 +7,8 @@
  copied, modified, or distributed except according to those terms.
  */
 
+#include "opgpdevice.h"
+
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -64,8 +66,8 @@ void hw_spiffs_mount() {
 		printf_device("format res: %i\n", res);
 	}
 
-	uint32_t total = 0;
-	uint32_t used = 0;
+	u32_t total = 0;
+	u32_t used = 0;
 	SPIFFS_info(&fs, &total, &used);
 	printf_device("Mounted OK. Memory total: %d used: %d\n", total, used);
 	sprintfs();
@@ -75,27 +77,6 @@ int hwinit() {
 	hw_spiffs_mount();
 
 	return 0;
-}
-
-void ccid_init()
-{
-//    fd = udp_server();
-}
-
-uint32_t ccid_recv(uint8_t * msg)
-{
-//    l = udp_recv(fd, msg, 1024);
-}
-
-void ccid_send(uint8_t * msg, uint32_t sz)
-{
-//    udp_send(fd, msg, sz);
-}
-
-void make_work_directory(char* dir) {
-	if (access(dir, F_OK) != 0) {
-		mkdir(dir, 0777);
-	}
 }
 
 bool fileexist(char* name) {
@@ -152,8 +133,8 @@ int sprintfs() {
 	struct spiffs_dirent e;
 	struct spiffs_dirent *pe = &e;
 
-	uint32_t total = 0;
-	uint32_t used = 0;
+	u32_t total = 0;
+	u32_t used = 0;
 	SPIFFS_info(&fs, &total, &used);
 	printf_device("Memory total: %d used: %d\n", total, used);
 
@@ -165,18 +146,26 @@ int sprintfs() {
 	return 0;
 }
 
+bool fnmatch(char *pattern, char*name){
+    if (strcmp(pattern, name) == 0)
+        return true;
+
+    if (strcmp(pattern, "*") == 0)
+        return true;
+        
+    return false;
+}
+
 int deletefiles(char* name) {
 	spiffs_DIR d;
 	struct spiffs_dirent e;
 	struct spiffs_dirent *pe = &e;
 	int res;
 
-	sprintfs();
-
 	SPIFFS_opendir(&fs, "/", &d);
 	while ((pe = SPIFFS_readdir(&d, pe))) {
-		if ((fnmatch(name, (char *)pe->name, 0)) == 0) {
-			fd = SPIFFS_open_by_dirent(&fs, pe, SPIFFS_RDWR, 0);
+		if (fnmatch(name, (char *)pe->name)) {
+			spiffs_file fd = SPIFFS_open_by_dirent(&fs, pe, SPIFFS_RDWR, 0);
 			if (fd < 0)
 				return SPIFFS_errno(&fs);
 			res = SPIFFS_fremove(&fs, fd);
