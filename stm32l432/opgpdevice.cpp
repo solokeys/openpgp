@@ -31,34 +31,39 @@ static u8_t spiffs_fds[32 * 4];
 static u8_t spiffs_cache_buf[(LOG_PAGE_SIZE + 32) * 4];
 
 static s32_t hw_spiffs_read(u32_t addr, u32_t size, u8_t *dst) {
-	//memcpy(dst, fsbuf + addr, size);
-    //   int page_offset = (sizeof(CTAP_residentKey) * index) / PAGE_SIZE;
-    //   uint32_t addr = flash_addr(page_offset + RK_START_PAGE) + ((sizeof(CTAP_residentKey)*index) % PAGE_SIZE);
-    //    uint32_t * ptr = (uint32_t *)addr;
-    //    memmove((uint8_t*)rk,ptr,sizeof(CTAP_residentKey));
-
+    if (addr < OPENPGP_START_PAGE_ADDR || addr + size > OPENPGP_END_PAGE_ADDR)
+        return SPIFFS_ERR_INTERNAL;
+    
+    memmove(dst, addr, size);
 	return SPIFFS_OK;
 }
 
 static s32_t hw_spiffs_write(u32_t addr, u32_t size, u8_t *src) {
 	//memcpy(fsbuf + addr, src, size);
-    //flash_write(addr, (uint8_t*)rk, sizeof(CTAP_residentKey));
+    if (addr < OPENPGP_START_PAGE_ADDR || addr + size > OPENPGP_END_PAGE_ADDR)
+        return SPIFFS_ERR_INTERNAL;
+    
+    flash_write(addr, src, size);
 	return SPIFFS_OK;
 }
 
 static s32_t hw_spiffs_erase(u32_t addr, u32_t size) {
 	//memset(fsbuf + addr, 0xff, size);
-    //flash_erase_page(page);
+    uint8_t page = addr / BLOCK_SIZE;
+    if (page < OPENPGP_START_PAGE || page > OPENPGP_END_PAGE)
+        return SPIFFS_ERR_INTERNAL;
+    
+    flash_erase_page(page);
 	return SPIFFS_OK;
 }
 
 void hw_spiffs_mount() {
 	spiffs_config cfg;
-	cfg.phys_size = TOTAL_FS_SIZE;           // use all spi flash
-	cfg.phys_addr = 0;                       // start spiffs at start of spi flash
-	cfg.phys_erase_block = BLOCK_SIZE;       // according to the datasheet
+	cfg.phys_size = TOTAL_FS_SIZE;           // use size as in `memory_layout.h`
+	cfg.phys_addr = OPENPGP_START_PAGE_ADDR; // start memory area for OpenPGP
+	cfg.phys_erase_block = BLOCK_SIZE;       // block size as in CPU
 	cfg.log_block_size = BLOCK_SIZE;         // let us not complicate things
-	cfg.log_page_size = LOG_PAGE_SIZE;       // as we said
+	cfg.log_page_size = LOG_PAGE_SIZE;       // page size for filesystem
 
 	cfg.hal_read_f = hw_spiffs_read;
 	cfg.hal_write_f = hw_spiffs_write;
