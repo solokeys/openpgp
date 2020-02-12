@@ -10,9 +10,13 @@
 #include "stdint.h"
 #include "stddef.h"
 
+#ifdef __cplusplus
 extern "C" {
+#endif
 
 	void OpenpgpInit();
 	void OpenpgpExchange(uint8_t *datain, size_t datainlen, uint8_t *dataout, size_t *outlen);
 
+#ifdef __cplusplus
 }
+#endif
