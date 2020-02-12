@@ -11,7 +11,7 @@
 #define SRC_APPLETS_OPENPGP_OPENPGPCONST_H_
 
 #include <cstdint>
-#include "util.h"
+#include "opgputil.h"
 
 namespace OpenPGP {
 

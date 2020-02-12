@@ -11,8 +11,8 @@
 #define SRC_TLV_H_
 
 #include <opgpdevice.h>
-#include "util.h"
-#include "errors.h"
+#include <opgputil.h>
+#include <errors.h>
 #include <array>
 #include <string.h>
 

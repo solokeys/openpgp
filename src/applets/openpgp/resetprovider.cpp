@@ -11,7 +11,7 @@
 
 #include "opgpdevice.h"
 #include "solofactory.h"
-#include "util.h"
+#include "opgputil.h"
 
 namespace OpenPGP {
 

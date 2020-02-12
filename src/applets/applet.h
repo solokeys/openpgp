@@ -13,7 +13,7 @@
 #include <cstdint>
 #include <string_view>
 
-#include "util.h"
+#include "opgputil.h"
 #include "errors.h"
 #include "filesystem.h"
 #include "apduconst.h"

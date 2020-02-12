@@ -12,7 +12,7 @@
 
 #include <cstdint>
 #include <cstdlib>
-#include "util.h"
+#include "opgputil.h"
 #include "errors.h"
 #include "applets/appletstorage.h"
 #include "applets/apduconst.h"

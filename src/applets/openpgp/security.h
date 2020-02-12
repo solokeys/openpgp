@@ -13,7 +13,7 @@
 #include <cstdint>
 
 #include "errors.h"
-#include "util.h"
+#include "opgputil.h"
 #include "openpgpconst.h"
 #include "openpgpstruct.h"
 

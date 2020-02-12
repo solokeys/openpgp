@@ -12,7 +12,7 @@
 #define SRC_OPENPGP_OPENPGPSTRUCT_H_
 
 #include "filesystem.h"
-#include "util.h"
+#include "opgputil.h"
 #include "openpgpconst.h"
 #include "cryptolib.h"
 

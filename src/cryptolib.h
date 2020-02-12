@@ -10,7 +10,7 @@
 #ifndef SRC_CRYPTOLIB_H_
 #define SRC_CRYPTOLIB_H_
 
-#include <util.h>
+#include <opgputil.h>
 #include <cstddef>
 #include <cstdint>
 #include <errors.h>

@@ -14,7 +14,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <cstdio>
-#include "util.h"
+#include "opgputil.h"
 #include "errors.h"
 #include "opgpdevice.h"
 

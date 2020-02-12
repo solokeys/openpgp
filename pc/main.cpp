@@ -14,7 +14,7 @@
 #include <thread>
 
 #include "solofactory.h"
-#include "util.h"
+#include "opgputil.h"
 #include "applets/apduconst.h"
 #include "ccid.h"
 
