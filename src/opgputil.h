@@ -5,8 +5,8 @@
 // http://opensource.org/licenses/MIT>, at your option. This file may not be
 // copied, modified, or distributed except according to those terms.
 
-#ifndef _UTIL_H
-#define _UTIL_H
+#ifndef _OPGPUTIL_H
+#define _OPGPUTIL_H
 
 #include <cstdio>
 #include <cstdint>
