@@ -15,7 +15,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include "util.h"
-#include "error.h"
+#include "errors.h"
 #include "opgpdevice.h"
 
 namespace Applet {
