@@ -13,10 +13,16 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "flash.h"
+#include "memory_layout.h"
+
 #include <spiffs.h>
 static spiffs fs;
 
 #define LOG_PAGE_SIZE 64
+// 2048 for this CPU
+#define BLOCK_SIZE PAGE_SIZE
+#define TOTAL_FS_SIZE OPENPGP_NUM_PAGES*BLOCK_SIZE
 
 int sprintfs();
 
@@ -26,26 +32,33 @@ static u8_t spiffs_cache_buf[(LOG_PAGE_SIZE + 32) * 4];
 
 static s32_t hw_spiffs_read(u32_t addr, u32_t size, u8_t *dst) {
 	//memcpy(dst, fsbuf + addr, size);
+    //   int page_offset = (sizeof(CTAP_residentKey) * index) / PAGE_SIZE;
+    //   uint32_t addr = flash_addr(page_offset + RK_START_PAGE) + ((sizeof(CTAP_residentKey)*index) % PAGE_SIZE);
+    //    uint32_t * ptr = (uint32_t *)addr;
+    //    memmove((uint8_t*)rk,ptr,sizeof(CTAP_residentKey));
+
 	return SPIFFS_OK;
 }
 
 static s32_t hw_spiffs_write(u32_t addr, u32_t size, u8_t *src) {
 	//memcpy(fsbuf + addr, src, size);
+    //flash_write(addr, (uint8_t*)rk, sizeof(CTAP_residentKey));
 	return SPIFFS_OK;
 }
 
 static s32_t hw_spiffs_erase(u32_t addr, u32_t size) {
 	//memset(fsbuf + addr, 0xff, size);
+    //flash_erase_page(page);
 	return SPIFFS_OK;
 }
 
 void hw_spiffs_mount() {
 	spiffs_config cfg;
-	cfg.phys_size = 10*2048;           // use all spi flash
-	cfg.phys_addr = 0;                 // start spiffs at start of spi flash
-	cfg.phys_erase_block = 2048;       // according to the datasheet
-	cfg.log_block_size = 2048;         // let us not complicate things
-	cfg.log_page_size = LOG_PAGE_SIZE; // as we said
+	cfg.phys_size = TOTAL_FS_SIZE;           // use all spi flash
+	cfg.phys_addr = 0;                       // start spiffs at start of spi flash
+	cfg.phys_erase_block = BLOCK_SIZE;       // according to the datasheet
+	cfg.log_block_size = BLOCK_SIZE;         // let us not complicate things
+	cfg.log_page_size = LOG_PAGE_SIZE;       // as we said
 
 	cfg.hal_read_f = hw_spiffs_read;
 	cfg.hal_write_f = hw_spiffs_write;
