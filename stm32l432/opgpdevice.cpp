@@ -51,7 +51,7 @@ static s32_t hw_spiffs_write(u32_t addr, u32_t size, u8_t *src) {
 
 static s32_t hw_spiffs_erase(u32_t addr, u32_t size) {
 	//memset(fsbuf + addr, 0xff, size);
-    uint8_t page = addr / BLOCK_SIZE;
+    uint8_t page = OPENPGP_START_PAGE + (addr - OPENPGP_START_PAGE_ADDR) / BLOCK_SIZE;
     if (page < OPENPGP_START_PAGE || page > OPENPGP_END_PAGE)
         return SPIFFS_ERR_INTERNAL;
     
