@@ -10,11 +10,13 @@
 #include "opgpdevice.h"
 
 #include <stdint.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "flash.h"
 #include "memory_layout.h"
+#include "device.h"
 
 #include <spiffs.h>
 static spiffs fs;
@@ -34,7 +36,7 @@ static s32_t hw_spiffs_read(u32_t addr, u32_t size, u8_t *dst) {
     if (addr < OPENPGP_START_PAGE_ADDR || addr + size > OPENPGP_END_PAGE_ADDR)
         return SPIFFS_ERR_INTERNAL;
     
-    memmove(dst, addr, size);
+    memmove(dst, (u8_t *)addr, size);
 	return SPIFFS_OK;
 }
 
@@ -196,6 +198,6 @@ int deletefiles(char* name) {
 }
 
 int hwreboot() {
-
+    device_reboot();
 	return 0;
 }
