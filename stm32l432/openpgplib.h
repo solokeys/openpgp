@@ -6,6 +6,9 @@
  http://opensource.org/licenses/MIT>, at your option. This file may not be
  copied, modified, or distributed except according to those terms.
  */
+ 
+#ifndef _OPENPGPLIB_H_
+#define _OPENPGPLIB_H_
 
 #include "stdint.h"
 #include "stddef.h"
@@ -19,4 +22,6 @@ extern "C" {
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif
