@@ -326,7 +326,7 @@ typedef unsigned char u8_t;
 // use this technique. If your controller is one of the rare ones that don't,
 // turn this option on and SPIFFS will perform a read-modify-write instead.
 #ifndef SPIFFS_NO_BLIND_WRITES
-#define SPIFFS_NO_BLIND_WRITES                0
+#define SPIFFS_NO_BLIND_WRITES                1
 #endif
 
 // Set SPIFFS_TEST_VISUALISATION to non-zero to enable SPIFFS_vis function
