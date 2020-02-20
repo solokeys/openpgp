@@ -26,36 +26,41 @@ static spiffs fs;
 #define BLOCK_SIZE PAGE_SIZE
 #define TOTAL_FS_SIZE OPENPGP_NUM_PAGES*BLOCK_SIZE
 
-int sprintfs();
+void sprintfs();
 
 static u8_t spiffs_work_buf[LOG_PAGE_SIZE * 2];
 static u8_t spiffs_fds[32 * 4];
 static u8_t spiffs_cache_buf[(LOG_PAGE_SIZE + 32) * 4];
 
 static s32_t hw_spiffs_read(u32_t addr, u32_t size, u8_t *dst) {
-    if (addr < OPENPGP_START_PAGE_ADDR || addr + size > OPENPGP_END_PAGE_ADDR)
+    if (addr < OPENPGP_START_PAGE_ADDR || addr + size > OPENPGP_END_PAGE_ADDR) {
+        printf_device("spiffs read address %x error\n", addr);
         return SPIFFS_ERR_INTERNAL;
+    }
     
     memmove(dst, (u8_t *)addr, size);
 	return SPIFFS_OK;
 }
 
 static s32_t hw_spiffs_write(u32_t addr, u32_t size, u8_t *src) {
-	//memcpy(fsbuf + addr, src, size);
-    if (addr < OPENPGP_START_PAGE_ADDR || addr + size > OPENPGP_END_PAGE_ADDR)
+    if (addr < OPENPGP_START_PAGE_ADDR || addr + size > OPENPGP_END_PAGE_ADDR) {
+        printf_device("spiffs write address %x error\n", addr);
         return SPIFFS_ERR_INTERNAL;
+    }
     
-    flash_write(addr, src, size);
+    flash_write_ex(addr, src, size);
 	return SPIFFS_OK;
 }
 
 static s32_t hw_spiffs_erase(u32_t addr, u32_t size) {
-	//memset(fsbuf + addr, 0xff, size);
-    uint8_t page = OPENPGP_START_PAGE + (addr - OPENPGP_START_PAGE_ADDR) / BLOCK_SIZE;
-    if (page < OPENPGP_START_PAGE || page > OPENPGP_END_PAGE)
-        return SPIFFS_ERR_INTERNAL;
-    
-    flash_erase_page(page);
+    for(u32_t x = 0; x < size; x += 2048) {
+        uint8_t page = OPENPGP_START_PAGE + (addr - OPENPGP_START_PAGE_ADDR) / BLOCK_SIZE;
+        if (page < OPENPGP_START_PAGE || page > OPENPGP_END_PAGE) {
+            printf_device("spiffs erase address %x error\n", addr);
+            return SPIFFS_ERR_INTERNAL;
+        }
+        flash_erase_page(page + x / 2048);
+    }
 	return SPIFFS_OK;
 }
 
@@ -86,10 +91,7 @@ void hw_spiffs_mount() {
 		printf_device("format res: %i\n", res);
 	}
 
-	u32_t total = 0;
-	u32_t used = 0;
-	SPIFFS_info(&fs, &total, &used);
-	printf_device("Mounted OK. Memory total: %d used: %d\n", total, used);
+	printf_device("SPIFFS mount OK.\n");
 	sprintfs();
 }
 
@@ -148,7 +150,7 @@ int deletefile(char* name) {
 	return SPIFFS_remove(&fs, name);
 }
 
-int sprintfs() {
+void sprintfs() {
 	spiffs_DIR d;
 	struct spiffs_dirent e;
 	struct spiffs_dirent *pe = &e;
@@ -163,7 +165,7 @@ int sprintfs() {
 		printf_device("  [%4d] %s\n", pe->size, pe->name);
 	}
 	SPIFFS_closedir(&d);
-	return 0;
+	return;
 }
 
 bool fnmatch(char *pattern, char*name){
