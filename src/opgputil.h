@@ -184,4 +184,6 @@ constexpr void dump_hex(bstr data, size_t maxlen = 0) {
 	dump_hex(const_cast<uint8_t*>(&data.front()), data.length(), maxlen);
 }
 
+[[ noreturn ]] void show_error();
+
 #endif

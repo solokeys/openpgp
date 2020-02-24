@@ -6,4 +6,11 @@
 // copied, modified, or distributed except according to those terms.
 
 #include "opgputil.h"
+#include "led.h"
 
+void show_error() {
+    led_rgb(0xFF0000U);
+    while (true);
+}
+
+void std::__throw_out_of_range_fmt(char const*, ...) {show_error();};
