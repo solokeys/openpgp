@@ -5,7 +5,7 @@
 #include <cstdlib>
 #include <stdio.h>
 
-//#define OPGP_DEBUG
+#define OPGP_DEBUG
 
 template <class ... Args>
 constexpr void printf_device(const char *fmt, Args ... args) {
