@@ -18,7 +18,7 @@ extern "C" {
 #endif
 
 	void OpenpgpInit();
-	void OpenpgpExchange(uint8_t *datain, size_t datainlen, uint8_t *dataout, size_t *outlen);
+	void OpenpgpExchange(uint8_t *datain, size_t datainlen, uint8_t *dataout, uint32_t *outlen);
 
 #ifdef __cplusplus
 }
