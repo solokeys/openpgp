@@ -19,7 +19,7 @@ void OpenpgpExchange(uint8_t *datain, size_t datainlen, uint8_t *dataout, uint32
 	if (fexecutor == nullptr)
 		return;
 
-	uint8_t apdu_result[4096] = {0};
+	PUT_TO_SRAM2 static uint8_t apdu_result[4096] = {0};
 	auto resstr = bstr(apdu_result, 0, sizeof(apdu_result) - 10);
 	auto apdu = bstr(datain, datainlen);
 
@@ -34,7 +34,6 @@ void OpenpgpExchange(uint8_t *datain, size_t datainlen, uint8_t *dataout, uint32
 }
 
 void OpenpgpInit() {
-
     printf_device("-------- INIT --------\n");
 
     hwinit();

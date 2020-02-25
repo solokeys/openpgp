@@ -28,9 +28,9 @@ static spiffs fs;
 
 void sprintfs();
 
-static u8_t spiffs_work_buf[LOG_PAGE_SIZE * 2];
-static u8_t spiffs_fds[32 * 4];
-static u8_t spiffs_cache_buf[(LOG_PAGE_SIZE + 32) * 4];
+PUT_TO_SRAM2 static u8_t spiffs_work_buf[LOG_PAGE_SIZE * 2];
+PUT_TO_SRAM2 static u8_t spiffs_fds[32 * 4];
+PUT_TO_SRAM2 static u8_t spiffs_cache_buf[(LOG_PAGE_SIZE + 32) * 4];
 
 static s32_t hw_spiffs_read(u32_t addr, u32_t size, u8_t *dst) {
     if (addr < OPENPGP_START_PAGE_ADDR || addr + size > OPENPGP_END_PAGE_ADDR) {
