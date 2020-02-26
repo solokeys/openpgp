@@ -203,3 +203,11 @@ int hwreboot() {
     device_reboot();
 	return 0;
 }
+
+int gen_random_device_callback(void *parameters, uint8_t *data, size_t size) {
+    return gen_random_device(data, size);
+}
+
+int gen_random_device(uint8_t * data, size_t size) {
+    return 0;
+}
