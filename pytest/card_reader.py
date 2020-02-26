@@ -25,6 +25,7 @@ from struct import pack
 from usb.util import find_descriptor, claim_interface, get_string, \
     endpoint_type, endpoint_direction, \
     ENDPOINT_TYPE_BULK, ENDPOINT_OUT, ENDPOINT_IN
+from card_pcsc_reader import get_pcsc_device
 
 # USB class, subclass, protocol
 CCID_CLASS = 0x0B
@@ -314,16 +315,23 @@ class find_class(object):
 
 def get_ccid_device():
     ccid = None
+
     dev_list = usb.core.find(find_all=True, custom_match=find_class(CCID_CLASS))
     for dev in dev_list:
         try:
+            print("=== %03d Device %03d" % (dev.bus, dev.address))
             ccid = CardReader(dev)
             print("CCID device: Bus %03d Device %03d" % (dev.bus, dev.address))
             break
         except:
             pass
+
+    if not ccid:
+        ccid = get_pcsc_device()
+
     if not ccid:
         raise ValueError("No CCID device present")
+
     status = ccid.ccid_get_status()
     if status == 0:
         # It's ON already
