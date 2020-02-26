@@ -209,5 +209,6 @@ int gen_random_device_callback(void *parameters, uint8_t *data, size_t size) {
 }
 
 int gen_random_device(uint8_t * data, size_t size) {
+    ctap_generate_rng(data, size);
     return 0;
 }
