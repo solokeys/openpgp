@@ -11,7 +11,7 @@
 
 namespace Factory {
 
-static SoloFactory soloFactory;
+PUT_TO_SRAM2 static SoloFactory soloFactory;
 
 SoloFactory &SoloFactory::GetSoloFactory() {
 	return soloFactory;
