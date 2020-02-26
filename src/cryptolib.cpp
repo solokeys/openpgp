@@ -12,8 +12,6 @@
 #include <mbedtls/config.h>
 #include <mbedtls/rsa.h>
 #include <mbedtls/aes.h>
-#include <mbedtls/entropy.h>
-#include <mbedtls/ctr_drbg.h>
 #include "mbedtls/ecdh.h"
 #include "mbedtls/platform.h"
 
@@ -123,13 +121,9 @@ Util::Error CryptoLib::RSAGenKey(RSAKey& keyOut, size_t keySize) {
 	ClearKeyBuffer();
 
 	mbedtls_rsa_context rsa;
-    mbedtls_entropy_context entropy;
-    mbedtls_ctr_drbg_context ctr_drbg;
 	mbedtls_mpi N, P, Q, D, E;
 
 	mbedtls_rsa_init(&rsa, MBEDTLS_RSA_PKCS_V15, 0);
-    mbedtls_ctr_drbg_init(&ctr_drbg);
-    mbedtls_entropy_init(&entropy);
     mbedtls_mpi_init(&N);
     mbedtls_mpi_init(&P);
     mbedtls_mpi_init(&Q);
@@ -137,15 +131,8 @@ Util::Error CryptoLib::RSAGenKey(RSAKey& keyOut, size_t keySize) {
     mbedtls_mpi_init(&E);
 
 	while (true) {
-	    const char *pers = "solokey_openpgp";
-	    if (mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy,
-	    		(const unsigned char *)pers, strlen(pers))) {
-			ret = Util::Error::CryptoOperationError;
-			break;
-	    }
-
 		// OpenPGP 3.3.1 pages 33,34
-		if (mbedtls_rsa_gen_key(&rsa, mbedtls_ctr_drbg_random, &ctr_drbg, keySize, 65537)) {
+		if (mbedtls_rsa_gen_key(&rsa, &gen_random_device_callback, NULL, keySize, 65537)) {
 			ret = Util::Error::CryptoOperationError;
 			break;
 		}
@@ -177,8 +164,6 @@ Util::Error CryptoLib::RSAGenKey(RSAKey& keyOut, size_t keySize) {
     mbedtls_mpi_free(&Q);
     mbedtls_mpi_free(&D);
     mbedtls_mpi_free(&E);
-    mbedtls_ctr_drbg_free(&ctr_drbg);
-    mbedtls_entropy_free(&entropy);
 	mbedtls_rsa_free(&rsa);
 
 	return ret;
@@ -402,13 +387,6 @@ Util::Error CryptoLib::ECDSAGenKey(ECDSAaid curveID, ECDSAKey& keyOut) {
 
 	mbedtls_ecdsa_context ctx;
 
-	mbedtls_entropy_context entropy;
-	mbedtls_ctr_drbg_context ctr_drbg;
-	const char *pers = "ecdsa solokeys generate";
-
-	mbedtls_entropy_init(&entropy);
-	mbedtls_ctr_drbg_init(&ctr_drbg);
-
 	Util::Error err = Util::Error::InternalError;
 	mbedtls_ecp_group_id groupid = MbedtlsCurvefromAid(curveID);
 
@@ -416,17 +394,10 @@ Util::Error CryptoLib::ECDSAGenKey(ECDSAaid curveID, ECDSAKey& keyOut) {
 		if (ecdsa_init(&ctx, groupid, NULL, NULL)){
 			break;
 		}
-			
 
-		if (mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy, (const unsigned char *)pers, strlen(pers))) {
-			break;	
-		}
-			
-
-		if (mbedtls_ecdsa_genkey(&ctx, groupid, mbedtls_ctr_drbg_random, &ctr_drbg)){
+		if (mbedtls_ecdsa_genkey(&ctx, groupid, &gen_random_device_callback, NULL)){
 			break;
 		}
-			
 
 		keyOut.CurveId = curveID;
 	    AppendKeyPart(KeyBuffer, keyOut.Private, &ctx.d);
@@ -437,8 +408,6 @@ Util::Error CryptoLib::ECDSAGenKey(ECDSAaid curveID, ECDSAKey& keyOut) {
 		break;
 	}
 
-	mbedtls_entropy_free(&entropy);
-	mbedtls_ctr_drbg_free(&ctr_drbg);
 	mbedtls_ecdsa_free(&ctx);
 	return err;
 
@@ -454,21 +423,9 @@ Util::Error CryptoLib::ECDSASign(ECDSAKey key, bstr data, bstr& signature) {
 	mbedtls_mpi_init(&s);
 
 
-	mbedtls_entropy_context entropy;
-	mbedtls_ctr_drbg_context ctr_drbg;
-	const char *pers = "ecdsa solokeys signature";
-
-	mbedtls_entropy_init(&entropy);
-	mbedtls_ctr_drbg_init(&ctr_drbg);
-
 	Util::Error ret = Util::Error::InternalError;
 
 	while (true) {
-		if (mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy, (const unsigned char *)pers, strlen(pers))) {
-			ret =  Util::Error::CryptoOperationError;
-			break;
-		}
-
 		if (ecdsa_init(&ctx, MbedtlsCurvefromAid(key.CurveId), &key.Private, &key.Public)) {
 			ret = Util::Error::CryptoDataError;
 			break;
@@ -486,8 +443,8 @@ Util::Error CryptoLib::ECDSASign(ECDSAKey key, bstr data, bstr& signature) {
 				&ctx.d,
 				data.uint8Data(),
 				data.length(),
-				mbedtls_ctr_drbg_random,
-				&ctr_drbg)) {
+				&gen_random_device_callback,
+				NULL)) {
 			ret =  Util::Error::CryptoOperationError;
 			break;
 		}
@@ -518,8 +475,6 @@ Util::Error CryptoLib::ECDSASign(ECDSAKey key, bstr data, bstr& signature) {
 	}
 
 
-	mbedtls_entropy_free(&entropy);
-	mbedtls_ctr_drbg_free(&ctr_drbg);
 	mbedtls_ecdsa_free(&ctx);
 	mbedtls_mpi_free(&r);
 	mbedtls_mpi_free(&s);
@@ -574,26 +529,14 @@ Util::Error CryptoLib::ECDSACalcPublicKey(ECDSAaid curveID, bstr privateKey, bst
 	Util::Error ret = Util::Error::NoError;
 
 	mbedtls_ecdsa_context ctx;
-	mbedtls_entropy_context entropy;
-	mbedtls_ctr_drbg_context ctr_drbg;
-	const char *pers = "ecdsa solokeys public key";
-
-	mbedtls_entropy_init(&entropy);
-	mbedtls_ctr_drbg_init(&ctr_drbg);
-
 	while (true) {
-		if (mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy, (const unsigned char *)pers, strlen(pers))) {
-			ret = Util::Error::CryptoOperationError;
-			break;
-		}
-
 		if (ecdsa_init(&ctx, MbedtlsCurvefromAid(curveID), &privateKey, NULL)) {
 			ret = Util::Error::CryptoDataError;
 			break;
 		}
 
 		// Q = d * P
-		if (mbedtls_ecp_mul( &ctx.grp, &ctx.Q, &ctx.d, &ctx.grp.G, mbedtls_ctr_drbg_random, &ctr_drbg)) {
+		if (mbedtls_ecp_mul( &ctx.grp, &ctx.Q, &ctx.d, &ctx.grp.G, &gen_random_device_callback, NULL)) {
 			ret = Util::Error::CryptoOperationError;
 			break;
 		}
@@ -619,8 +562,6 @@ Util::Error CryptoLib::ECDSACalcPublicKey(ECDSAaid curveID, bstr privateKey, bst
 		break;
 	}
 
-	mbedtls_entropy_free(&entropy);
-	mbedtls_ctr_drbg_free(&ctr_drbg);
 	mbedtls_ecdsa_free(&ctx);
 	return ret;
 }
@@ -637,25 +578,14 @@ Util::Error CryptoLib::ECDHComputeShared(ECDSAKey key, bstr anotherPublicKey, bs
 	mbedtls_ecdh_context ctx;
 	mbedtls_ecp_point anotherQ;
 	mbedtls_mpi z;
-	mbedtls_entropy_context entropy;
-	mbedtls_ctr_drbg_context ctr_drbg;
-	const char *pers = "ecdsa solokeys ecdh";
 	Util::Error ret = Util::Error::InternalError;
 
 	mbedtls_ecdh_init(&ctx);
 
-	mbedtls_entropy_init(&entropy);
-	mbedtls_ctr_drbg_init(&ctr_drbg);
 	mbedtls_ecp_point_init(&anotherQ);
 	mbedtls_mpi_init(&z);
 
 	while (true) {
-		// init random
-		if (mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy, (const unsigned char *)pers, strlen(pers))) {
-			ret = Util::Error::CryptoOperationError;
-			break;
-		}
-
 		// load keys
 		if (mbedtls_ecp_group_load(&ctx.grp, MbedtlsCurvefromAid(key.CurveId))) {
 			ret = Util::Error::StoredKeyError;
@@ -699,8 +629,8 @@ Util::Error CryptoLib::ECDHComputeShared(ECDSAKey key, bstr anotherPublicKey, bs
 				&z,
 				&anotherQ,
 				&ctx.d,
-				mbedtls_ctr_drbg_random,
-				&ctr_drbg) ) {
+				&gen_random_device_callback,
+				NULL) ) {
 			ret = Util::Error::CryptoOperationError;
 			break;
 		}
@@ -721,8 +651,6 @@ Util::Error CryptoLib::ECDHComputeShared(ECDSAKey key, bstr anotherPublicKey, bs
 	mbedtls_ecdh_free(&ctx);
 
 
-	mbedtls_entropy_free(&entropy);
-	mbedtls_ctr_drbg_free(&ctr_drbg);
 	mbedtls_mpi_free(&z);
 	mbedtls_ecp_point_free(&anotherQ);
 	
