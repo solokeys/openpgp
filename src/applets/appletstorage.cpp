@@ -27,11 +27,12 @@ Util::Error AppletStorage::SelectApplet(bstr aid, bstr &result) {
     	app->DeSelect();
 
     auto err = sapp->Select(result);
-    if (err != Util::Error::NoError)
+    if (err != Util::Error::NoError &&
+        err != Util::Error::ApplicationTerminated)
     	return err;
 
     selectedApplet = sapp;
-	return Util::Error::NoError;
+	return err;
 }
 
 Applet* AppletStorage::GetSelectedApplet() {
