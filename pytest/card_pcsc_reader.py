@@ -1,3 +1,4 @@
+import struct
 from smartcard import System
 from smartcard.pcsc.PCSCExceptions import ListReadersException
 from smartcard.pcsc.PCSCContext import PCSCContext
@@ -62,8 +63,27 @@ class CardReader(object):
     def recv_tpdu(self):
         print("recv_tpdu")
 
+    def apdu_exchange(self, apdu, protocol=None):
+        """Exchange data with smart card.
+
+        :param apdu: byte string. data to exchange with card
+        :return: byte string. response from card
+        """
+
+        print(">> " + apdu.hex())
+        resp, sw1, sw2 = self.__conn.transmit(list(apdu), protocol)
+        response = bytes(bytearray(resp))
+        print('<< [' + bytes(bytearray([sw1, sw2])).hex() + ']' + response.hex())
+
+        return response, sw1, sw2
+
+    def _select(self, aid):
+        apdu = b"\x00\xa4\x04\x00" + struct.pack("!B", len(aid)) + aid
+        return self.apdu_exchange(apdu)  # resp, sw1, sw2
+
     def send_cmd(self, cmd):
-        return b""
+        resp, sw1, sw2 = self.apdu_exchange(cmd)
+        return resp + bytes(bytearray([sw1, sw2]))
 
 
 def get_pcsc_device():
