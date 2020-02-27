@@ -197,17 +197,12 @@ class CryptoLib {
 private:
 	CryptoEngine &cryptoEngine;
 
-	uint8_t _KeyBuffer[2049]; // needs for placing RSA 4096 key
-	bstr KeyBuffer{_KeyBuffer, 0, sizeof(_KeyBuffer)};
-
 	Util::Error RSAFillPrivateKey(mbedtls_rsa_context *context, RSAKey key);
 	Util::Error AppendKeyPart(bstr &buffer, bstr &keypart, mbedtls_mpi *mpi);
 	Util::Error AppendKeyPartEcpPoint(bstr &buffer, bstr &keypart,  mbedtls_ecp_group *grp, mbedtls_ecp_point  *point);
 public:
-	CryptoLib(CryptoEngine &_cryptoEngine): cryptoEngine(_cryptoEngine) {
-		ClearKeyBuffer();
-	};
-
+	CryptoLib(CryptoEngine &_cryptoEngine);
+    
 	void ClearKeyBuffer();
 
 	Util::Error GenerateRandom(size_t length, bstr &dataOut);
@@ -231,11 +226,8 @@ public:
 class KeyStorage {
 private:
 	CryptoEngine &cryptoEngine;
-
-	uint8_t prvData[2049] = {0}; // needs for placing RSA 4096 key
-	bstr prvStr{prvData, 0, sizeof(prvData)};
 public:
-	KeyStorage(CryptoEngine &_cryptoEngine): cryptoEngine(_cryptoEngine) {prvStr.clear();};
+	KeyStorage(CryptoEngine &_cryptoEngine);
 
 	bool KeyExists(AppID_t appID, KeyID_t keyID);
 

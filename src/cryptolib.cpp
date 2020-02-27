@@ -28,6 +28,17 @@ namespace Crypto {
 
 static const bstr RSADefaultExponent = "\x01\x00\x01"_bstr;
 
+PUT_TO_SRAM2 uint8_t _KeyBuffer[2049] = {0}; // needs for placing RSA 4096 key
+PUT_TO_SRAM2 bstr KeyBuffer;
+
+PUT_TO_SRAM2 uint8_t prvData[2049] = {0}; // needs for placing RSA 4096 key
+PUT_TO_SRAM2 bstr prvStr;
+
+CryptoLib::CryptoLib(CryptoEngine &_cryptoEngine): cryptoEngine(_cryptoEngine) {
+    KeyBuffer = bstr(_KeyBuffer, 0, sizeof(_KeyBuffer));
+    ClearKeyBuffer();
+};
+
 void CryptoLib::ClearKeyBuffer() {
 	memset(_KeyBuffer, 0x00, sizeof(_KeyBuffer));
 	KeyBuffer.clear();
@@ -656,6 +667,11 @@ Util::Error CryptoLib::ECDHComputeShared(ECDSAKey key, bstr anotherPublicKey, bs
 	
 	return ret;
 }
+
+KeyStorage::KeyStorage(CryptoEngine &_cryptoEngine): cryptoEngine(_cryptoEngine) {
+    prvStr = bstr(prvData, 0, sizeof(prvData));
+    prvStr.clear();
+};
 
 bool KeyStorage::KeyExists(AppID_t appID, KeyID_t keyID) {
 	Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
