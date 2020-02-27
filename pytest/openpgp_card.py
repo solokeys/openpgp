@@ -25,6 +25,7 @@ from enum import Enum, unique
 from struct import pack, unpack
 from kdf_calc import kdf_calc
 from util import *
+import time
 
 
 @unique
@@ -258,6 +259,7 @@ class OpenPGP_Card(object):
 
     def cmd_select_openpgp(self):
         cmd_data = iso7816_compose(0xa4, 0x04, 0x00, b"\xD2\x76\x00\x01\x24\x01")
+        self.__reader.reconnect()
         r = self.__reader.send_cmd(cmd_data)
         if len(r) < 2:
             raise ValueError(r)
@@ -463,6 +465,7 @@ class OpenPGP_Card(object):
             raise ValueError(sw)
         if not (sw[0] == 0x90 and sw[1] == 0x00):
             raise ValueError("%02x%02x" % (sw[0], sw[1]))
+        time.sleep(1)
 
 def parse_kdf_data(kdf_data):
     if len(kdf_data) == 90:

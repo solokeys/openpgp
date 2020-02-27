@@ -16,7 +16,11 @@ def _list_readers():
 class CardReader(object):
     def __init__(self, dev):
         self.__dev = dev
-        self.__conn = dev.createConnection()
+        self.__conn = self.__dev.createConnection()
+        self.reconnect()
+
+    def reconnect(self):
+        self.__conn = self.__dev.createConnection()
         self.__conn.connect()
 
     def get_string(self, num):
@@ -73,7 +77,7 @@ class CardReader(object):
         print(">> " + apdu.hex())
         resp, sw1, sw2 = self.__conn.transmit(list(apdu), protocol)
         response = bytes(bytearray(resp))
-        print('<< [' + bytes(bytearray([sw1, sw2])).hex() + ']' + response.hex())
+        print('<< ' + response.hex() + ' [' + bytes(bytearray([sw1, sw2])).hex() + ']')
 
         return response, sw1, sw2
 
