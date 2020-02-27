@@ -13,6 +13,20 @@ namespace Factory {
 
 PUT_TO_SRAM2 static SoloFactory soloFactory;
 
+using namespace Crypto;
+using namespace Applet;
+using namespace OpenPGP;
+using namespace File;
+
+PUT_TO_SRAM2 OpenPGPFactory openPGPFactory;
+
+PUT_TO_SRAM2 AppletStorage appletStorage;
+PUT_TO_SRAM2 APDUExecutor apduExecutor;
+
+PUT_TO_SRAM2 CryptoEngine cryptoEngine;
+
+PUT_TO_SRAM2 FileSystem fileSystem;
+
 SoloFactory &SoloFactory::GetSoloFactory() {
 	return soloFactory;
 }

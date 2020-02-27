@@ -14,6 +14,16 @@
 #include "solofactory.h"
 
 namespace Applet {
+    
+PUT_TO_SRAM2 static uint8_t apduBuffer[1130] = {0};
+PUT_TO_SRAM2 static uint8_t resultBuffer[1130] = {0};
+PUT_TO_SRAM2 static bstr sapdu;
+PUT_TO_SRAM2 static bstr sresult;
+
+APDUExecutor::APDUExecutor() {
+    sapdu = bstr(apduBuffer, 0, sizeof(apduBuffer));
+    sresult = bstr(resultBuffer, 0, sizeof(resultBuffer));
+};
 
 void APDUExecutor::SetResultError(bstr& result, Util::Error error) {
 	using Util::Error;
@@ -70,7 +80,7 @@ Util::Error APDUExecutor::Execute(bstr apdu, bstr& result) {
 	}
 
 	Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
-	AppletStorage &appletStorage = solo.appletStorage;
+	AppletStorage &appletStorage = solo.GetAppletStorage();
 
 	APDUStruct decapdu;
 	auto errd = decapdu.decode(apdu);

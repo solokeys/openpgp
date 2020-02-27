@@ -12,6 +12,9 @@
 #include "solofactory.h"
 #include "applets/apduconst.h"
 
+// result buffer
+PUT_TO_SRAM2 static uint8_t apdu_result[4096] = {0};
+
 Applet::APDUExecutor *fexecutor = nullptr;
 void OpenpgpExchange(uint8_t *datain, size_t datainlen, uint8_t *dataout, uint32_t *outlen) {
 	*outlen = 0;
