@@ -16,7 +16,8 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
+    extern bool DoReset;
+    
 	void OpenpgpInit();
 	void OpenpgpExchange(uint8_t *datain, size_t datainlen, uint8_t *dataout, uint32_t *outlen);
 

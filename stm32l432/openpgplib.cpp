@@ -15,14 +15,16 @@
 // result buffer
 PUT_TO_SRAM2 static uint8_t apdu_result[4096] = {0};
 
+bool DoReset = false;
+
 Applet::APDUExecutor *fexecutor = nullptr;
+OpenPGP::Security *fsecurity = nullptr;
 void OpenpgpExchange(uint8_t *datain, size_t datainlen, uint8_t *dataout, uint32_t *outlen) {
 	*outlen = 0;
 
 	if (fexecutor == nullptr)
 		return;
 
-	PUT_TO_SRAM2 static uint8_t apdu_result[4096] = {0};
 	auto resstr = bstr(apdu_result, 0, sizeof(apdu_result) - 10);
 	auto apdu = bstr(datain, datainlen);
 
@@ -32,6 +34,9 @@ void OpenpgpExchange(uint8_t *datain, size_t datainlen, uint8_t *dataout, uint32
 
     *outlen = resstr.length();
     memcpy(dataout, apdu_result, *outlen);
+    
+    // finish operation and then reset
+    DoReset = security->DoReset;
 
     return;
 }
@@ -44,11 +49,13 @@ void OpenpgpInit() {
 
     Factory::SoloFactory &factory = Factory::SoloFactory::GetSoloFactory();
     factory.Init();
-    printf_device("OpenPGP factory: ok.\n");
 
     Applet::APDUExecutor executor = factory.GetAPDUExecutor();
     fexecutor = &executor;
-    printf_device("OpenPGP executor: ok.\n");
 
+	OpenPGP::Security &security = factory.GetSecurity();
+    fsecurity = &security;    
+    printf_device("OpenPGP init: ok.\n");
+    
     return;
 }

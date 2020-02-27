@@ -176,10 +176,8 @@ Util::Error APDUSoloReboot::Process(uint8_t cla, uint8_t ins,
 	OpenPGP::OpenPGPFactory &opgp_factory = solo.GetOpenPGPFactory();
 	OpenPGP::Security &security = opgp_factory.GetSecurity();
 
+    // set reset flag
 	security.intRESET();
-
-	//reboot from hardware
-	hwreboot();
 
 	return Util::Error::NoError;
 }

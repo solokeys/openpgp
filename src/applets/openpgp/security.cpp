@@ -273,6 +273,7 @@ void Security::Reload() {
 void Security::intRESET() {
 	appletState.Init();  // clear `terminateExecuted` state
 	Init();
+    DoReset = true;
 }
 
 Util::Error Security::AfterSaveFileLogic(uint16_t objectID) {

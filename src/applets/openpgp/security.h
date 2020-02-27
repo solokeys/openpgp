@@ -26,6 +26,7 @@ namespace OpenPGP {
 		AppletConfig appletConfig;
 		PWStatusBytes pwstatus;
 		KDFDO kdfDO;
+        bool DoReset = false;
 	public:
 		void Init();
 		void Reload();
