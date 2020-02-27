@@ -36,7 +36,7 @@ void OpenpgpExchange(uint8_t *datain, size_t datainlen, uint8_t *dataout, uint32
     memcpy(dataout, apdu_result, *outlen);
     
     // finish operation and then reset
-    DoReset = security->DoReset;
+    DoReset = fsecurity->DoReset;
 
     return;
 }
@@ -53,7 +53,8 @@ void OpenpgpInit() {
     Applet::APDUExecutor executor = factory.GetAPDUExecutor();
     fexecutor = &executor;
 
-	OpenPGP::Security &security = factory.GetSecurity();
+	OpenPGP::OpenPGPFactory &opgp_factory = factory.GetOpenPGPFactory();
+	OpenPGP::Security &security = opgp_factory.GetSecurity();
     fsecurity = &security;    
     printf_device("OpenPGP init: ok.\n");
     

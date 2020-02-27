@@ -26,7 +26,6 @@ namespace OpenPGP {
 		AppletConfig appletConfig;
 		PWStatusBytes pwstatus;
 		KDFDO kdfDO;
-        bool DoReset = false;
 	public:
 		void Init();
 		void Reload();
@@ -55,6 +54,8 @@ namespace OpenPGP {
 		Util::Error DataObjectAccessCheck(uint16_t dataObjectID, bool writeAccess);
 		Util::Error DataObjectInAllowedList(uint16_t dataObjectID);
 		bool DataObjectInSecureArea(uint16_t dataObjectID);
+
+        bool DoReset = false;
 
 		void Terminate();
 		bool isTerminated();
