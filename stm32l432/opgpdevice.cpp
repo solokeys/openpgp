@@ -17,6 +17,7 @@
 #include "flash.h"
 #include "memory_layout.h"
 #include "device.h"
+#include "util.h"
 
 #include <spiffs.h>
 static spiffs fs;
@@ -174,8 +175,18 @@ bool fnmatch(char *pattern, char*name){
 
     if (strcmp(pattern, "*") == 0)
         return true;
-        
-    return false;
+    
+    size_t xlen = MIN(strlen(pattern), strlen(name));
+    for (size_t i = 0; i < xlen; i++) {
+        if (pattern[i] == '*')
+            return true;
+        if (pattern[i] != '?' &&
+            pattern[i] != name[i])
+            return false;
+    }
+    
+    // exact match with length
+    return (strlen(pattern) == strlen(name));
 }
 
 int deletefiles(char* name) {
