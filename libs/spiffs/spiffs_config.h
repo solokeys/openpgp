@@ -104,7 +104,7 @@ typedef unsigned char u8_t;
 #if SPIFFS_CACHE
 // Enables memory write caching for file descriptors in hydrogen
 #ifndef  SPIFFS_CACHE_WR
-#define SPIFFS_CACHE_WR                 1
+#define SPIFFS_CACHE_WR                 0
 #endif
 
 // Enable/disable statistics on caching. Debug/test purpose only.
