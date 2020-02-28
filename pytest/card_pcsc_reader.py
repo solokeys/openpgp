@@ -35,7 +35,6 @@ class CardReader(object):
         print("reset_device")
 
     def is_tpdu_reader(self):
-        print("is_tpdu_reader")
         return False
 
     def ccid_get_result(self):
