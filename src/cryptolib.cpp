@@ -53,11 +53,8 @@ Util::Error CryptoLib::GenerateRandom(size_t length, bstr& dataOut) {
 	//mbedtls_havege_init(&state);
 	//mbedtls_havege_random(nullptr, dataOut.uint8Data(), length);
 	//mbedtls_havege_free(&state);
-	size_t i;
-	for (i=0; i<= length; i++){
-		dataOut.uint8Data()[i]	= rand();
-	}
 
+    gen_random_device(dataOut.uint8Data(), length);
 	dataOut.set_length(length);
 
 	return Util::Error::NoError;
