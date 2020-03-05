@@ -210,6 +210,16 @@ int deletefiles(char* name) {
 	return 0;
 }
 
+int hw_reset_fs_and_reboot(bool reboot) {
+    for (uint8_t page = OPENPGP_START_PAGE; page <= OPENPGP_END_PAGE; page++)
+        flash_erase_page(page);
+    
+    if (reboot)
+        return hwreboot();
+    else
+        return 0;
+}
+
 int hwreboot() {
     device_reboot();
 	return 0;

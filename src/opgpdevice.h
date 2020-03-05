@@ -31,6 +31,7 @@ void ccid_send(uint8_t * buf, uint32_t sz);
 
 int hwinit();
 int hwreboot();
+int hw_reset_fs_and_reboot(bool reboot);
 
 bool fileexist(char* name);
 int readfile(char* name, uint8_t * buf, size_t max_size, size_t *size);
