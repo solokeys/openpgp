@@ -10,9 +10,9 @@
 #ifndef SRC_STM32FS_H_
 #define SRC_STM32FS_H_
 
-#include <array>
+#include <vector>
 #include <string>
-#include <function>
+#include <functional>
 
 #define PACKED __attribute__((packed))
 
@@ -59,12 +59,12 @@ struct Stm32File_t {
 };
 
 struct Stm32fsConfigBlock_t {
-    std::array<uint8_t> HeaderSectors;
-    std::array<uint8_t> DataSectors;
+    std::vector<uint8_t> HeaderSectors;
+    std::vector<uint8_t> DataSectors;
 };
 
 struct Stm32fsConfig_t {
-    std::Array<Stm32fsConfigBlock_t> Blocks;
+    std::vector<Stm32fsConfigBlock_t> Blocks;
     uint32_t BaseBlockAddress;
     uint32_t SectorSize; //  2048
     std::function<bool (uint8_t)> fnEraseFlashBlock;
