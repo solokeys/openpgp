@@ -9,6 +9,12 @@
 
 #include "stm32fs.h"
 
+static const size_t BlockSize = 2048;
+
+uint32_t Stm32fs::GetBlockAddress(uint8_t blockNum) {
+    return blockNum * BlockSize;
+}
+
 bool Stm32fs::EraseFlashBlock(uint8_t blockNo) {
     printf("- erase block %d\n", blockNo);
     return FsConfig.fnEraseFlashBlock(blockNo);
@@ -28,6 +34,19 @@ bool Stm32fs::ReadFlash(uint32_t address, uint8_t *data, size_t length) {
     return FsConfig.fnReadFlash(FsConfig.BaseBlockAddress + address, data, length);
 }
 
+bool Stm32fs::CheckFsHeader(Stm32FSHeader_t &header) {
+    if (header.HeaderStart.StartSeq != 0xaa55)
+        return false;
+
+    if (header.HeaderEnd.EndSeq != 0x55aa)
+        return false;
+
+    if (header.HeaderStart.Serial == 0)
+        return false;
+    
+    return true;
+}
+
 bool Stm32fs::CreateFsBlock(Stm32fsConfigBlock_t &blockCfg) {
     for (auto &sector: blockCfg.HeaderSectors) {
         if (!isFlashBlockEmpty(sector)) {
@@ -41,8 +60,20 @@ bool Stm32fs::CreateFsBlock(Stm32fsConfigBlock_t &blockCfg) {
 }
 
 Stm32fsConfigBlock_t *Stm32fs::SearchLastFsBlockInFlash() {
+    uint32_t Serial = 0;
+    Stm32fsConfigBlock_t *xblock = nullptr;
+    for (auto &block: FsConfig.Blocks) {
+        Stm32FSHeader_t header;
+        ReadFlash(GetBlockAddress(block.HeaderSectors[0]), (uint8_t *)&header, sizeof(header));
+        if (CheckFsHeader(header)) {
+            if (Serial > header.HeaderStart.Serial) {
+                Serial = header.HeaderStart.Serial;
+                xblock = &block;
+            }
+        }
+    }
     
-    return nullptr;
+    return xblock;
 }
 
 Stm32fsConfigBlock_t *Stm32fs::SearchNextFsBlockInFlash() {
