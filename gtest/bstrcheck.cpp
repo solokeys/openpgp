@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
  
-#include "../src/util.h"
+#include "../src/opgputil.h"
 
 TEST(bstrTest, UserDefinedStringLiteral) {
     bstr teststring = "12345678"_bstr;

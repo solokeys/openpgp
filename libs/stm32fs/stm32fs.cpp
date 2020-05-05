@@ -11,6 +11,7 @@
 
 Stm32fs::Stm32fs(Stm32fsConfig_t config) {
     FsConfig = config;
+    Valid = true;
     
 }
 
