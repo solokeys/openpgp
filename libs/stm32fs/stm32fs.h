@@ -78,6 +78,12 @@ private:
     Stm32fsConfigBlock_t CurrentFsBlock;
     bool Valid;
     
+    bool EraseFlashBlock(uint8_t blockNo);
+    bool isFlashBlockEmpty(uint8_t blockNo);
+    bool WriteFlash(uint32_t address, uint8_t *data, size_t length);
+    bool ReadFlash(uint32_t address, uint8_t *data, size_t *length);
+    
+    bool CreateFsBlock(Stm32fsConfigBlock_t &blockCfg);
     Stm32fsConfigBlock_t *SearchLastFsBlockInFlash();
     Stm32fsConfigBlock_t *SearchNextFsBlockInFlash();
     uint32_t GetCurrentFsBlockSerial();
