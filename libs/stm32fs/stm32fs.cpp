@@ -20,12 +20,12 @@ bool Stm32fs::isFlashBlockEmpty(uint8_t blockNo) {
 
 bool Stm32fs::WriteFlash(uint32_t address, uint8_t *data, size_t length) {
     printf("- write flash %x [%zd]\n", address, length);
-    return FsConfig.fnWriteFlash(address, data, length);
+    return FsConfig.fnWriteFlash(FsConfig.BaseBlockAddress + address, data, length);
 }
 
-bool Stm32fs::ReadFlash(uint32_t address, uint8_t *data, size_t *length) {
-    printf("- read flash %x\n", address);
-    return FsConfig.fnReadFlash(address, data, length);
+bool Stm32fs::ReadFlash(uint32_t address, uint8_t *data, size_t length) {
+    printf("- read flash %x [%zd]\n", address, length);
+    return FsConfig.fnReadFlash(FsConfig.BaseBlockAddress + address, data, length);
 }
 
 bool Stm32fs::CreateFsBlock(Stm32fsConfigBlock_t &blockCfg) {

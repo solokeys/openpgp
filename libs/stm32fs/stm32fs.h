@@ -69,7 +69,7 @@ struct Stm32fsConfig_t {
     uint32_t SectorSize; //  2048
     std::function<bool (uint8_t)> fnEraseFlashBlock;
     std::function<bool (uint32_t, uint8_t*, size_t)> fnWriteFlash; // address, data, length
-    std::function<bool (uint32_t, uint8_t*, size_t*)> fnReadFlash; // address, data, length
+    std::function<bool (uint32_t, uint8_t*, size_t)> fnReadFlash; // address, data, length
 };
 
 class Stm32fs {
@@ -81,7 +81,7 @@ private:
     bool EraseFlashBlock(uint8_t blockNo);
     bool isFlashBlockEmpty(uint8_t blockNo);
     bool WriteFlash(uint32_t address, uint8_t *data, size_t length);
-    bool ReadFlash(uint32_t address, uint8_t *data, size_t *length);
+    bool ReadFlash(uint32_t address, uint8_t *data, size_t length);
     
     bool CreateFsBlock(Stm32fsConfigBlock_t &blockCfg);
     Stm32fsConfigBlock_t *SearchLastFsBlockInFlash();

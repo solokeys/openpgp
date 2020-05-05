@@ -16,8 +16,8 @@ TEST(stm32fsTest, Create) {
     cfg.SectorSize = SECTOR_SIZE;
     cfg.Blocks = {{{0,1}, {2,3,4}}};
     cfg.fnEraseFlashBlock = [&vmem](uint8_t blockNo){std::memset(&vmem[SECTOR_SIZE * blockNo], 0xff, SECTOR_SIZE);return true;};
-    cfg.fnWriteFlash = [&vmem](uint32_t, uint8_t *data, size_t len){return true;};
-    cfg.fnReadFlash = [&vmem](uint32_t, uint8_t *data, size_t *len){return true;};
+    cfg.fnWriteFlash = [&vmem](uint32_t address, uint8_t *data, size_t len){std::memcpy(&vmem[address], data, len);return true;};
+    cfg.fnReadFlash = [&vmem](uint32_t address, uint8_t *data, size_t len){std::memcpy(data, &vmem[address], len);return true;};
     
     Stm32fs fs{cfg};
     EXPECT_TRUE(fs.isValid());
