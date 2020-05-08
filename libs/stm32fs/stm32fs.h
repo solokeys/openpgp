@@ -85,8 +85,10 @@ private:
     bool ReadFlash(uint32_t address, uint8_t *data, size_t length);
     
     bool CheckFsHeader(Stm32FSHeader_t &header);
+    void FillFsHeader(Stm32FSHeader_t &header, uint32_t serial);
+    bool EraseFs(Stm32fsConfigBlock_t &config);
+    bool CreateFsBlock(Stm32fsConfigBlock_t &blockCfg, uint32_t serial);
     
-    bool CreateFsBlock(Stm32fsConfigBlock_t &blockCfg);
     Stm32fsConfigBlock_t *SearchLastFsBlockInFlash();
     Stm32fsConfigBlock_t *SearchNextFsBlockInFlash();
     uint32_t GetCurrentFsBlockSerial();
