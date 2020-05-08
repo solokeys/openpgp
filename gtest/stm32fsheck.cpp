@@ -8,6 +8,7 @@
 #define SECTOR_SIZE 2048
 
 static uint8_t StdHeader[] = {0x55, 0xaa, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xaa, 0x55};
+//static uint8_t StdData[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10};
 static uint8_t vmem[SECTOR_SIZE * 10] = {0};
 
 void InitFS(Stm32fsConfig_t &cfg) {
@@ -40,8 +41,20 @@ TEST(stm32fsTest, Create) {
     InitFS(cfg);
     
     Stm32fs fs{cfg};
-    EXPECT_TRUE(fs.isValid());
+    ASSERT_TRUE(fs.isValid());
+    
+    ASSERT_EQ(fs.GetCurrentFsBlockSerial(), 1);
   
     AssertArrayEQ(vmem, StdHeader, sizeof(StdHeader));
     AssertArrayEQConst(vmem + 16, sizeof(vmem) - 16, 0xff);
+} 
+
+TEST(stm32fsTest, WriteFile) {
+    Stm32fsConfig_t cfg;
+    InitFS(cfg);
+    
+    Stm32fs fs{cfg};
+    EXPECT_TRUE(fs.isValid());
+
+    //EXPECT_TRUE(fs.WriteFile("testfile", StdData, sizeof(StdData)));
 } 

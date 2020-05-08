@@ -75,7 +75,7 @@ struct Stm32fsConfig_t {
 class Stm32fs {
 private:
     Stm32fsConfig_t FsConfig = {};
-    Stm32fsConfigBlock_t CurrentFsBlock;
+    Stm32fsConfigBlock_t *CurrentFsBlock;
     bool Valid;
     
     uint32_t GetBlockAddress(uint8_t blockNum);
@@ -91,14 +91,17 @@ private:
     
     Stm32fsConfigBlock_t *SearchLastFsBlockInFlash();
     Stm32fsConfigBlock_t *SearchNextFsBlockInFlash();
-    uint32_t GetCurrentFsBlockSerial();
+    bool GetCurrentFsBlockHeader(Stm32FSHeader_t &header);
+    
     bool CheckIsFlashEmpty(uint8_t *data, size_t size);
-    Stm32FSHeader_t *CheckFsHeader(uint8_t *data);
+    //Stm32FSHeader_t *CheckFsHeader(uint8_t *data);
 public:
 	Stm32fs(Stm32fsConfig_t config);
     
     bool isValid();
 
+    uint32_t GetCurrentFsBlockSerial();
+    
     Stm32File_t *FindFirst(std::string_view fileFilter, Stm32File_t *filePtr);
     Stm32File_t *FindNext(Stm32File_t *filePtr);
 

@@ -101,8 +101,32 @@ Stm32fsConfigBlock_t *Stm32fs::SearchNextFsBlockInFlash() {
     return nullptr;
 }
 
+bool Stm32fs::GetCurrentFsBlockHeader(Stm32FSHeader_t &header) {
+    if (CurrentFsBlock == nullptr)
+        return false;
+    
+    Stm32FSHeader_t iheader;
+    ReadFlash(GetBlockAddress(CurrentFsBlock->HeaderSectors[0]), (uint8_t *)&iheader, sizeof(iheader));
+    if (CheckFsHeader(header)) {
+        header = iheader;
+        return true;
+    }
+    
+    return false;
+}
+
+uint32_t Stm32fs::GetCurrentFsBlockSerial() {
+    Stm32FSHeader_t header;
+    
+    if (GetCurrentFsBlockHeader(header))
+        return header.HeaderStart.Serial;
+    
+    return 0;
+}
+
 Stm32fs::Stm32fs(Stm32fsConfig_t config) {
     Valid = false;
+    CurrentFsBlock = nullptr;
     FsConfig = config;
     
     if (config.Blocks.size() == 0)
@@ -115,9 +139,11 @@ Stm32fs::Stm32fs(Stm32fsConfig_t config) {
     
     if (blk == nullptr) {
         Valid = CreateFsBlock(config.Blocks[0], 1);
+        CurrentFsBlock = &config.Blocks[0];
         return;
     }
     
+    CurrentFsBlock = blk;
     Valid = true;
 }
 
