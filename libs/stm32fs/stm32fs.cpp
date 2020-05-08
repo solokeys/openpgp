@@ -107,7 +107,7 @@ bool Stm32fs::GetCurrentFsBlockHeader(Stm32FSHeader_t &header) {
     
     Stm32FSHeader_t iheader;
     ReadFlash(GetBlockAddress(CurrentFsBlock->HeaderSectors[0]), (uint8_t *)&iheader, sizeof(iheader));
-    if (CheckFsHeader(header)) {
+    if (CheckFsHeader(iheader)) {
         header = iheader;
         return true;
     }
@@ -129,17 +129,17 @@ Stm32fs::Stm32fs(Stm32fsConfig_t config) {
     CurrentFsBlock = nullptr;
     FsConfig = config;
     
-    if (config.Blocks.size() == 0)
+    if (FsConfig.Blocks.size() == 0)
         return;
 
-    if (config.Blocks[0].HeaderSectors.size() == 0 || config.Blocks[0].DataSectors.size() == 0)
+    if (FsConfig.Blocks[0].HeaderSectors.size() == 0 || FsConfig.Blocks[0].DataSectors.size() == 0)
         return;
     
     auto blk = SearchLastFsBlockInFlash();
     
     if (blk == nullptr) {
-        Valid = CreateFsBlock(config.Blocks[0], 1);
-        CurrentFsBlock = &config.Blocks[0];
+        Valid = CreateFsBlock(FsConfig.Blocks[0], 1);
+        CurrentFsBlock = &FsConfig.Blocks[0];
         return;
     }
     
