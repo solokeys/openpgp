@@ -10,6 +10,7 @@
 #include "stm32fs.h"
 
 #include <algorithm>
+#include <cstring>
 
 static const size_t BlockSize = 2048;
 static const size_t FileHeaderSize = 16;
@@ -213,20 +214,64 @@ Stm32FSFileVersion Stm32fs::SearchFileVersion(uint16_t fileID) {
 }
 
 Stm32FSFileHeader Stm32fs::AppendFileHeader(std::string_view fileName) {
-    Stm32FSFileHeader header = SearchFileHeader(fileName).FileState;
-    if(header == fsFileHeader)
+    Stm32FSFileHeader header = SearchFileHeader(fileName);
+    if(header.FileState == fsFileHeader)
         return header;
     
+    uint16_t fileID = 0;
+    uint32_t addr = GetFirstHeaderAddress();
+    
+    Stm32FSFileRecord filerec;
+    while(true) {
+        if (addr == 0)
+            break;
+
+        ReadFlash(addr, (uint8_t *)&filerec, sizeof(filerec));
+        
+        // end of catalog
+        if (filerec.header.FileState == fsEmpty)
+            break;
+        
+        if (filerec.header.FileID > fileID)
+            fileID = filerec.header.FileID;
+        
+        addr = GetNextHeaderAddress(addr);
+    }
+
     header.FileState = fsFileHeader;
-    header.FileID = id + 1;
-    header.FileName = fileName;
+    header.FileID = fileID + 1;
+    std::memset(header.FileName, 0x00, FileNameMaxLen);
+    std::memcpy(header.FileName, fileName.data(), std::min(fileName.size(), FileNameMaxLen));
+    
+    WriteFlash(addr, (uint8_t *)&header, sizeof(header));
     
     return header;
 }
 
 bool Stm32fs::AppendFileVersion(Stm32FSFileVersion &version) {
 
-    return true;
+    uint32_t addr = GetFirstHeaderAddress();
+    
+    Stm32FSFileRecord filerec;
+    while(true) {
+        if (addr == 0)
+            break;
+
+        ReadFlash(addr, (uint8_t *)&filerec, sizeof(filerec));
+        
+        // end of catalog
+        if (filerec.header.FileState == fsEmpty)
+            return WriteFlash(addr, (uint8_t *)&version, sizeof(Stm32FSFileVersion));
+        
+        addr = GetNextHeaderAddress(addr);
+    }
+    
+    return false;
+}
+
+uint32_t Stm32fs::FindEmptyDataArea(size_t length) {
+    
+    return 0;
 }
 
 Stm32fs::Stm32fs(Stm32fsConfig_t config) {
@@ -287,7 +332,7 @@ bool Stm32fs::ReadFile(std::string_view fileName, uint8_t *data, size_t *length,
     if (ver.FileState != fsFileVersion)
         return false;
     
-    size_t len = std::min(ver.FileSize, maxlength);
+    size_t len = std::min((size_t)ver.FileSize, maxlength);
     ReadFlash(ver.FileAddress, data, len);
     *length = len;
      
@@ -304,7 +349,7 @@ bool Stm32fs::GetFilePtr(std::string_view fileName, uint8_t **ptr, size_t *lengt
         return false;
     
     *ptr = (uint8_t *)ver.FileAddress;
-    *length = ver.FileLength;
+    *length = ver.FileSize;
 
     return true;
 }
@@ -346,7 +391,9 @@ bool Stm32fs::DeleteFile(std::string_view fileName) {
     if (ver.FileState != fsFileVersion)
         return true;
     
-    Stm32FSFileVersion ver = AppendFileVersion(header.FileID, fsDeleted);
+    ver.FileState = fsDeleted;
+    if (!AppendFileVersion(ver))
+        return false;
 
     return true;
 }

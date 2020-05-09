@@ -114,6 +114,7 @@ private:
     Stm32FSFileVersion SearchFileVersion(uint16_t fileID);
     Stm32FSFileHeader AppendFileHeader(std::string_view fileName);
     bool AppendFileVersion(Stm32FSFileVersion &version);
+    uint32_t FindEmptyDataArea(size_t length);
 public:
 	Stm32fs(Stm32fsConfig_t config);
     
