@@ -34,23 +34,33 @@ struct PACKED Stm32FSHeader_t {
     Stm32FSHeaderEnd_t HeaderEnd;
 };
 
-struct Stm32FSFile {
-    uint16_t FileID;
-    char FileName[14];
-};
-
+// 0xff - empty block, 0x01 - file header, 0x80 - file, 0x00 - deleted
 enum Stm32FileState_e {
     fsEmpty = 0xff,
-    fsFile = 0x80,
+    fsFileHeader = 0x01,
+    fsFileVersion = 0x80,
     fsDeleted = 0x00
 };
 
+static const size_t FileNameMaxLen = 13;
+
+struct PACKED Stm32FSFileHeader {
+    uint8_t FileState;
+    uint16_t FileID;
+    char FileName[FileNameMaxLen];
+};
+
 struct PACKED Stm32FSFileVersion {
-    uint8_t FileState; // 0xff - empty block, 0x80 - file, 0x00 - deleted
+    uint8_t FileState;
     uint16_t FileID;
     uint8_t none;
     uint32_t FileAddress;
     uint32_t FileSize;
+};
+
+union PACKED Stm32FSFileRecord {
+    Stm32FSFileHeader header;
+    Stm32FSFileVersion version;
 };
 
 struct Stm32File_t {
@@ -79,6 +89,7 @@ private:
     bool Valid;
     
     uint32_t GetBlockAddress(uint8_t blockNum);
+    uint32_t GetBlockFromAddress(uint32_t address);
     bool EraseFlashBlock(uint8_t blockNo);
     bool isFlashBlockEmpty(uint8_t blockNo);
     bool WriteFlash(uint32_t address, uint8_t *data, size_t length);
@@ -95,6 +106,14 @@ private:
     
     bool CheckIsFlashEmpty(uint8_t *data, size_t size);
     //Stm32FSHeader_t *CheckFsHeader(uint8_t *data);
+    
+    uint32_t GetFirstHeaderAddress();
+    uint32_t GetNextHeaderAddress(uint32_t previousAddress);
+    
+    Stm32FSFileHeader SearchFileHeader(std::string_view fileName);
+    Stm32FSFileVersion SearchFileVersion(uint16_t fileID);
+    Stm32FSFileHeader AppendFileHeader(std::string_view fileName);
+    Stm32FSFileVersion AppendFileVersion(uint16_t fileID, Stm32FileState_e fileState)
 public:
 	Stm32fs(Stm32fsConfig_t config);
     
@@ -105,6 +124,7 @@ public:
     Stm32File_t *FindFirst(std::string_view fileFilter, Stm32File_t *filePtr);
     Stm32File_t *FindNext(Stm32File_t *filePtr);
 
+	bool FileExist(std::string_view fileName);
 	bool ReadFile(std::string_view fileName, uint8_t *data, size_t *length, size_t maxlength);
     bool GetFilePtr(std::string_view fileName, uint8_t **ptr, size_t *length);
 	bool WriteFile(std::string_view fileName, uint8_t *data, size_t length);
