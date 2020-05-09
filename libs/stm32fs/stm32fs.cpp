@@ -212,7 +212,7 @@ Stm32FSFileVersion Stm32fs::SearchFileVersion(uint16_t fileID) {
     return fver;
 }
 
-Stm32FSFileHeader AppendFileHeader(std::string_view fileName) {
+Stm32FSFileHeader Stm32fs::AppendFileHeader(std::string_view fileName) {
     Stm32FSFileHeader header = SearchFileHeader(fileName).FileState;
     if(header == fsFileHeader)
         return header;
@@ -224,7 +224,7 @@ Stm32FSFileHeader AppendFileHeader(std::string_view fileName) {
     return header;
 }
 
-bool AppendFileVersion(Stm32FSFileVersion version) {
+bool Stm32fs::AppendFileVersion(Stm32FSFileVersion &version) {
 
     return true;
 }
@@ -321,10 +321,16 @@ bool Stm32fs::WriteFile(std::string_view fileName, uint8_t *data, size_t length)
     if (addr == 0)
         return false;
     
-    WriteFlash(addr, data, length);
+    if (!WriteFlash(addr, data, length))
+        return false;
     
-    Stm32FSFileVersion ver = AppendFileVersion(header.FileID, fsFileVersion);
-    if (ver.FileState != fsFileVersion)
+    Stm32FSFileVersion ver = {0};
+    ver.FileState = fsFileVersion;
+    ver.FileID = header.FileID;
+    ver.FileAddress = addr;
+    ver.FileSize = length;
+    
+    if (!AppendFileVersion(ver))
         return false;
     
     return true;

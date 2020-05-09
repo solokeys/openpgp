@@ -113,7 +113,7 @@ private:
     Stm32FSFileHeader SearchFileHeader(std::string_view fileName);
     Stm32FSFileVersion SearchFileVersion(uint16_t fileID);
     Stm32FSFileHeader AppendFileHeader(std::string_view fileName);
-    Stm32FSFileVersion AppendFileVersion(uint16_t fileID, Stm32FileState_e fileState)
+    bool AppendFileVersion(Stm32FSFileVersion &version);
 public:
 	Stm32fs(Stm32fsConfig_t config);
     
