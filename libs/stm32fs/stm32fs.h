@@ -87,6 +87,7 @@ private:
     Stm32fsConfig_t FsConfig = {};
     Stm32fsConfigBlock_t *CurrentFsBlock;
     bool Valid;
+    bool NeedsOptimization;
     
     uint32_t GetBlockAddress(uint8_t blockNum);
     uint32_t GetBlockFromAddress(uint32_t address);
@@ -120,6 +121,7 @@ public:
 	Stm32fs(Stm32fsConfig_t config);
     
     bool isValid();
+    bool isNeedsOptimization();
 
     uint32_t GetCurrentFsBlockSerial();
     

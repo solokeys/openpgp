@@ -36,6 +36,7 @@ bool Stm32fs::isFlashEmpty(uint32_t address, size_t length, bool reverse, uint32
     if (!reverse) {
         for (uint32_t i = 0; i < length; i++)
             if (data[i] != 0xffU) {
+                printf("empty except addr=%d len=%zd\n", address, length);
                 if (exceptAddr)
                     *exceptAddr = address + i;
                 return false;
@@ -49,6 +50,7 @@ bool Stm32fs::isFlashEmpty(uint32_t address, size_t length, bool reverse, uint32
             }
     }
     
+    printf("empty OK addr=%d len=%zd\n", address, length);
     return true;
 }
 
@@ -167,7 +169,7 @@ uint32_t Stm32fs::GetNextHeaderAddress(uint32_t previousAddress) {
     uint32_t addr = previousAddress + FileHeaderSize;
     
     uint32_t xblock = GetBlockFromAddress(addr);
-    printf("xblock=%d\n", xblock);
+    printf("addr=%d xblock=%d\n", addr, xblock);
     for (auto &sector: CurrentFsBlock->HeaderSectors) {
         if (xblock == sector)
             return addr;
@@ -324,6 +326,7 @@ uint32_t Stm32fs::FindEmptyDataArea(size_t length) {
 
 Stm32fs::Stm32fs(Stm32fsConfig_t config) {
     Valid = false;
+    NeedsOptimization = false;
     CurrentFsBlock = nullptr;
     FsConfig = config;
     
@@ -347,6 +350,10 @@ Stm32fs::Stm32fs(Stm32fsConfig_t config) {
 
 bool Stm32fs::isValid() {
     return Valid;
+}
+
+bool Stm32fs::isNeedsOptimization() {
+    return NeedsOptimization;
 }
 
 Stm32File_t *Stm32fs::FindFirst(std::string_view fileFilter, Stm32File_t *filePtr) {

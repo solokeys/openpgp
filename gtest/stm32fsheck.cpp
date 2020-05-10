@@ -11,8 +11,8 @@ static uint8_t StdHeader[] = {0x55, 0xaa, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x
 static uint8_t StdData[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10};
 static uint8_t vmem[SECTOR_SIZE * 10] = {0};
 
-void InitFS(Stm32fsConfig_t &cfg) {
-    std::memset(vmem, 0xff, sizeof(vmem));
+void InitFS(Stm32fsConfig_t &cfg, uint8_t defaultVal) {
+    std::memset(vmem, defaultVal, sizeof(vmem));
     
     cfg.BaseBlockAddress = (size_t)&vmem;
     cfg.SectorSize = SECTOR_SIZE;
@@ -38,28 +38,42 @@ void AssertArrayEQConst(uint8_t *data, uint32_t size, uint8_t constval) {
 
 TEST(stm32fsTest, Create) {
     Stm32fsConfig_t cfg;
-    InitFS(cfg);
+    InitFS(cfg, 0x00);
     
     Stm32fs fs{cfg};
     ASSERT_TRUE(fs.isValid());
+    ASSERT_FALSE(fs.isNeedsOptimization());
     
     ASSERT_EQ(fs.GetCurrentFsBlockSerial(), 1);
   
     AssertArrayEQ(vmem, StdHeader, sizeof(StdHeader));
-    AssertArrayEQConst(vmem + 16, sizeof(vmem) - 16, 0xff);
+    AssertArrayEQConst(vmem + 16, SECTOR_SIZE * 5 - 16, 0xff); // 5 sectors of filesystem
 } 
 
 TEST(stm32fsTest, WriteFile) {
     Stm32fsConfig_t cfg;
-    InitFS(cfg);
+    InitFS(cfg, 0xff);
     
     Stm32fs fs{cfg};
-    EXPECT_TRUE(fs.isValid());
+    ASSERT_TRUE(fs.isValid());
     
-    EXPECT_FALSE(fs.FileExist("testfile"));
+    ASSERT_FALSE(fs.FileExist("testfile"));
 
-    EXPECT_TRUE(fs.WriteFile("testfile", StdData, sizeof(StdData)));
+    ASSERT_TRUE(fs.WriteFile("testfile", StdData, sizeof(StdData)));
     
-    EXPECT_TRUE(fs.FileExist("testfile"));
+    Stm32FSFileHeader *header = (Stm32FSFileHeader *)&vmem[16];
+    ASSERT_EQ(header->FileState, fsFileHeader);
+    ASSERT_EQ(header->FileID, 1);
+    ASSERT_EQ(std::strncmp("testfile", header->FileName, 8), 0);
+    
+    Stm32FSFileVersion *version = (Stm32FSFileVersion *)&vmem[32];
+    ASSERT_EQ(version->FileState, fsFileVersion);
+    ASSERT_EQ(version->FileID, 1);
+    ASSERT_EQ(version->FileAddress, 2 * SECTOR_SIZE);
+    ASSERT_EQ(version->FileSize, sizeof(StdData));
+    
+    ASSERT_TRUE(std::memcmp(vmem + 2 * SECTOR_SIZE, StdData, sizeof(StdData)) == 0);
+    
+    ASSERT_TRUE(fs.FileExist("testfile"));
 
 } 
