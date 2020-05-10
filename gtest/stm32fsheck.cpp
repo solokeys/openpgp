@@ -78,6 +78,9 @@ TEST(stm32fsTest, WriteFile) {
     ASSERT_TRUE(std::memcmp(vmem + 2 * SECTOR_SIZE, StdData, sizeof(StdData)) == 0);
     
     ASSERT_TRUE(fs.FileExist("testfile"));
+
+    ASSERT_EQ(fs.GetSize(), SECTOR_SIZE * 3);
+    ASSERT_EQ(fs.GetFreeFileDescriptors(), (SECTOR_SIZE / 16) * 2 - 1 - 2);
 }
 
 TEST(stm32fsTest, WriteFileNameLen) {
