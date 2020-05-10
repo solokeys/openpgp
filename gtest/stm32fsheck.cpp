@@ -182,3 +182,33 @@ TEST(stm32fsTest, ReadFileMaxLen) {
     ASSERT_EQ(std::memcmp(testmem, testmemr, SECTOR_SIZE * 3), 0);    
 }
 
+TEST(stm32fsTest, DeleteFile) {
+    Stm32fsConfig_t cfg;
+    InitFS(cfg, 0xff);
+    Stm32fs fs{cfg};
+    
+    uint8_t testmem[SECTOR_SIZE] = {0};
+    uint8_t testmemr[SECTOR_SIZE] = {0};
+    std::memset(testmem, 0xab, sizeof(testmem));
+    std::memset(testmemr, 0xab, sizeof(testmemr));
+
+    ASSERT_TRUE(fs.WriteFile("testfile", StdData, sizeof(StdData)));
+    ASSERT_EQ(fs.FileLength("testfile"), sizeof(StdData));
+    
+    ASSERT_TRUE(fs.DeleteFile("testfile"));
+    
+    ASSERT_FALSE(fs.FileExist("testfile"));
+    ASSERT_TRUE(fs.FileLength("testfile") < 0);
+    
+    size_t rxlength = 0;
+    ASSERT_FALSE(fs.ReadFile("testfile", testmem, &rxlength, sizeof(StdData)));
+    
+    ASSERT_EQ(rxlength, 0);
+    ASSERT_EQ(std::memcmp(testmem, testmemr, sizeof(testmem)), 0);
+    
+    Stm32FSFileVersion *version = (Stm32FSFileVersion *)&vmem[32 + 16];
+    ASSERT_EQ(version->FileState, fsDeleted);
+    ASSERT_EQ(version->FileID, 1);
+    ASSERT_EQ(version->FileAddress, 0);
+    ASSERT_EQ(version->FileSize, 0);
+}

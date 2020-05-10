@@ -505,6 +505,8 @@ bool Stm32fs::DeleteFile(std::string_view fileName) {
         return true;
     
     ver.FileState = fsDeleted;
+    ver.FileAddress = 0;
+    ver.FileSize = 0;
     if (!AppendFileVersion(ver))
         return false;
 
