@@ -398,6 +398,21 @@ bool Stm32fs::isNeedsOptimization() {
     return NeedsOptimization;
 }
 
+uint32_t Stm32fs::GetSize() {
+    if (!Valid || CurrentFsBlock == nullptr)
+        return 0;
+    
+    return CurrentFsBlock->DataSectors.size() * BlockSize;
+}
+
+uint32_t Stm32fs::GetFreeMemory() {
+    return 0;
+}
+
+uint32_t Stm32fs::GetFreeFileDescriptors() {
+    return 0;
+}
+
 Stm32File_t *Stm32fs::FindFirst(std::string_view fileFilter, Stm32File_t *filePtr) {
 
     return nullptr;

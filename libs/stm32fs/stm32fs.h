@@ -127,6 +127,9 @@ public:
     bool isNeedsOptimization();
 
     uint32_t GetCurrentFsBlockSerial();
+    uint32_t GetSize();
+    uint32_t GetFreeMemory();
+    uint32_t GetFreeFileDescriptors();
     
     Stm32File_t *FindFirst(std::string_view fileFilter, Stm32File_t *filePtr);
     Stm32File_t *FindNext(Stm32File_t *filePtr);

@@ -48,6 +48,8 @@ TEST(stm32fsTest, Create) {
   
     AssertArrayEQ(vmem, StdHeader, sizeof(StdHeader));
     AssertArrayEQConst(vmem + 16, SECTOR_SIZE * 5 - 16, 0xff); // 5 sectors of filesystem
+    
+    ASSERT_EQ(fs.GetSize(), SECTOR_SIZE * 3);
 } 
 
 TEST(stm32fsTest, WriteFile) {
