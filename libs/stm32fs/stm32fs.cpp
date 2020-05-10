@@ -28,10 +28,10 @@ bool Stm32fs::EraseFlashBlock(uint8_t blockNo) {
     return FsConfig.fnEraseFlashBlock(blockNo);
 }
 
-bool Stm32fs::isFlashEmpty(size_t address, size_t length, bool reverse, uint32_t *exceptAddr) {
+bool Stm32fs::isFlashEmpty(uint32_t address, size_t length, bool reverse, uint32_t *exceptAddr) {
     if(exceptAddr)
         *exceptAddr = 0;
-    uint8_t *data = (uint8_t *)address;
+    uint8_t *data = (uint8_t *)(FsConfig.BaseBlockAddress + address);
     
     if (!reverse) {
         for (uint32_t i = 0; i < length; i++)
@@ -58,12 +58,12 @@ bool Stm32fs::isFlashBlockEmpty(uint8_t blockNo) {
 
 bool Stm32fs::WriteFlash(uint32_t address, uint8_t *data, size_t length) {
     printf("- write flash %x [%zd]\n", address, length);
-    return FsConfig.fnWriteFlash(FsConfig.BaseBlockAddress + address, data, length);
+    return FsConfig.fnWriteFlash(address, data, length);
 }
 
 bool Stm32fs::ReadFlash(uint32_t address, uint8_t *data, size_t length) {
     printf("- read flash %x [%zd]\n", address, length);
-    return FsConfig.fnReadFlash(FsConfig.BaseBlockAddress + address, data, length);
+    return FsConfig.fnReadFlash(address, data, length);
 }
 
 bool Stm32fs::EraseFs(Stm32fsConfigBlock_t &config) {
@@ -396,7 +396,7 @@ bool Stm32fs::GetFilePtr(std::string_view fileName, uint8_t **ptr, size_t *lengt
     if (ver.FileState != fsFileVersion)
         return false;
     
-    *ptr = (uint8_t *)(size_t)ver.FileAddress;
+    *ptr = (uint8_t *)(FsConfig.BaseBlockAddress + ver.FileAddress);
     *length = ver.FileSize;
 
     return true;

@@ -14,7 +14,7 @@ static uint8_t vmem[SECTOR_SIZE * 10] = {0};
 void InitFS(Stm32fsConfig_t &cfg) {
     std::memset(vmem, 0xff, sizeof(vmem));
     
-    cfg.BaseBlockAddress = 0;
+    cfg.BaseBlockAddress = (size_t)&vmem;
     cfg.SectorSize = SECTOR_SIZE;
     cfg.Blocks = {{{0,1}, {2,3,4}}};
     cfg.fnEraseFlashBlock = [](uint8_t blockNo){std::memset(&vmem[SECTOR_SIZE * blockNo], 0xff, SECTOR_SIZE);return true;};
