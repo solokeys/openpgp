@@ -75,5 +75,4 @@ TEST(stm32fsTest, WriteFile) {
     ASSERT_TRUE(std::memcmp(vmem + 2 * SECTOR_SIZE, StdData, sizeof(StdData)) == 0);
     
     ASSERT_TRUE(fs.FileExist("testfile"));
-
 } 

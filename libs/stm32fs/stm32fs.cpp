@@ -264,12 +264,16 @@ Stm32FSFileHeader Stm32fs::AppendFileHeader(std::string_view fileName) {
         addr = GetNextHeaderAddress(addr);
     }
 
-    header.FileState = fsFileHeader;
-    header.FileID = fileID + 1;
-    std::memset(header.FileName, 0x00, FileNameMaxLen);
-    std::memcpy(header.FileName, fileName.data(), std::min(fileName.size(), FileNameMaxLen));
-    
-    WriteFlash(addr, (uint8_t *)&header, sizeof(header));
+    if (addr != 0) {
+        header.FileState = fsFileHeader;
+        header.FileID = fileID + 1;
+        std::memset(header.FileName, 0x00, FileNameMaxLen);
+        std::memcpy(header.FileName, fileName.data(), std::min(fileName.size(), FileNameMaxLen));
+        
+        WriteFlash(addr, (uint8_t *)&header, sizeof(header));
+    } else {
+        NeedsOptimization = true;
+    }
     
     return header;
 }
@@ -291,6 +295,7 @@ bool Stm32fs::AppendFileVersion(Stm32FSFileVersion &version) {
         
         addr = GetNextHeaderAddress(addr);
     }
+    NeedsOptimization = true;
     
     return false;
 }
