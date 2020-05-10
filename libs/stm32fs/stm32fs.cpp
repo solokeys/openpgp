@@ -406,10 +406,22 @@ uint32_t Stm32fs::GetSize() {
 }
 
 uint32_t Stm32fs::GetFreeMemory() {
-    return 0;
+    if (!Valid || CurrentFsBlock == nullptr)
+        return 0;
+
+    int size = FindEmptyDataArea(8) - GetBlockAddress(CurrentFsBlock->DataSectors[0]);
+    int freesize = CurrentFsBlock->DataSectors.size() * BlockSize - size;
+
+    if (freesize > 0)
+        return freesize;
+    else
+        return 0;
 }
 
 uint32_t Stm32fs::GetFreeFileDescriptors() {
+    if (!Valid || CurrentFsBlock == nullptr)
+        return 0;
+
     uint32_t addr = GetFirstHeaderAddress();
     
     uint32_t size = sizeof(Stm32FSHeader_t);

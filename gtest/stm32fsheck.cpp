@@ -50,6 +50,7 @@ TEST(stm32fsTest, Create) {
     AssertArrayEQConst(vmem + 16, SECTOR_SIZE * 5 - 16, 0xff); // 5 sectors of filesystem
     
     ASSERT_EQ(fs.GetSize(), SECTOR_SIZE * 3);
+    ASSERT_EQ(fs.GetFreeMemory(), SECTOR_SIZE * 3);
     ASSERT_EQ(fs.GetFreeFileDescriptors(), (SECTOR_SIZE / 16) * 2 - 1);
 } 
 
@@ -80,6 +81,7 @@ TEST(stm32fsTest, WriteFile) {
     ASSERT_TRUE(fs.FileExist("testfile"));
 
     ASSERT_EQ(fs.GetSize(), SECTOR_SIZE * 3);
+    ASSERT_EQ(fs.GetFreeMemory(), SECTOR_SIZE * 3 - sizeof(StdData));
     ASSERT_EQ(fs.GetFreeFileDescriptors(), (SECTOR_SIZE / 16) * 2 - 1 - 2);
 }
 
