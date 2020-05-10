@@ -234,5 +234,8 @@ TEST(stm32fsTest, NeedsOptimize) {
     ASSERT_FALSE(fs.WriteFile("file3", testmem, 1));
     ASSERT_FALSE(fs.FileExist("file3"));
     ASSERT_TRUE(fs.isNeedsOptimization());
-
+    
+    ASSERT_TRUE(fs.DeleteFile("file1"));
+    ASSERT_TRUE(fs.DeleteFile("file2"));
+    ASSERT_TRUE(fs.isNeedsOptimization());
 }
