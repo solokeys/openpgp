@@ -75,4 +75,21 @@ TEST(stm32fsTest, WriteFile) {
     ASSERT_TRUE(std::memcmp(vmem + 2 * SECTOR_SIZE, StdData, sizeof(StdData)) == 0);
     
     ASSERT_TRUE(fs.FileExist("testfile"));
-} 
+}
+
+TEST(stm32fsTest, WriteFileNameLen) {
+    Stm32fsConfig_t cfg;
+    InitFS(cfg, 0xff);
+    
+    Stm32fs fs{cfg};
+    ASSERT_TRUE(fs.isValid());
+    
+    ASSERT_TRUE(fs.WriteFile("t", StdData, 1));
+    ASSERT_TRUE(fs.WriteFile("1234567890123", StdData, 1));
+    ASSERT_TRUE(fs.WriteFile("-234567890123e", StdData, 1));
+
+    ASSERT_TRUE(fs.FileExist("t"));
+    ASSERT_TRUE(fs.FileExist("1234567890123"));
+    ASSERT_FALSE(fs.FileExist("-234567890123e"));
+    ASSERT_TRUE(fs.FileExist("-234567890123"));
+}

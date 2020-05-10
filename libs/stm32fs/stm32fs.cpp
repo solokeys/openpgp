@@ -24,8 +24,8 @@ uint32_t Stm32fs::GetBlockFromAddress(uint32_t address) {
 }
 
 bool Stm32fs::AddressInFlash(uint32_t address, size_t length) {
-    if (address < FlashBlocksCount * BlockSize && 
-        address + length < FlashBlocksCount * BlockSize) 
+    if (address <= FlashBlocksCount * BlockSize && 
+        address + length <= FlashBlocksCount * BlockSize) 
         return true;
     
     printf("out of memory[%d]!!! adr=%d len=%zd\n", FlashBlocksCount, address, length);
@@ -215,7 +215,7 @@ Stm32FSFileHeader Stm32fs::SearchFileHeader(std::string_view fileName) {
         if (filerec.header.FileState == fsEmpty)
             break;
         
-        std::string_view str = {filerec.header.FileName, FileNameMaxLen};
+        std::string_view str = {filerec.header.FileName, strnlen(filerec.header.FileName, FileNameMaxLen)};
         
         if (str == fileName)
             return filerec.header;
@@ -375,7 +375,8 @@ Stm32fs::Stm32fs(Stm32fsConfig_t config) {
         if (block.HeaderSectors.size() == 0 || block.DataSectors.size() == 0)
             return;
     }
-        
+
+    FlashBlocksCount = 1;
     auto blk = SearchLastFsBlockInFlash();
     
     if (blk == nullptr) {
