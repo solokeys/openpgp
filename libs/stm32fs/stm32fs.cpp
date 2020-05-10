@@ -433,6 +433,9 @@ int Stm32fs::FileLength(std::string_view fileName) {
 }
 
 bool Stm32fs::ReadFile(std::string_view fileName, uint8_t *data, size_t *length, size_t maxlength) {
+    if (length)
+        *length = 0;
+
     Stm32FSFileHeader header = SearchFileHeader(fileName);
     if (header.FileState != fsFileHeader)
         return false;
@@ -443,7 +446,8 @@ bool Stm32fs::ReadFile(std::string_view fileName, uint8_t *data, size_t *length,
     
     size_t len = std::min((size_t)ver.FileSize, maxlength);
     ReadFlash(ver.FileAddress, data, len);
-    *length = len;
+    if (length)
+        *length = len;
      
     return true;
 }

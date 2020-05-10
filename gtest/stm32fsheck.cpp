@@ -149,4 +149,25 @@ TEST(stm32fsTest, ReadFile) {
     ASSERT_EQ(rxlength, sizeof(StdData));
     ASSERT_EQ(std::memcmp(testmem, StdData, sizeof(StdData)), 0);
     
+    ASSERT_TRUE(fs.ReadFile("testfile", testmem, nullptr, sizeof(StdData)));
 }
+
+TEST(stm32fsTest, ReadFileMaxLen) {
+    Stm32fsConfig_t cfg;
+    InitFS(cfg, 0xff);
+    Stm32fs fs{cfg};
+    
+    uint8_t testmem[SECTOR_SIZE * 4] = {0};
+    uint8_t testmemr[SECTOR_SIZE * 4] = {0};
+    std::memset(testmem, 0xab, sizeof(testmem));
+    std::memset(testmemr, 0x00, sizeof(testmemr));
+
+    ASSERT_TRUE(fs.WriteFile("file_6kb", testmem, SECTOR_SIZE * 3));
+
+    size_t rxlength = 0;
+    ASSERT_TRUE(fs.ReadFile("file_6kb", testmemr, &rxlength, sizeof(testmemr)));
+    
+    ASSERT_EQ(rxlength, SECTOR_SIZE * 3);
+    ASSERT_EQ(std::memcmp(testmem, testmemr, SECTOR_SIZE * 3), 0);    
+}
+
