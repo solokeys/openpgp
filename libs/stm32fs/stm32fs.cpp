@@ -476,8 +476,10 @@ bool Stm32fs::WriteFile(std::string_view fileName, uint8_t *data, size_t length)
     }
     
     uint32_t addr = FindEmptyDataArea(length);
-    if (addr == 0)
+    if (addr == 0) {
+        NeedsOptimization = true;
         return false;
+    }
     
     if (!WriteFlash(addr, data, length))
         return false;

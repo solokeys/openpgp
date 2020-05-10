@@ -212,3 +212,27 @@ TEST(stm32fsTest, DeleteFile) {
     ASSERT_EQ(version->FileAddress, 0);
     ASSERT_EQ(version->FileSize, 0);
 }
+
+TEST(stm32fsTest, NeedsOptimize) {
+    Stm32fsConfig_t cfg;
+    InitFS(cfg, 0xff);
+    Stm32fs fs{cfg};
+    
+    uint8_t testmem[SECTOR_SIZE * 4] = {0};
+    std::memset(testmem, 0xab, sizeof(testmem));
+
+    ASSERT_FALSE(fs.isNeedsOptimization());
+    
+    ASSERT_TRUE(fs.WriteFile("file1", testmem, SECTOR_SIZE * 2));
+    ASSERT_TRUE(fs.FileExist("file1"));
+    ASSERT_FALSE(fs.isNeedsOptimization());
+
+    ASSERT_TRUE(fs.WriteFile("file2", testmem, SECTOR_SIZE));
+    ASSERT_TRUE(fs.FileExist("file2"));
+    ASSERT_FALSE(fs.isNeedsOptimization());
+
+    ASSERT_FALSE(fs.WriteFile("file3", testmem, 1));
+    ASSERT_FALSE(fs.FileExist("file3"));
+    ASSERT_TRUE(fs.isNeedsOptimization());
+
+}
