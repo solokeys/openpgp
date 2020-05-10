@@ -420,6 +420,18 @@ bool Stm32fs::FileExist(std::string_view fileName) {
     return true;
 }
 
+int Stm32fs::FileLength(std::string_view fileName) {
+    Stm32FSFileHeader header = SearchFileHeader(fileName);
+    if (header.FileState != fsFileHeader)
+        return -1;
+    
+    Stm32FSFileVersion ver = SearchFileVersion(header.FileID);
+    if (ver.FileState != fsFileVersion)
+        return -2;
+     
+    return ver.FileSize;
+}
+
 bool Stm32fs::ReadFile(std::string_view fileName, uint8_t *data, size_t *length, size_t maxlength) {
     Stm32FSFileHeader header = SearchFileHeader(fileName);
     if (header.FileState != fsFileHeader)
@@ -433,7 +445,7 @@ bool Stm32fs::ReadFile(std::string_view fileName, uint8_t *data, size_t *length,
     ReadFlash(ver.FileAddress, data, len);
     *length = len;
      
-    return false;
+    return true;
 }
 
 bool Stm32fs::GetFilePtr(std::string_view fileName, uint8_t **ptr, size_t *length) {

@@ -140,6 +140,9 @@ TEST(stm32fsTest, ReadFile) {
     std::memset(testmem, 0xab, sizeof(testmem));
 
     ASSERT_TRUE(fs.WriteFile("testfile", StdData, sizeof(StdData)));
+    
+    ASSERT_EQ(fs.FileLength("testfile"), sizeof(StdData));
+    
     size_t rxlength = 0;
     ASSERT_TRUE(fs.ReadFile("testfile", testmem, &rxlength, sizeof(StdData)));
     

@@ -80,7 +80,7 @@ struct Stm32fsConfig_t {
     uint32_t SectorSize; //  2048
     std::function<bool (uint8_t)> fnEraseFlashBlock;
     std::function<bool (uint32_t, uint8_t*, size_t)> fnWriteFlash; // address, data, length
-    std::function<bool (uint32_t, uint8_t*, size_t)> fnReadFlash; // address, data, length
+    std::function<bool (uint32_t, uint8_t*, size_t)> fnReadFlash;  // address, data, length
 };
 
 class Stm32fs {
@@ -132,6 +132,7 @@ public:
     Stm32File_t *FindNext(Stm32File_t *filePtr);
 
 	bool FileExist(std::string_view fileName);
+    int FileLength(std::string_view fileName);
 	bool ReadFile(std::string_view fileName, uint8_t *data, size_t *length, size_t maxlength);
     bool GetFilePtr(std::string_view fileName, uint8_t **ptr, size_t *length);
 	bool WriteFile(std::string_view fileName, uint8_t *data, size_t length);
