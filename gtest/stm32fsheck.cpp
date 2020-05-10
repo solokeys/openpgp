@@ -80,9 +80,7 @@ TEST(stm32fsTest, WriteFile) {
 TEST(stm32fsTest, WriteFileNameLen) {
     Stm32fsConfig_t cfg;
     InitFS(cfg, 0xff);
-    
     Stm32fs fs{cfg};
-    ASSERT_TRUE(fs.isValid());
     
     ASSERT_TRUE(fs.WriteFile("t", StdData, 1));
     ASSERT_TRUE(fs.WriteFile("1234567890123", StdData, 1));
@@ -97,15 +95,38 @@ TEST(stm32fsTest, WriteFileNameLen) {
 TEST(stm32fsTest, WriteFileLen) {
     Stm32fsConfig_t cfg;
     InitFS(cfg, 0xff);
-    
     Stm32fs fs{cfg};
-    ASSERT_TRUE(fs.isValid());
     
+    uint8_t testmem[SECTOR_SIZE * 2] = {0};
+    std::memset(testmem, 0xab, sizeof(testmem));
+
     ASSERT_TRUE(fs.WriteFile("file_1b", StdData, 1));
-    ASSERT_TRUE(fs.WriteFile("file_3kb", StdData, 1));
-    //ASSERT_TRUE(fs.WriteFile("file_6kb", StdData, 1));
+    ASSERT_TRUE(fs.WriteFile("file_3kb", testmem, sizeof(testmem)));
 
     ASSERT_TRUE(fs.FileExist("file_1b"));
     ASSERT_TRUE(fs.FileExist("file_3kb"));
 }
 
+TEST(stm32fsTest, WriteFileMaxLen) {
+    Stm32fsConfig_t cfg;
+    InitFS(cfg, 0xff);
+    Stm32fs fs{cfg};
+    
+    uint8_t testmem[SECTOR_SIZE * 3] = {0};
+    std::memset(testmem, 0xab, sizeof(testmem));
+
+    ASSERT_TRUE(fs.WriteFile("file_6kb", testmem, SECTOR_SIZE * 3));
+    ASSERT_TRUE(fs.FileExist("file_6kb"));
+}
+
+TEST(stm32fsTest, WriteFileMaxLenMore) {
+    Stm32fsConfig_t cfg;
+    InitFS(cfg, 0xff);
+    Stm32fs fs{cfg};
+    
+    uint8_t testmem[SECTOR_SIZE * 4] = {0};
+    std::memset(testmem, 0xab, sizeof(testmem));
+
+    ASSERT_FALSE(fs.WriteFile("file_6kb+", testmem, SECTOR_SIZE * 3 + 1));
+    ASSERT_FALSE(fs.FileExist("file_6kb+"));
+}
