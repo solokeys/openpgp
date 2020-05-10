@@ -28,8 +28,32 @@ bool Stm32fs::EraseFlashBlock(uint8_t blockNo) {
     return FsConfig.fnEraseFlashBlock(blockNo);
 }
 
+bool Stm32fs::isFlashEmpty(size_t address, size_t length, bool reverse, uint32_t *exceptAddr) {
+    if(exceptAddr)
+        *exceptAddr = 0;
+    uint8_t *data = (uint8_t *)address;
+    
+    if (!reverse) {
+        for (uint32_t i = 0; i < length; i++)
+            if (data[i] != 0xffU) {
+                if (exceptAddr)
+                    *exceptAddr = address + i;
+                return false;
+            }
+    } else {
+        for (int i = length - 1; i >= 0; i--)
+            if (data[i] != 0xffU) {
+                if (exceptAddr)
+                    *exceptAddr = address + i;
+                return false;
+            }
+    }
+    
+    return true;
+}
+
 bool Stm32fs::isFlashBlockEmpty(uint8_t blockNo) {
-    return false;
+    return isFlashEmpty(GetBlockAddress(blockNo), BlockSize, false, nullptr);
 }
 
 bool Stm32fs::WriteFlash(uint32_t address, uint8_t *data, size_t length) {
@@ -270,8 +294,32 @@ bool Stm32fs::AppendFileVersion(Stm32FSFileVersion &version) {
 }
 
 uint32_t Stm32fs::FindEmptyDataArea(size_t length) {
+    uint32_t daddr = GetBlockAddress(CurrentFsBlock->DataSectors[0]);
+    uint32_t addr = GetFirstHeaderAddress();
     
-    return 0;
+    Stm32FSFileRecord filerec;
+    while(true) {
+        if (addr == 0)
+            break;
+
+        ReadFlash(addr, (uint8_t *)&filerec, sizeof(filerec));
+        
+        // end of catalog
+        if (filerec.version.FileState == fsEmpty)
+            break;
+        
+       if (filerec.version.FileState == fsFileVersion && filerec.version.FileID != 0) {         
+            if (filerec.version.FileAddress + filerec.version.FileSize > daddr)
+                daddr = filerec.version.FileAddress + filerec.version.FileSize;
+       }
+        
+        addr = GetNextHeaderAddress(addr);
+    }
+    
+    // check for  0xff empty
+    
+    
+    return daddr;
 }
 
 Stm32fs::Stm32fs(Stm32fsConfig_t config) {
@@ -348,7 +396,7 @@ bool Stm32fs::GetFilePtr(std::string_view fileName, uint8_t **ptr, size_t *lengt
     if (ver.FileState != fsFileVersion)
         return false;
     
-    *ptr = (uint8_t *)ver.FileAddress;
+    *ptr = (uint8_t *)(size_t)ver.FileAddress;
     *length = ver.FileSize;
 
     return true;

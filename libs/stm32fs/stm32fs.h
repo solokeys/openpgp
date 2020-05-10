@@ -91,6 +91,7 @@ private:
     uint32_t GetBlockAddress(uint8_t blockNum);
     uint32_t GetBlockFromAddress(uint32_t address);
     bool EraseFlashBlock(uint8_t blockNo);
+    bool isFlashEmpty(size_t address, size_t length, bool reverse, uint32_t *exceptAddr);
     bool isFlashBlockEmpty(uint8_t blockNo);
     bool WriteFlash(uint32_t address, uint8_t *data, size_t length);
     bool ReadFlash(uint32_t address, uint8_t *data, size_t length);
