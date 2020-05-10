@@ -89,7 +89,9 @@ TEST(stm32fsTest, WriteFileNameLen) {
     ASSERT_TRUE(fs.FileExist("t"));
     ASSERT_TRUE(fs.FileExist("1234567890123"));
     ASSERT_FALSE(fs.FileExist("-234567890123e"));
+    ASSERT_TRUE(fs.FileLength("-234567890123e") < 0);
     ASSERT_TRUE(fs.FileExist("-234567890123"));
+    ASSERT_TRUE(fs.FileLength("-234567890123") > 0);
 }
 
 TEST(stm32fsTest, WriteFileLen) {
