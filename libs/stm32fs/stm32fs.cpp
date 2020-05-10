@@ -410,7 +410,26 @@ uint32_t Stm32fs::GetFreeMemory() {
 }
 
 uint32_t Stm32fs::GetFreeFileDescriptors() {
-    return 0;
+    uint32_t addr = GetFirstHeaderAddress();
+    
+    uint32_t size = sizeof(Stm32FSHeader_t);
+    Stm32FSFileRecord filerec;
+    while(true) {
+        if (addr == 0)
+            break;
+
+        ReadFlash(addr, (uint8_t *)&filerec, sizeof(filerec));
+        
+        // end of catalog
+        if (filerec.version.FileState == fsEmpty)
+            break;
+        
+        size += FileHeaderSize;
+        
+        addr = GetNextHeaderAddress(addr);
+    }
+
+    return (CurrentFsBlock->HeaderSectors.size() * BlockSize - size) / 16;
 }
 
 Stm32File_t *Stm32fs::FindFirst(std::string_view fileFilter, Stm32File_t *filePtr) {
