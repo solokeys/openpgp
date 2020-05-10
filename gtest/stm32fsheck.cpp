@@ -97,14 +97,16 @@ TEST(stm32fsTest, WriteFileLen) {
     InitFS(cfg, 0xff);
     Stm32fs fs{cfg};
     
-    uint8_t testmem[SECTOR_SIZE * 2] = {0};
+    uint8_t testmem[SECTOR_SIZE * 2 + 1] = {0};
     std::memset(testmem, 0xab, sizeof(testmem));
 
     ASSERT_TRUE(fs.WriteFile("file_1b", StdData, 1));
     ASSERT_TRUE(fs.WriteFile("file_3kb", testmem, sizeof(testmem)));
 
     ASSERT_TRUE(fs.FileExist("file_1b"));
+    ASSERT_EQ(fs.FileLength("file_1b"), 1);
     ASSERT_TRUE(fs.FileExist("file_3kb"));
+    ASSERT_EQ(fs.FileLength("file_3kb"), sizeof(testmem));
 }
 
 TEST(stm32fsTest, WriteFileMaxLen) {
@@ -150,6 +152,13 @@ TEST(stm32fsTest, ReadFile) {
     ASSERT_EQ(std::memcmp(testmem, StdData, sizeof(StdData)), 0);
     
     ASSERT_TRUE(fs.ReadFile("testfile", testmem, nullptr, sizeof(StdData)));
+    
+    std::memset(testmem, 0xab, sizeof(testmem));
+    rxlength = 0;
+    ASSERT_TRUE(fs.ReadFile("testfile", testmem, &rxlength, 5));
+    ASSERT_EQ(rxlength, 5);
+    ASSERT_EQ(std::memcmp(testmem, StdData, 5), 0);
+    ASSERT_NE(std::memcmp(testmem, StdData, sizeof(StdData)), 0);
 }
 
 TEST(stm32fsTest, ReadFileMaxLen) {
