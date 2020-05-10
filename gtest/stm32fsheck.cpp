@@ -217,6 +217,8 @@ TEST(stm32fsTest, DeleteFile) {
     ASSERT_EQ(version->FileID, 1);
     ASSERT_EQ(version->FileAddress, 0);
     ASSERT_EQ(version->FileSize, 0);
+
+    ASSERT_EQ(fs.GetFreeFileDescriptors(), (SECTOR_SIZE / 16) * 2 - 1 - 3);
 }
 
 TEST(stm32fsTest, NeedsOptimize) {
