@@ -130,3 +130,20 @@ TEST(stm32fsTest, WriteFileMaxLenMore) {
     ASSERT_FALSE(fs.WriteFile("file_6kb+", testmem, SECTOR_SIZE * 3 + 1));
     ASSERT_FALSE(fs.FileExist("file_6kb+"));
 }
+
+TEST(stm32fsTest, ReadFile) {
+    Stm32fsConfig_t cfg;
+    InitFS(cfg, 0xff);
+    Stm32fs fs{cfg};
+    
+    uint8_t testmem[SECTOR_SIZE] = {0};
+    std::memset(testmem, 0xab, sizeof(testmem));
+
+    ASSERT_TRUE(fs.WriteFile("testfile", StdData, sizeof(StdData)));
+    size_t rxlength = 0;
+    ASSERT_TRUE(fs.ReadFile("testfile", testmem, &rxlength, sizeof(StdData)));
+    
+    ASSERT_EQ(rxlength, sizeof(StdData));
+    ASSERT_EQ(std::memcmp(testmem, StdData, sizeof(StdData)), 0);
+    
+}
