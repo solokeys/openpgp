@@ -93,3 +93,19 @@ TEST(stm32fsTest, WriteFileNameLen) {
     ASSERT_FALSE(fs.FileExist("-234567890123e"));
     ASSERT_TRUE(fs.FileExist("-234567890123"));
 }
+
+TEST(stm32fsTest, WriteFileLen) {
+    Stm32fsConfig_t cfg;
+    InitFS(cfg, 0xff);
+    
+    Stm32fs fs{cfg};
+    ASSERT_TRUE(fs.isValid());
+    
+    ASSERT_TRUE(fs.WriteFile("file_1b", StdData, 1));
+    ASSERT_TRUE(fs.WriteFile("file_3kb", StdData, 1));
+    //ASSERT_TRUE(fs.WriteFile("file_6kb", StdData, 1));
+
+    ASSERT_TRUE(fs.FileExist("file_1b"));
+    ASSERT_TRUE(fs.FileExist("file_3kb"));
+}
+
