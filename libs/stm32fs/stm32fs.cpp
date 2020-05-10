@@ -23,6 +23,15 @@ uint32_t Stm32fs::GetBlockFromAddress(uint32_t address) {
     return address / BlockSize;
 }
 
+bool Stm32fs::AddressInFlash(uint32_t address, size_t length) {
+    if (address < FlashBlocksCount * BlockSize && 
+        address + length < FlashBlocksCount * BlockSize) 
+        return true;
+    
+    printf("out of memory[%d]!!! adr=%d len=%zd\n", FlashBlocksCount, address, length);
+    return false;
+}
+
 bool Stm32fs::EraseFlashBlock(uint8_t blockNo) {
     printf("- erase block %d\n", blockNo);
     return FsConfig.fnEraseFlashBlock(blockNo);
@@ -31,6 +40,9 @@ bool Stm32fs::EraseFlashBlock(uint8_t blockNo) {
 bool Stm32fs::isFlashEmpty(uint32_t address, size_t length, bool reverse, uint32_t *exceptAddr) {
     if(exceptAddr)
         *exceptAddr = 0;
+    if (!AddressInFlash(address, length))
+        return false;
+    
     uint8_t *data = (uint8_t *)(FsConfig.BaseBlockAddress + address);
     
     if (!reverse) {
@@ -59,11 +71,15 @@ bool Stm32fs::isFlashBlockEmpty(uint8_t blockNo) {
 }
 
 bool Stm32fs::WriteFlash(uint32_t address, uint8_t *data, size_t length) {
+    if (!AddressInFlash(address, length))
+        return false;
     printf("- write flash %x [%zd]\n", address, length);
     return FsConfig.fnWriteFlash(address, data, length);
 }
 
 bool Stm32fs::ReadFlash(uint32_t address, uint8_t *data, size_t length) {
+    if (!AddressInFlash(address, length))
+        return false;
     printf("- read flash %x [%zd]\n", address, length);
     return FsConfig.fnReadFlash(address, data, length);
 }
@@ -167,6 +183,8 @@ uint32_t Stm32fs::GetFirstHeaderAddress() {
 
 uint32_t Stm32fs::GetNextHeaderAddress(uint32_t previousAddress) {
     uint32_t addr = previousAddress + FileHeaderSize;
+    if (!AddressInFlash(addr, FileHeaderSize))
+        return 0;
     
     uint32_t xblock = GetBlockFromAddress(addr);
     printf("addr=%d xblock=%d\n", addr, xblock);
@@ -223,7 +241,8 @@ Stm32FSFileVersion Stm32fs::SearchFileVersion(uint16_t fileID) {
         if (addr == 0)
             break;
 
-        ReadFlash(addr, (uint8_t *)&filerec, sizeof(filerec));
+        if (!ReadFlash(addr, (uint8_t *)&filerec, sizeof(filerec)))
+            return fver;
         
         // end of catalog
         if (filerec.version.FileState == fsEmpty)
@@ -252,7 +271,8 @@ Stm32FSFileHeader Stm32fs::AppendFileHeader(std::string_view fileName) {
         if (addr == 0)
             break;
 
-        ReadFlash(addr, (uint8_t *)&filerec, sizeof(filerec));
+        if(!ReadFlash(addr, (uint8_t *)&filerec, sizeof(filerec)))
+            return header;
         
         // end of catalog
         if (filerec.header.FileState == fsEmpty)
@@ -270,7 +290,10 @@ Stm32FSFileHeader Stm32fs::AppendFileHeader(std::string_view fileName) {
         std::memset(header.FileName, 0x00, FileNameMaxLen);
         std::memcpy(header.FileName, fileName.data(), std::min(fileName.size(), FileNameMaxLen));
         
-        WriteFlash(addr, (uint8_t *)&header, sizeof(header));
+        if (!WriteFlash(addr, (uint8_t *)&header, sizeof(header))) {
+            header.FileState = fsError;
+            return header;
+        }
     } else {
         NeedsOptimization = true;
     }
@@ -281,6 +304,8 @@ Stm32FSFileHeader Stm32fs::AppendFileHeader(std::string_view fileName) {
 bool Stm32fs::AppendFileVersion(Stm32FSFileVersion &version) {
 
     uint32_t addr = GetFirstHeaderAddress();
+    if (!AddressInFlash(addr, FileHeaderSize))
+        return false;
     
     Stm32FSFileRecord filerec;
     while(true) {
@@ -323,8 +348,16 @@ uint32_t Stm32fs::FindEmptyDataArea(size_t length) {
         addr = GetNextHeaderAddress(addr);
     }
     
-    // check for  0xff empty
-    
+    // check for empty. because data write before write record to header.
+    uint32_t waddress = 0;
+    while (!isFlashEmpty(daddr, length, true, &waddress)) {
+        if (waddress == 0)
+            return 0;
+        
+        daddr = waddress + 1;
+        if (!AddressInFlash(daddr, length))
+            return false;
+    }    
     
     return daddr;
 }
@@ -338,18 +371,21 @@ Stm32fs::Stm32fs(Stm32fsConfig_t config) {
     if (FsConfig.Blocks.size() == 0)
         return;
 
-    if (FsConfig.Blocks[0].HeaderSectors.size() == 0 || FsConfig.Blocks[0].DataSectors.size() == 0)
-        return;
-    
+    for(auto &block: FsConfig.Blocks) {
+        if (block.HeaderSectors.size() == 0 || block.DataSectors.size() == 0)
+            return;
+    }
+        
     auto blk = SearchLastFsBlockInFlash();
     
     if (blk == nullptr) {
+        blk = &FsConfig.Blocks[0];
+        FlashBlocksCount = blk->HeaderSectors.size() + blk->DataSectors.size();
         Valid = CreateFsBlock(FsConfig.Blocks[0], 1);
-        CurrentFsBlock = &FsConfig.Blocks[0];
-        return;
     }
     
     CurrentFsBlock = blk;
+    FlashBlocksCount = blk->HeaderSectors.size() + blk->DataSectors.size();
     Valid = true;
 }
 

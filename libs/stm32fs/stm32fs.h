@@ -36,10 +36,11 @@ struct PACKED Stm32FSHeader_t {
 
 // 0xff - empty block, 0x01 - file header, 0x80 - file, 0x00 - deleted
 enum Stm32FileState_e {
-    fsEmpty = 0xff,
+    fsDeleted = 0x00,
     fsFileHeader = 0x01,
     fsFileVersion = 0x80,
-    fsDeleted = 0x00
+    fsError = 0xf0,
+    fsEmpty = 0xff
 };
 
 static const size_t FileNameMaxLen = 13;
@@ -88,9 +89,11 @@ private:
     Stm32fsConfigBlock_t *CurrentFsBlock;
     bool Valid;
     bool NeedsOptimization;
+    uint32_t FlashBlocksCount;
     
     uint32_t GetBlockAddress(uint8_t blockNum);
     uint32_t GetBlockFromAddress(uint32_t address);
+    bool AddressInFlash(uint32_t address, size_t length);
     bool EraseFlashBlock(uint8_t blockNo);
     bool isFlashEmpty(uint32_t address, size_t length, bool reverse, uint32_t *exceptAddr);
     bool isFlashBlockEmpty(uint8_t blockNo);
