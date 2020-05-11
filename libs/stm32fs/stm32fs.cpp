@@ -642,8 +642,18 @@ Stm32File_t *Stm32fs::FindNext(Stm32File_t *filePtr) {
 }
 
 bool Stm32fs::DeleteFiles(std::string_view fileFilter) {
+    Stm32File_t srecm;
+    Stm32File_t *rc = nullptr;
     
-    return false;
+    rc = FindFirst(fileFilter, &srecm);
+    while (rc != nullptr) {
+        if (!DeleteFile(rc->FileName))
+            return false;
+        
+        rc = FindNext(rc);
+    }
+    
+    return true;
 }
 
 bool Stm32fs::Optimize() {

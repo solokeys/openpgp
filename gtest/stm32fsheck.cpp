@@ -356,3 +356,28 @@ TEST(stm32fsTest, FindNext) {
     ASSERT_NE(rc, nullptr);
     ASSERT_TRUE(rc->FileName == "file2"); 
 }
+
+TEST(stm32fsTest, DeleteFiles) {
+    Stm32fsConfig_t cfg;
+    InitFS(cfg, 0xff);
+    Stm32fs fs{cfg};
+    
+    ASSERT_TRUE(fs.WriteFile("file1", StdData, 1));
+    ASSERT_TRUE(fs.WriteFile("file2", StdData, 2));
+    ASSERT_TRUE(fs.WriteFile("file3", StdData, 3));
+    ASSERT_TRUE(fs.WriteFile("file4", StdData, 4));
+    
+    uint32_t restmem = fs.GetFreeMemory();
+    
+    ASSERT_TRUE(fs.DeleteFiles("file1"));
+    
+    ASSERT_FALSE(fs.FileExist("file1"));
+
+    ASSERT_TRUE(fs.DeleteFiles("*"));
+    
+    ASSERT_FALSE(fs.FileExist("file2"));
+    ASSERT_FALSE(fs.FileExist("file3"));
+    ASSERT_FALSE(fs.FileExist("file4"));
+    
+    ASSERT_EQ(restmem, fs.GetFreeMemory());
+}
