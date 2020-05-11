@@ -65,7 +65,11 @@ union PACKED Stm32FSFileRecord {
 };
 
 struct Stm32File_t {
+    char FileFilterChr[FileNameMaxLen * 2]; 
+    std::string_view FileFilter;
+    char FileNameChr[FileNameMaxLen]; 
     std::string_view FileName;
+    uint16_t FileID;
     uint32_t FileAddress;
     uint32_t FileSize;
     uint32_t HeaderAddress;

@@ -271,5 +271,24 @@ TEST(stm32fsTest, FindFirst) {
 
     rc = fs.FindFirst("file1?", &srecm);
     ASSERT_EQ(rc, nullptr);
+    
+    rc = fs.FindFirst("file1", &srecm);
+    ASSERT_NE(rc, nullptr);
+    ASSERT_TRUE(rc->FileName == "file1");
+    ASSERT_EQ(rc->FileSize, 1);
+    ASSERT_EQ(rc->FileID, 1);
+    ASSERT_EQ(rc->FileAddress, SECTOR_SIZE * 2);
+    
+    rc = fs.FindFirst("file?", &srecm);
+    ASSERT_NE(rc, nullptr);
+    ASSERT_TRUE(rc->FileName == "file1");
+    
+    rc = fs.FindFirst("file*", &srecm);
+    ASSERT_NE(rc, nullptr);
+    ASSERT_TRUE(rc->FileName == "file1");
+    
+    rc = fs.FindFirst("*", &srecm);
+    ASSERT_NE(rc, nullptr);
+    ASSERT_TRUE(rc->FileName == "file1");
 }
 

@@ -450,16 +450,6 @@ uint32_t Stm32fs::GetFreeFileDescriptors() {
     return (CurrentFsBlock->HeaderSectors.size() * BlockSize - size) / 16;
 }
 
-Stm32File_t *Stm32fs::FindFirst(std::string_view fileFilter, Stm32File_t *filePtr) {
-
-    return nullptr;
-}
-
-Stm32File_t *Stm32fs::FindNext(Stm32File_t *filePtr) {
-    
-    return nullptr;
-}
-
 bool Stm32fs::FileExist(std::string_view fileName) {
     Stm32FSFileHeader header = SearchFileHeader(fileName);
     if (header.FileState != fsFileHeader)
@@ -567,14 +557,14 @@ bool Stm32fs::DeleteFile(std::string_view fileName) {
     return true;
 }
 
-bool fnmatch(char *pattern, char*name){
-    if (strcmp(pattern, name) == 0)
+bool fnmatch(std::string_view &pattern, std::string_view &name){
+    if (pattern == name)
         return true;
 
-    if (strcmp(pattern, "*") == 0)
+    if (pattern == "*")
         return true;
     
-    size_t xlen = std::min(strlen(pattern), strlen(name));
+    size_t xlen = std::min(pattern.size(), name.size());
     for (size_t i = 0; i < xlen; i++) {
         if (pattern[i] == '*')
             return true;
@@ -584,7 +574,71 @@ bool fnmatch(char *pattern, char*name){
     }
     
     // exact match with length
-    return (strlen(pattern) == strlen(name));
+    return (pattern.size() == name.size());
+}
+
+Stm32File_t *Stm32fs::FindFirst(std::string_view fileFilter, Stm32File_t *filePtr) {
+    if (filePtr == nullptr)
+        return nullptr;
+    
+    size_t slen = std::min(fileFilter.size(), sizeof(filePtr->FileFilterChr));
+    std::memset(filePtr->FileFilterChr, 0, sizeof(filePtr->FileFilterChr));
+    std::memcpy(filePtr->FileFilterChr, fileFilter.data(), slen);
+    filePtr->FileFilter = std::string_view(filePtr->FileFilterChr, slen);
+    
+    std::memset(filePtr->FileNameChr, 0, sizeof(filePtr->FileNameChr));
+    filePtr->FileName = std::string_view(filePtr->FileNameChr, 0);
+    
+    filePtr->FileAddress = 0;
+    filePtr->FileSize = 0;
+    filePtr->HeaderAddress = 0;
+
+    return FindNext(filePtr);
+}
+
+Stm32File_t *Stm32fs::FindNext(Stm32File_t *filePtr) {
+    if (filePtr == nullptr)
+        return nullptr;
+    
+    if (filePtr->HeaderAddress == 0)
+        filePtr->HeaderAddress = GetFirstHeaderAddress();
+    else
+        filePtr->HeaderAddress = GetNextHeaderAddress(filePtr->HeaderAddress);
+    
+    Stm32FSFileRecord filerec;
+    while(true) {
+        if (filePtr->HeaderAddress == 0)
+            break;
+
+        ReadFlash(filePtr->HeaderAddress, (uint8_t *)&filerec, sizeof(filerec));
+        
+        // end of catalog
+        if (filerec.header.FileState == fsEmpty)
+            break;
+        
+        std::string_view str = {filerec.header.FileName, strnlen(filerec.header.FileName, FileNameMaxLen)};
+        if (filerec.header.FileState == fsFileHeader && fnmatch(filePtr->FileFilter, str)) {
+
+            Stm32FSFileVersion ver = SearchFileVersion(filerec.header.FileID);
+            if (ver.FileState == fsFileVersion) {
+                size_t slen = strnlen(filerec.header.FileName, FileNameMaxLen);
+                std::memset(filePtr->FileNameChr, 0, sizeof(filePtr->FileNameChr));
+                std::memcpy(filePtr->FileNameChr, filerec.header.FileName, slen);
+                filePtr->FileName = std::string_view(filePtr->FileNameChr, slen);
+                
+                filePtr->FileID = filerec.header.FileID;
+                
+                filePtr->FileAddress = ver.FileAddress;
+                filePtr->FileSize = ver.FileSize;
+                
+                return filePtr;
+            }
+        }
+        
+        filePtr->HeaderAddress = GetNextHeaderAddress(filePtr->HeaderAddress);
+    }
+
+    return nullptr;
 }
 
 bool Stm32fs::DeleteFiles(std::string_view fileFilter) {
