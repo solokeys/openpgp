@@ -14,6 +14,7 @@
 
 static const size_t BlockSize = 2048;
 static const size_t FileHeaderSize = 16;
+static const uint8_t FlashPadding = 8;
 
 uint32_t Stm32fs::GetBlockAddress(uint8_t blockNum) {
     return blockNum * BlockSize;
@@ -348,13 +349,18 @@ uint32_t Stm32fs::FindEmptyDataArea(size_t length) {
         addr = GetNextHeaderAddress(addr);
     }
     
-    // check for empty. because data write before write record to header.
+    // check for empty. because data writes before it writes a record to a header.
     uint32_t waddress = 0;
     while (!isFlashEmpty(daddr, length, true, &waddress)) {
         if (waddress == 0)
             return 0;
         
+        // FlashPadding
         daddr = waddress + 1;
+        uint32_t aladdr = (daddr / FlashPadding) * FlashPadding;
+        if (daddr != aladdr)
+            daddr = aladdr + FlashPadding;
+        
         if (!AddressInFlash(daddr, length))
             return false;
     }    
@@ -559,6 +565,26 @@ bool Stm32fs::DeleteFile(std::string_view fileName) {
         return false;
 
     return true;
+}
+
+bool fnmatch(char *pattern, char*name){
+    if (strcmp(pattern, name) == 0)
+        return true;
+
+    if (strcmp(pattern, "*") == 0)
+        return true;
+    
+    size_t xlen = std::min(strlen(pattern), strlen(name));
+    for (size_t i = 0; i < xlen; i++) {
+        if (pattern[i] == '*')
+            return true;
+        if (pattern[i] != '?' &&
+            pattern[i] != name[i])
+            return false;
+    }
+    
+    // exact match with length
+    return (strlen(pattern) == strlen(name));
 }
 
 bool Stm32fs::DeleteFiles(std::string_view fileFilter) {

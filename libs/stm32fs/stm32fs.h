@@ -66,7 +66,9 @@ union PACKED Stm32FSFileRecord {
 
 struct Stm32File_t {
     std::string_view FileName;
-    size_t FileSize;
+    uint32_t FileAddress;
+    uint32_t FileSize;
+    uint32_t HeaderAddress;
 };
 
 struct Stm32fsConfigBlock_t {

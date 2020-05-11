@@ -249,3 +249,27 @@ TEST(stm32fsTest, NeedsOptimize) {
     ASSERT_TRUE(fs.DeleteFile("file2"));
     ASSERT_TRUE(fs.isNeedsOptimization());
 }
+
+TEST(stm32fsTest, FindFirst) {
+    Stm32fsConfig_t cfg;
+    InitFS(cfg, 0xff);
+    Stm32fs fs{cfg};
+    
+    ASSERT_TRUE(fs.WriteFile("file1", StdData, 1));
+    ASSERT_TRUE(fs.WriteFile("file2", StdData, 1));
+    ASSERT_TRUE(fs.WriteFile("file3", StdData, 1));
+    ASSERT_TRUE(fs.WriteFile("file4", StdData, 1));
+    
+    Stm32File_t srecm;
+    Stm32File_t *rc = nullptr;
+    
+    rc = fs.FindFirst("xfile", &srecm);
+    ASSERT_EQ(rc, nullptr);
+    
+    rc = fs.FindFirst("filez", &srecm);
+    ASSERT_EQ(rc, nullptr);
+
+    rc = fs.FindFirst("file1?", &srecm);
+    ASSERT_EQ(rc, nullptr);
+}
+
