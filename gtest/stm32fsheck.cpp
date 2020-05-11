@@ -279,6 +279,10 @@ TEST(stm32fsTest, FindFirst) {
     ASSERT_EQ(rc->FileID, 1);
     ASSERT_EQ(rc->FileAddress, SECTOR_SIZE * 2);
     
+    rc = fs.FindFirst("file4", &srecm);
+    ASSERT_NE(rc, nullptr);
+    ASSERT_TRUE(rc->FileName == "file4");
+
     rc = fs.FindFirst("file?", &srecm);
     ASSERT_NE(rc, nullptr);
     ASSERT_TRUE(rc->FileName == "file1");
@@ -292,3 +296,63 @@ TEST(stm32fsTest, FindFirst) {
     ASSERT_TRUE(rc->FileName == "file1");
 }
 
+TEST(stm32fsTest, FindNext) {
+    Stm32fsConfig_t cfg;
+    InitFS(cfg, 0xff);
+    Stm32fs fs{cfg};
+    
+    ASSERT_TRUE(fs.WriteFile("file1", StdData, 1));
+    ASSERT_TRUE(fs.WriteFile("file2", StdData, 2));
+    ASSERT_TRUE(fs.WriteFile("file3", StdData, 3));
+    ASSERT_TRUE(fs.WriteFile("file4", StdData, 4));
+    
+    Stm32File_t srecm;
+    Stm32File_t *rc = nullptr;
+    
+    rc = fs.FindFirst("file?", &srecm);
+    ASSERT_NE(rc, nullptr);
+    ASSERT_TRUE(rc->FileName == "file1");
+    ASSERT_EQ(rc->FileSize, 1);
+    
+    rc = fs.FindNext(rc);
+    ASSERT_NE(rc, nullptr);
+    ASSERT_TRUE(rc->FileName == "file2");
+    ASSERT_EQ(rc->FileSize, 2);
+    
+    rc = fs.FindNext(rc);
+    ASSERT_NE(rc, nullptr);
+    ASSERT_TRUE(rc->FileName == "file3");
+    ASSERT_EQ(rc->FileSize, 3);
+    
+    rc = fs.FindNext(rc);
+    ASSERT_NE(rc, nullptr);
+    ASSERT_TRUE(rc->FileName == "file4");
+    ASSERT_EQ(rc->FileSize, 4);
+    
+    rc = fs.FindNext(rc);
+    ASSERT_EQ(rc, nullptr);
+    
+    rc = fs.FindFirst("file*", &srecm);
+    ASSERT_NE(rc, nullptr);
+    ASSERT_TRUE(rc->FileName == "file1");
+    
+    rc = fs.FindNext(rc);
+    ASSERT_NE(rc, nullptr);
+    ASSERT_TRUE(rc->FileName == "file2"); 
+
+    rc = fs.FindFirst("*", &srecm);
+    ASSERT_NE(rc, nullptr);
+    ASSERT_TRUE(rc->FileName == "file1");
+    
+    rc = fs.FindNext(rc);
+    ASSERT_NE(rc, nullptr);
+    ASSERT_TRUE(rc->FileName == "file2"); 
+
+    rc = fs.FindFirst("?????", &srecm);
+    ASSERT_NE(rc, nullptr);
+    ASSERT_TRUE(rc->FileName == "file1");
+    
+    rc = fs.FindNext(rc);
+    ASSERT_NE(rc, nullptr);
+    ASSERT_TRUE(rc->FileName == "file2"); 
+}
