@@ -381,3 +381,30 @@ TEST(stm32fsTest, DeleteFiles) {
     
     ASSERT_EQ(restmem, fs.GetFreeMemory());
 }
+
+TEST(stm32fsTest, Optimize) {
+    Stm32fsConfig_t cfg;
+    InitFS(cfg, 0xff);
+    Stm32fs fs{cfg};
+    
+    ASSERT_TRUE(fs.WriteFile("file1", StdData, 1));
+    ASSERT_TRUE(fs.WriteFile("file2", StdData, 2));
+    ASSERT_TRUE(fs.WriteFile("file3", StdData, 3));
+    ASSERT_TRUE(fs.WriteFile("file4", StdData, 4));
+    
+    uint32_t restmem = fs.GetFreeMemory();
+    
+    ASSERT_TRUE(fs.DeleteFiles("*"));
+    ASSERT_FALSE(fs.FileExist("file1"));
+    ASSERT_EQ(restmem, fs.GetFreeMemory());
+        
+    ASSERT_TRUE(fs.Optimize());
+    
+    ASSERT_FALSE(fs.FileExist("file1"));
+    ASSERT_FALSE(fs.FileExist("file2"));
+    ASSERT_FALSE(fs.FileExist("file3"));
+    ASSERT_FALSE(fs.FileExist("file4"));
+    
+    ASSERT_NE(restmem, fs.GetFreeMemory());
+    ASSERT_EQ(fs.GetFreeMemory(), SECTOR_SIZE * 3 - sizeof(StdData));
+}
