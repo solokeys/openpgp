@@ -89,13 +89,14 @@ struct Stm32fsConfig_t {
     std::function<bool (uint32_t, uint8_t*, size_t)> fnReadFlash;  // address, data, length
 };
 
-class Stm32fs {
+class Stm32fsFlash {
 private:
-    Stm32fsConfig_t FsConfig = {};
-    Stm32fsConfigBlock_t *CurrentFsBlock;
-    bool Valid;
-    bool NeedsOptimization;
+    Stm32fsConfig_t *FsConfig;
     uint32_t FlashBlocksCount;
+public:
+    Stm32fsFlash();
+    
+    Stm32fsConfigBlock_t *Init(Stm32fsConfig_t *config);
     
     uint32_t GetBlockAddress(uint8_t blockNum);
     uint32_t GetBlockFromAddress(uint32_t address);
@@ -105,7 +106,7 @@ private:
     bool isFlashBlockEmpty(uint8_t blockNo);
     bool WriteFlash(uint32_t address, uint8_t *data, size_t length);
     bool ReadFlash(uint32_t address, uint8_t *data, size_t length);
-    
+
     bool CheckFsHeader(Stm32FSHeader_t &header);
     void FillFsHeader(Stm32FSHeader_t &header, uint32_t serial);
     bool EraseFs(Stm32fsConfigBlock_t &config);
@@ -113,10 +114,18 @@ private:
     
     Stm32fsConfigBlock_t *SearchLastFsBlockInFlash();
     Stm32fsConfigBlock_t *SearchNextFsBlockInFlash();
-    bool GetCurrentFsBlockHeader(Stm32FSHeader_t &header);
+};
+
+class Stm32fs {
+private:
+    Stm32fsConfig_t FsConfig = {};
+    Stm32fsConfigBlock_t *CurrentFsBlock;
+    bool Valid;
+    bool NeedsOptimization;
     
-    bool CheckIsFlashEmpty(uint8_t *data, size_t size);
-    //Stm32FSHeader_t *CheckFsHeader(uint8_t *data);
+    Stm32fsFlash flash;
+    
+    bool GetCurrentFsBlockHeader(Stm32FSHeader_t &header);
     
     uint32_t GetFirstHeaderAddress();
     uint32_t GetNextHeaderAddress(uint32_t previousAddress);
@@ -150,6 +159,47 @@ public:
     bool DeleteFiles(std::string_view fileFilter);
     
     bool Optimize();
+};
+
+struct PACKED Stm32OptimizedFile_t {
+    char FileName[FileNameMaxLen];
+    uint32_t FileAddress;
+    uint16_t FileSize;
+};
+
+class Stm32fsWriteCache {
+private:
+    uint8_t cache[2048] = {0};
+public:
+    Stm32fsWriteCache();
+    
+    bool Init(Stm32fsConfigBlock_t &block);
+    bool Write(uint8_t *data, size_t len);
+    bool WriteFsHeader(Stm32FSHeader_t fsHeader);
+    bool WriteFileHeader(Stm32OptimizedFile_t &fileHeader);
+    bool Flush();
+};
+    
+class Stm32fsFileList {
+private:
+    static const size_t FileListLength = 110;
+    Stm32OptimizedFile_t FileList[FileListLength] = {0};
+public:
+    Stm32fsFileList();
+    
+    void Clear();
+    bool Append(Stm32FSFileHeader &header, Stm32FSFileVersion &version);
+    bool Sort();
+    bool Write(Stm32fsWriteCache &cache);
+};
+
+class Stm32fsOptimizer {
+private:
+public:
+    Stm32fsOptimizer();
+    
+    bool OptimizeViaRam(Stm32fsConfigBlock_t &block);
+    bool OptimizeMultiblock(Stm32fsConfigBlock_t &inputBlock, Stm32fsConfigBlock_t &outputBlock);
 };
 
 #endif  // SRC_STM32FS_H_

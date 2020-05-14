@@ -398,7 +398,11 @@ TEST(stm32fsTest, Optimize) {
     ASSERT_FALSE(fs.FileExist("file1"));
     ASSERT_EQ(restmem, fs.GetFreeMemory());
         
+    ASSERT_EQ(fs.GetCurrentFsBlockSerial(), 1);
+
     ASSERT_TRUE(fs.Optimize());
+    
+    ASSERT_EQ(fs.GetCurrentFsBlockSerial(), 2);
     
     ASSERT_FALSE(fs.FileExist("file1"));
     ASSERT_FALSE(fs.FileExist("file2"));
