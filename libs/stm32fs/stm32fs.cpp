@@ -727,6 +727,47 @@ bool Stm32fs::Optimize() {
 }
 
 /*
+ * --- Stm32fsFileList ---
+ */
+
+Stm32fsFileList::Stm32fsFileList() {
+    Clear();
+}
+
+int Stm32fsFileList::FindEmptyID() {
+    for (size_t i = 0; i < FileListLength; i++)
+        if (FileList[i].FileName[0] == 0x00 && FileList[i].FileAddress == 0 && FileList[i].FileSize == 0)
+            return i;
+    return -1;
+}
+
+void Stm32fsFileList::Clear() {
+    std::memset((void *)FileList, 0x00, sizeof(FileList));
+}
+
+bool Stm32fsFileList::Append(Stm32FSFileHeader &header, Stm32FSFileVersion &version) {
+    int id = FindEmptyID();
+    if (id < 0)
+        return false;
+    
+    std::memcpy(FileList[id].FileName, header.FileName, FileNameMaxLen);
+    FileList[id].FileAddress = version.FileAddress;
+    FileList[id].FileSize = version.FileSize;
+    
+    return true;
+}
+
+bool Stm32fsFileList::Sort() {
+    
+    return true;
+}
+
+bool Stm32fsFileList::Write(Stm32fsWriteCache &cache) {
+
+    return true;
+}
+
+/*
  * --- Stm32fsOptimizer ---
  */
 
@@ -741,6 +782,8 @@ bool Stm32fsOptimizer::OptimizeMultiblock(Stm32fsConfigBlock_t &inputBlock, Stm3
 }
 
 bool Stm32fsOptimizer::OptimizeViaRam(Stm32fsConfigBlock_t &block) {
+    
+    Stm32fsFileList fileList;
     
     return true;
 }

@@ -184,6 +184,8 @@ class Stm32fsFileList {
 private:
     static const size_t FileListLength = 110;
     Stm32OptimizedFile_t FileList[FileListLength] = {0};
+    
+    int FindEmptyID();
 public:
     Stm32fsFileList();
     
