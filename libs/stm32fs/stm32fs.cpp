@@ -746,6 +746,9 @@ void Stm32fsFileList::Clear() {
 }
 
 bool Stm32fsFileList::Append(Stm32FSFileHeader &header, Stm32FSFileVersion &version) {
+    if (header.FileName[0] = 0x00)
+        return true;
+    
     int id = FindEmptyID();
     if (id < 0)
         return false;
