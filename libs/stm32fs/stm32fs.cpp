@@ -80,36 +80,44 @@ bool Stm32fsFlash::AddressInFlash(uint32_t address, size_t length) {
 }
 
 bool Stm32fsFlash::EraseFlashBlock(uint8_t blockNo) {
-    printf("- erase block %d\n", blockNo);
     return FsConfig->fnEraseFlashBlock(blockNo);
 }
 
 bool Stm32fsFlash::isFlashEmpty(uint32_t address, size_t length, bool reverse, uint32_t *exceptAddr) {
     if(exceptAddr)
         *exceptAddr = 0;
-    if (!AddressInFlash(address, length))
+    
+    // address - start of flash block
+    uint32_t addr = (address / FlashPadding) * FlashPadding;
+    
+    // length - length of flash block
+    size_t len = ((length + (address - addr)) / FlashPadding) * FlashPadding;
+    if (len != length)
+        len += FlashPadding;
+    
+    if (!AddressInFlash(addr, len))
         return false;
     
-    uint8_t *data = (uint8_t *)(FsConfig->BaseBlockAddress + address);
+    uint8_t *data = (uint8_t *)(FsConfig->BaseBlockAddress + addr);
     
     if (!reverse) {
-        for (uint32_t i = 0; i < length; i++)
+        for (uint32_t i = 0; i < len; i++)
             if (data[i] != 0xffU) {
-                printf("empty except addr=%d len=%zd\n", address, length);
+                printf("empty except addr=%d len=%zd\n", addr, len);
                 if (exceptAddr)
-                    *exceptAddr = address + i;
+                    *exceptAddr = addr + i;
                 return false;
             }
     } else {
-        for (int i = length - 1; i >= 0; i--)
+        for (int i = len - 1; i >= 0; i--)
             if (data[i] != 0xffU) {
                 if (exceptAddr)
-                    *exceptAddr = address + i;
+                    *exceptAddr = addr + i;
                 return false;
             }
     }
     
-    printf("empty OK addr=%d len=%zd\n", address, length);
+    printf("empty OK addr=%d len=%zd\n", addr, len);
     return true;
 }
 
@@ -120,14 +128,12 @@ bool Stm32fsFlash::isFlashBlockEmpty(uint8_t blockNo) {
 bool Stm32fsFlash::WriteFlash(uint32_t address, uint8_t *data, size_t length) {
     if (!AddressInFlash(address, length))
         return false;
-    printf("- write flash %x [%zd]\n", address, length);
     return FsConfig->fnWriteFlash(address, data, length);
 }
 
 bool Stm32fsFlash::ReadFlash(uint32_t address, uint8_t *data, size_t length) {
     if (!AddressInFlash(address, length))
         return false;
-    printf("- read flash %x [%zd]\n", address, length);
     return FsConfig->fnReadFlash(address, data, length);
 }
 
@@ -254,7 +260,6 @@ uint32_t Stm32fs::GetNextHeaderAddress(uint32_t previousAddress) {
         return 0;
     
     uint32_t xblock = flash.GetBlockFromAddress(addr);
-    printf("addr=%d xblock=%d\n", addr, xblock);
     for (auto &sector: CurrentFsBlock->HeaderSectors) {
         if (xblock == sector)
             return addr;
@@ -863,21 +868,30 @@ bool Stm32fsWriteCache::Write(uint8_t *data, size_t len) {
     if (CurrentSectorID < 0)
         return false;
     
-    // TODO: add multisector write
-    std::memcpy(&cache[CurrentAddress], data, len);
-    CurrentAddress += len;
-    // TODO: flash align....
-    
-    if (CurrentAddress >= BlockSize) {
-        if (!WriteToFlash(sectors[CurrentSectorID]))
+    // multisector write
+    while (len > 0) {
+        if (CurrentSectorID < 0)
             return false;
+        
+        size_t blen = len;
+        if (blen > BlockSize - CurrentAddress)
+            blen = BlockSize - CurrentAddress;
+        std::memcpy(&cache[CurrentAddress], data, blen);
+        CurrentAddress += blen;                            // flash align not needs because we write it in single block...
 
-        CurrentSectorID++;
-        if (CurrentSectorID >= (int)sectors.size())
-            CurrentSectorID = -1;
+        len -= blen;
+        
+        if (CurrentAddress >= BlockSize) {
+            if (!WriteToFlash(sectors[CurrentSectorID]))
+                return false;
 
-        ClearCache();
-        CurrentAddress = 0;
+            CurrentSectorID++;
+            if (CurrentSectorID >= (int)sectors.size())
+                CurrentSectorID = -1;
+
+            ClearCache();
+            CurrentAddress = 0;
+        }
     }
     
     return true;

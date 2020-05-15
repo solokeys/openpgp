@@ -200,6 +200,30 @@ TEST(stm32fsTest, ReadFileMaxLen) {
     ASSERT_EQ(std::memcmp(testmem, testmemr, SECTOR_SIZE * 3), 0);    
 }
 
+TEST(stm32fsTest, WriteFileBadFS) {
+    Stm32fsConfig_t cfg;
+    InitFS(cfg, 0xff);
+    Stm32fs fs{cfg};
+    
+    uint8_t testmem[SECTOR_SIZE] = {0};
+    std::memset(testmem, 0x00, sizeof(testmem));
+
+    // flash bad blocks
+    // 8b border
+    vmem[SECTOR_SIZE * 2 + 5] = 0x00;
+    
+    uint32_t restmem = fs.GetFreeMemory();
+    ASSERT_TRUE(fs.WriteFile("file", StdData, 1));
+    ASSERT_TRUE(fs.WriteFile("file", StdData, sizeof(StdData) - 1));
+
+    size_t rxlength = 0;
+    ASSERT_TRUE(fs.ReadFile("file", testmem, &rxlength, sizeof(testmem)));
+    
+    ASSERT_EQ(rxlength, sizeof(StdData) - 1);
+    ASSERT_EQ(std::memcmp(testmem, StdData, rxlength), 0);
+    ASSERT_EQ(restmem - 24, fs.GetFreeMemory());
+}
+
 TEST(stm32fsTest, DeleteFile) {
     Stm32fsConfig_t cfg;
     InitFS(cfg, 0xff);
@@ -428,12 +452,12 @@ TEST(stm32fsTest, OptimizeSimple) {
     InitFS(cfg, 0xff);
     Stm32fs fs{cfg};
     
+    uint32_t startmem = fs.GetFreeMemory();
+    
     ASSERT_TRUE(fs.WriteFile("file1", StdData, 1));
     ASSERT_TRUE(fs.WriteFile("file2", StdData, 2));
     ASSERT_TRUE(fs.WriteFile("file3", StdData, 3));
     ASSERT_TRUE(fs.WriteFile("file4", StdData, 4));
-    
-    uint32_t restmem = fs.GetFreeMemory();
     
     ASSERT_TRUE(fs.DeleteFile("file3"));
     ASSERT_FALSE(fs.FileExist("file3"));
@@ -443,6 +467,7 @@ TEST(stm32fsTest, OptimizeSimple) {
     ASSERT_TRUE(fs.Optimize());
     
     dump_memory(vmem, 128);
+    dump_memory(&vmem[4096], 128);
     
     ASSERT_EQ(fs.GetCurrentFsBlockSerial(), 2);
     
@@ -451,5 +476,6 @@ TEST(stm32fsTest, OptimizeSimple) {
     ASSERT_FALSE(fs.FileExist("file3"));
     ASSERT_TRUE(fs.FileExist("file4"));
     
-    ASSERT_EQ(restmem, fs.GetFreeMemory());
+    // all the data inside 1 flash block
+    ASSERT_EQ(startmem - 8, fs.GetFreeMemory());
 }
