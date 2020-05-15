@@ -798,7 +798,7 @@ bool Stm32fsFileList::Sort() {
         if (FileList[i].isEmpty())
             break;
 
-        for (size_t j = i + 1; i < FileListLength; i++) {
+        for (size_t j = i + 1; i < FileListLength; j++) {
             if (FileList[j].isEmpty())
                 break;
             
