@@ -931,7 +931,10 @@ bool Stm32fsWriteCache::Flush() {
     if (CurrentSectorID < 0)
         return false;
     
-    bool res = WriteToFlash(sectors[CurrentSectorID]);
+    bool res = true;
+    // if we have something to write
+    if (CurrentAddress > 0)
+        res = WriteToFlash(sectors[CurrentSectorID]);
     CurrentSectorID = -1;
     CurrentAddress = 0;
     return res;
@@ -989,8 +992,8 @@ bool Stm32fsOptimizer::OptimizeViaRam(Stm32fsConfigBlock_t &block) {
         if (!cdata.Init())
             return false;
         
-        //if (!cdata.Flush())
-        //    return false;
+        if (!cdata.Flush())
+            return false;
         
     };
     
