@@ -466,8 +466,8 @@ TEST(stm32fsTest, OptimizeSimple) {
 
     ASSERT_TRUE(fs.Optimize());
     
-    dump_memory(vmem, 128);
-    dump_memory(&vmem[4096], 128);
+    //dump_memory(vmem, 128);
+    //dump_memory(&vmem[4096], 128);
     
     ASSERT_EQ(fs.GetCurrentFsBlockSerial(), 2);
     
@@ -478,4 +478,58 @@ TEST(stm32fsTest, OptimizeSimple) {
     
     // all the data inside 1 flash block
     ASSERT_EQ(startmem - 8, fs.GetFreeMemory());
+}
+
+TEST(stm32fsTest, OptimizeBifFiles) {
+    Stm32fsConfig_t cfg;
+    InitFS(cfg, 0xff);
+    Stm32fs fs{cfg};
+    
+    // init arrays
+    uint8_t testmem[SECTOR_SIZE * 3] = {0};
+    for (size_t i = 0; i < sizeof(testmem); i++)
+        testmem[i] = (i & 0xffU) ^ 0x5A;
+    uint8_t testmemr[SECTOR_SIZE * 3] = {0};
+    std::memset(testmemr, 0xab, sizeof(testmemr));
+    
+    uint32_t startmem = fs.GetFreeMemory();
+    
+    ASSERT_TRUE(fs.WriteFile("file1", StdData, 15));
+    ASSERT_TRUE(fs.WriteFile("file2", testmem, 3100));
+    ASSERT_EQ(fs.FileLength("file2"), 3100);
+    ASSERT_TRUE(fs.WriteFile("file3", testmem, 2500));
+    ASSERT_EQ(fs.FileLength("file3"), 2500);
+    
+    ASSERT_TRUE(fs.DeleteFile("file1"));
+    ASSERT_FALSE(fs.FileExist("file1"));
+        
+    ASSERT_EQ(fs.GetCurrentFsBlockSerial(), 1);
+
+    dump_memory(vmem, 128);
+
+    ASSERT_TRUE(fs.Optimize());
+    
+    dump_memory(vmem, 128);
+    dump_memory(&vmem[4096], 128);
+    
+    ASSERT_EQ(fs.GetCurrentFsBlockSerial(), 2);
+    
+    ASSERT_FALSE(fs.FileExist("file1"));
+    ASSERT_TRUE(fs.FileExist("file2"));
+    ASSERT_TRUE(fs.FileExist("file3"));
+    
+    
+
+    size_t rxlength = 0;
+    ASSERT_FALSE(fs.ReadFile("file2", testmemr, &rxlength, sizeof(testmemr)));
+    ASSERT_EQ(rxlength, 3100);
+    ASSERT_EQ(std::memcmp(testmem, testmemr, rxlength), 0);
+    
+    std::memset(testmemr, 0xab, sizeof(testmemr));
+    rxlength = 0;
+    ASSERT_FALSE(fs.ReadFile("file3", testmemr, &rxlength, sizeof(testmemr)));
+    ASSERT_EQ(rxlength, 2500);
+    ASSERT_EQ(std::memcmp(testmem, testmemr, rxlength), 0);
+    
+    ASSERT_EQ(startmem - (3100 + 2500 +555), fs.GetFreeMemory());
 }
