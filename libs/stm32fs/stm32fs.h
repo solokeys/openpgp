@@ -16,6 +16,8 @@
 
 #define PACKED __attribute__((packed))
 
+using UVector = std::vector<uint8_t>;
+
 struct PACKED Stm32FSHeaderStart_t {
     uint16_t StartSeq;
     uint32_t Serial;
@@ -174,13 +176,20 @@ struct PACKED Stm32OptimizedFile_t {
 
 class Stm32fsWriteCache {
 private:
+    Stm32fsFlash &flash;
+    UVector &sectors;
+    int CurrentSector = -1;
+    size_t CurrentAddress = 0;
     uint8_t cache[2048] = {0};
-public:
-    Stm32fsWriteCache();
     
-    bool Init(Stm32fsConfigBlock_t &block);
+    void ClearCache();
+    bool WriteToFlash(uint8_t sectorNum);
+public:
+    Stm32fsWriteCache(Stm32fsFlash &fsFlash, UVector &sec) :flash{fsFlash}, sectors{sec}{};
+    
+    bool Init();
     bool Write(uint8_t *data, size_t len);
-    bool WriteFsHeader(Stm32FSHeader_t fsHeader);
+    bool WriteFsHeader(uint32_t serial);
     bool WriteFileHeader(Stm32OptimizedFile_t &fileHeader);
     bool Flush();
 };

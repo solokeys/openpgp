@@ -426,6 +426,7 @@ TEST(stm32fsTest, OptimizeSimple) {
     uint32_t restmem = fs.GetFreeMemory();
     
     ASSERT_TRUE(fs.DeleteFile("file3"));
+    ASSERT_FALSE(fs.FileExist("file3"));
         
     ASSERT_EQ(fs.GetCurrentFsBlockSerial(), 1);
 

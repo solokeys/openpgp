@@ -813,6 +813,67 @@ bool Stm32fsFileList::Write(Stm32fsWriteCache &cache) {
 }
 
 /*
+ * --- Stm32fsWriteCache ---
+ */
+
+void Stm32fsWriteCache::ClearCache() {
+    std::memset(cache, 0xffU, sizeof(cache));
+}
+
+bool Stm32fsWriteCache::WriteToFlash(uint8_t sectorNum) {
+    
+    return true;
+}
+
+bool Stm32fsWriteCache::Init() {
+    if (sectors.size() == 0)
+        return false;
+    
+    ClearCache();
+    CurrentSector = sectors[0];
+    CurrentAddress = 0;
+    return true;
+}
+
+bool Stm32fsWriteCache::Write(uint8_t *data, size_t len) {
+    if (CurrentSector < 0)
+        return false;
+    
+    // TODO: add multisector write
+    std::memcpy(&cache[CurrentAddress], data, len);
+    CurrentAddress += len;
+    
+    return true;
+}
+
+bool Stm32fsWriteCache::WriteFsHeader(uint32_t serial) {
+    if (CurrentSector < 0)
+        return false;
+    
+    Stm32FSHeader_t header;
+    flash.FillFsHeader(header, serial);
+    
+    return Write((uint8_t *)&header, sizeof(header));
+}
+
+bool Stm32fsWriteCache::WriteFileHeader(Stm32OptimizedFile_t &fileHeader) {
+    if (CurrentSector < 0)
+        return false;
+    
+    return Write((uint8_t *)&fileHeader, sizeof(fileHeader));
+}
+
+bool Stm32fsWriteCache::Flush() {
+    if (CurrentSector < 0)
+        return false;
+    
+    bool res = WriteToFlash(CurrentSector);
+    CurrentSector = -1;
+    CurrentAddress = 0;
+    return res;
+}
+
+/*
  * --- Stm32fsOptimizer ---
  */
 
@@ -821,7 +882,7 @@ Stm32fsOptimizer::Stm32fsOptimizer(Stm32fs &stm32fs) : fs{stm32fs} {
 }
 
 bool Stm32fsOptimizer::OptimizeMultiblock(Stm32fsConfigBlock_t &inputBlock, Stm32fsConfigBlock_t &outputBlock) {
-    // TODO:
+    // TODO: multiblock optimization. from flash region to flash region.
     
     return false;
 }
@@ -854,6 +915,14 @@ bool Stm32fsOptimizer::OptimizeViaRam(Stm32fsConfigBlock_t &block) {
     printf("----- %s [%d]\n", fileList.Empty()?"EMPTY":"FULL", fileList.Size());
     fileList.Sort();
     printf("----- %s [%d]\n", fileList.Empty()?"EMPTY":"FULL", fileList.Size());
+    
+    Stm32fsWriteCache cache(fs.flash, block.HeaderSectors);
+    if (!cache.Init())
+        return false;
+
+    // lazy optimize  TODO!!!
+    if (!fileList.Write(cache))
+        return false;
     
     return true;
 }
