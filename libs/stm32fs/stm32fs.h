@@ -217,6 +217,7 @@ public:
     bool Append(Stm32FSFileHeader &header, Stm32FSFileVersion &version);
     bool Sort();
     bool Write(Stm32fsWriteCache &cache);
+    Stm32OptimizedFile_t &GetFileByID(size_t id);
 };
 
 class Stm32fsOptimizer {

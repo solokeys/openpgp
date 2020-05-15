@@ -832,6 +832,13 @@ bool Stm32fsFileList::Write(Stm32fsWriteCache &cache) {
     return cache.Flush();
 }
 
+Stm32OptimizedFile_t &Stm32fsFileList::GetFileByID(size_t id) {
+    if (id >= FileListLength)
+        return FileList[0];
+
+    return FileList[id];
+}
+
 /*
  * --- Stm32fsWriteCache ---
  */
@@ -981,22 +988,32 @@ bool Stm32fsOptimizer::OptimizeViaRam(Stm32fsConfigBlock_t &block) {
         return true;
     }
     
-    printf("----- %s [%d]\n", fileList.Empty()?"EMPTY":"FULL", fileList.Size());
     fileList.Sort();
-    printf("----- %s [%d]\n", fileList.Empty()?"EMPTY":"FULL", fileList.Size());
 
-    // TODO: optimize data sections
+    // optimize data sections
     if (true) {
         Stm32fsWriteCache cdata(fs.flash, block.DataSectors);
         
         if (!cdata.Init())
             return false;
         
+        int fsize = fileList.Size();
+        uint32_t curAddr = fs.flash.GetBlockAddress(block.DataSectors[0]);
+        for (int i = 0; i < fsize; i++) {
+            auto &file = fileList.GetFileByID(i);
+            if (!cdata.Write((uint8_t *)(fs.flash.GetBaseAddress() + file.FileAddress), file.FileSize))
+                return false;
+            file.FileAddress = curAddr;
+            curAddr += file.FileSize;
+        }
+        
         if (!cdata.Flush())
             return false;
         
     };
     
+    printf("----- %s [%d]\n", fileList.Empty()?"EMPTY":"FULL", fileList.Size());
+
     Stm32fsWriteCache cache(fs.flash, block.HeaderSectors);
     if (!cache.Init())
         return false;
