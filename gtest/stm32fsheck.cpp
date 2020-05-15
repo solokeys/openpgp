@@ -36,6 +36,16 @@ void AssertArrayEQConst(uint8_t *data, uint32_t size, uint8_t constval) {
     }
 }
 
+void dump_memory(void* data, size_t len) {
+    size_t i;
+    for (i=0;i<len;i++) {
+        printf("%02X ", ((unsigned char*)data)[i] );
+        if ((i + 1) % 16 == 0)
+            printf("\n");
+    }
+    printf("\n");
+}
+
 TEST(stm32fsTest, Create) {
     Stm32fsConfig_t cfg;
     InitFS(cfg, 0x00);
@@ -431,6 +441,8 @@ TEST(stm32fsTest, OptimizeSimple) {
     ASSERT_EQ(fs.GetCurrentFsBlockSerial(), 1);
 
     ASSERT_TRUE(fs.Optimize());
+    
+    dump_memory(vmem, 128);
     
     ASSERT_EQ(fs.GetCurrentFsBlockSerial(), 2);
     

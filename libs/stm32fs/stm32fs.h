@@ -16,6 +16,9 @@
 
 #define PACKED __attribute__((packed))
 
+static const size_t BlockSize = 2048;
+static const size_t FileNameMaxLen = 13;
+
 using UVector = std::vector<uint8_t>;
 
 struct PACKED Stm32FSHeaderStart_t {
@@ -45,8 +48,6 @@ enum Stm32FileState_e {
     fsEmpty = 0xff
 };
 
-static const size_t FileNameMaxLen = 13;
-
 struct PACKED Stm32FSFileHeader {
     uint8_t FileState;
     uint16_t FileID;
@@ -57,11 +58,17 @@ struct PACKED Stm32FSFileVersion {
     uint8_t FileState;
     uint16_t FileID;
     uint8_t none;
+    uint32_t none2;
     uint32_t FileAddress;
     uint32_t FileSize;
 };
 
 union PACKED Stm32FSFileRecord {
+    Stm32FSFileHeader header;
+    Stm32FSFileVersion version;
+};
+
+struct PACKED Stm32FSFullFileRecord {
     Stm32FSFileHeader header;
     Stm32FSFileVersion version;
 };
@@ -100,6 +107,7 @@ public:
     
     Stm32fsConfigBlock_t *Init(Stm32fsConfig_t *config);
     
+    size_t GetBaseAddress();
     uint32_t GetBlockAddress(uint8_t blockNum);
     uint32_t GetBlockFromAddress(uint32_t address);
     bool AddressInFlash(uint32_t address, size_t length);
@@ -178,9 +186,9 @@ class Stm32fsWriteCache {
 private:
     Stm32fsFlash &flash;
     UVector &sectors;
-    int CurrentSector = -1;
+    int CurrentSectorID = -1;
     size_t CurrentAddress = 0;
-    uint8_t cache[2048] = {0};
+    uint8_t cache[BlockSize] = {0};
     
     void ClearCache();
     bool WriteToFlash(uint8_t sectorNum);
@@ -190,7 +198,7 @@ public:
     bool Init();
     bool Write(uint8_t *data, size_t len);
     bool WriteFsHeader(uint32_t serial);
-    bool WriteFileHeader(Stm32OptimizedFile_t &fileHeader);
+    bool WriteFileHeader(Stm32OptimizedFile_t &fileHeader, uint16_t &fileID);
     bool Flush();
 };
     

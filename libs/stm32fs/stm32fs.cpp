@@ -12,7 +12,6 @@
 #include <algorithm>
 #include <cstring>
 
-static const size_t BlockSize = 2048;
 static const size_t FileHeaderSize = 16;
 static const uint8_t FlashPadding = 8;
 
@@ -54,6 +53,13 @@ Stm32fsConfigBlock_t *Stm32fsFlash::Init(Stm32fsConfig_t *config) {
     FlashBlocksCount = blk->HeaderSectors.size() + blk->DataSectors.size();
     
     return blk;
+}
+
+size_t Stm32fsFlash::GetBaseAddress() {
+    if (FsConfig == nullptr)
+        return 0;
+    
+    return FsConfig->BaseBlockAddress;
 }
 
 uint32_t Stm32fsFlash::GetBlockAddress(uint8_t blockNum) {
@@ -808,8 +814,17 @@ bool Stm32fsFileList::Sort() {
 }
 
 bool Stm32fsFileList::Write(Stm32fsWriteCache &cache) {
+    uint16_t fileID = 1;
+    
+    for (size_t i = 0; i < FileListLength; i++) {
+        if (FileList[i].isEmpty())
+            break;
 
-    return true;
+        if (!cache.WriteFileHeader(FileList[i], fileID))
+            return false;
+    }
+    
+    return cache.Flush();
 }
 
 /*
@@ -822,7 +837,16 @@ void Stm32fsWriteCache::ClearCache() {
 
 bool Stm32fsWriteCache::WriteToFlash(uint8_t sectorNum) {
     
-    return true;
+    size_t addr = flash.GetBaseAddress() + flash.GetBlockAddress(sectorNum);
+    
+    if (std::memcmp(cache, (void *)addr, BlockSize) == 0)
+        return true;
+    
+    if (!flash.isFlashBlockEmpty(sectorNum))
+        if (!flash.EraseFlashBlock(sectorNum))
+            return false;
+    
+    return flash.WriteFlash(flash.GetBlockAddress(sectorNum), cache, BlockSize);
 }
 
 bool Stm32fsWriteCache::Init() {
@@ -830,24 +854,37 @@ bool Stm32fsWriteCache::Init() {
         return false;
     
     ClearCache();
-    CurrentSector = sectors[0];
+    CurrentSectorID = 0;
     CurrentAddress = 0;
     return true;
 }
 
 bool Stm32fsWriteCache::Write(uint8_t *data, size_t len) {
-    if (CurrentSector < 0)
+    if (CurrentSectorID < 0)
         return false;
     
     // TODO: add multisector write
     std::memcpy(&cache[CurrentAddress], data, len);
     CurrentAddress += len;
+    // TODO: flash align....
+    
+    if (CurrentAddress >= BlockSize) {
+        if (!WriteToFlash(sectors[CurrentSectorID]))
+            return false;
+
+        CurrentSectorID++;
+        if (CurrentSectorID >= (int)sectors.size())
+            CurrentSectorID = -1;
+
+        ClearCache();
+        CurrentAddress = 0;
+    }
     
     return true;
 }
 
 bool Stm32fsWriteCache::WriteFsHeader(uint32_t serial) {
-    if (CurrentSector < 0)
+    if (CurrentSectorID < 0)
         return false;
     
     Stm32FSHeader_t header;
@@ -856,19 +893,32 @@ bool Stm32fsWriteCache::WriteFsHeader(uint32_t serial) {
     return Write((uint8_t *)&header, sizeof(header));
 }
 
-bool Stm32fsWriteCache::WriteFileHeader(Stm32OptimizedFile_t &fileHeader) {
-    if (CurrentSector < 0)
+bool Stm32fsWriteCache::WriteFileHeader(Stm32OptimizedFile_t &fileHeader, uint16_t &fileID) {
+    if (CurrentSectorID < 0)
         return false;
     
-    return Write((uint8_t *)&fileHeader, sizeof(fileHeader));
+    printf("--wr file %s [%d]\n", fileHeader.FileName, fileHeader.FileAddress);
+    
+    Stm32FSFullFileRecord fullFile = {0};
+    fullFile.header.FileState = fsFileHeader;
+    fullFile.header.FileID = fileID;
+    std::memcpy(fullFile.header.FileName, fileHeader.FileName, FileNameMaxLen);
+
+    fullFile.version.FileState = fsFileVersion;
+    fullFile.version.FileID = fileID;
+    fullFile.version.FileAddress = fileHeader.FileAddress;
+    fullFile.version.FileSize = fileHeader.FileSize;
+    
+    fileID++;
+    return Write((uint8_t *)&fullFile, sizeof(fullFile));
 }
 
 bool Stm32fsWriteCache::Flush() {
-    if (CurrentSector < 0)
+    if (CurrentSectorID < 0)
         return false;
     
-    bool res = WriteToFlash(CurrentSector);
-    CurrentSector = -1;
+    bool res = WriteToFlash(sectors[CurrentSectorID]);
+    CurrentSectorID = -1;
     CurrentAddress = 0;
     return res;
 }
@@ -907,20 +957,36 @@ bool Stm32fsOptimizer::OptimizeViaRam(Stm32fsConfigBlock_t &block) {
         addr = fs.GetNextHeader(addr, filerec);
     }
     
+    uint32_t serial = fs.GetCurrentFsBlockSerial();
+    
     if (fileList.Empty()) {
-        fs.flash.CreateFsBlock(block, fs.GetCurrentFsBlockSerial() + 1);
+        fs.flash.CreateFsBlock(block, serial + 1);
         return true;
     }
     
     printf("----- %s [%d]\n", fileList.Empty()?"EMPTY":"FULL", fileList.Size());
     fileList.Sort();
     printf("----- %s [%d]\n", fileList.Empty()?"EMPTY":"FULL", fileList.Size());
+
+    // TODO: optimize data sections
+    if (true) {
+        Stm32fsWriteCache cdata(fs.flash, block.DataSectors);
+        
+        if (!cdata.Init())
+            return false;
+        
+        //if (!cdata.Flush())
+        //    return false;
+        
+    };
     
     Stm32fsWriteCache cache(fs.flash, block.HeaderSectors);
     if (!cache.Init())
         return false;
 
-    // lazy optimize  TODO!!!
+    if (!cache.WriteFsHeader(serial + 1))
+        return false;
+
     if (!fileList.Write(cache))
         return false;
     
