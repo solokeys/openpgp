@@ -256,6 +256,35 @@ uint32_t Stm32fs::GetNextHeaderAddress(uint32_t previousAddress) {
     return 0;
 }
 
+uint32_t Stm32fs::GetFirstHeader(Stm32FSFileRecord &header) {
+    uint32_t addr = GetFirstHeaderAddress();
+    if (addr == 0)
+        return 0;
+
+    if (!flash.ReadFlash(addr, (uint8_t *)&header, sizeof(Stm32FSFileRecord)))
+        return 0;
+    
+    if (header.version.FileState == fsEmpty)
+        return 0;
+    
+    return addr;
+}
+
+uint32_t Stm32fs::GetNextHeader(uint32_t previousAddress, Stm32FSFileRecord &header) {
+    uint32_t addr = GetNextHeaderAddress(previousAddress);
+    if (addr == 0)
+        return 0;
+
+    if (!flash.ReadFlash(addr, (uint8_t *)&header, sizeof(Stm32FSFileRecord)))
+        return 0;
+    
+    if (header.version.FileState == fsEmpty)
+        return 0;
+    
+    return addr;
+}
+
+
 Stm32FSFileHeader Stm32fs::SearchFileHeader(std::string_view fileName) {
     Stm32FSFileHeader header;
     header.FileState = fsEmpty;
@@ -263,26 +292,19 @@ Stm32FSFileHeader Stm32fs::SearchFileHeader(std::string_view fileName) {
     if (fileName.size() > FileNameMaxLen)
         return header;
     
-    uint32_t addr = GetFirstHeaderAddress();
-    
     Stm32FSFileRecord filerec;
+    uint32_t addr = GetFirstHeader(filerec);
+    
     while(true) {
         if (addr == 0)
             break;
 
-        if (!flash.ReadFlash(addr, (uint8_t *)&filerec, sizeof(filerec)))
-            break;
-        
-        // end of catalog
-        if (filerec.header.FileState == fsEmpty)
-            break;
-        
         std::string_view str = {filerec.header.FileName, strnlen(filerec.header.FileName, FileNameMaxLen)};
         
         if (str == fileName)
             return filerec.header;
         
-        addr = GetNextHeaderAddress(addr);
+        addr = GetNextHeader(addr, filerec);
     }
     
     
@@ -296,25 +318,18 @@ Stm32FSFileVersion Stm32fs::SearchFileVersion(uint16_t fileID) {
     if (fileID == 0)
         return fver;
     
-    uint32_t addr = GetFirstHeaderAddress();
-    
     Stm32FSFileRecord filerec;
+    uint32_t addr = GetFirstHeader(filerec);
+    
     while(true) {
         if (addr == 0)
-            break;
-
-        if (!flash.ReadFlash(addr, (uint8_t *)&filerec, sizeof(filerec)))
-            return fver;
-        
-        // end of catalog
-        if (filerec.version.FileState == fsEmpty)
             break;
 
         if ((filerec.version.FileState == fsFileVersion || filerec.version.FileState == fsDeleted) && filerec.version.FileID == fileID) {
             fver = filerec.version;            
         }
         
-        addr = GetNextHeaderAddress(addr);
+        addr = GetNextHeader(addr, filerec);
     }
     
     return fver;
@@ -736,7 +751,7 @@ Stm32fsFileList::Stm32fsFileList() {
 
 int Stm32fsFileList::FindEmptyID() {
     for (size_t i = 0; i < FileListLength; i++)
-        if (FileList[i].FileName[0] == 0x00 && FileList[i].FileAddress == 0 && FileList[i].FileSize == 0)
+        if (FileList[i].isEmpty())
             return i;
     return -1;
 }
@@ -746,7 +761,7 @@ void Stm32fsFileList::Clear() {
 }
 
 bool Stm32fsFileList::Append(Stm32FSFileHeader &header, Stm32FSFileVersion &version) {
-    if (header.FileName[0] = 0x00)
+    if (header.FileName[0] == 0x00)
         return true;
     
     int id = FindEmptyID();
@@ -761,6 +776,21 @@ bool Stm32fsFileList::Append(Stm32FSFileHeader &header, Stm32FSFileVersion &vers
 }
 
 bool Stm32fsFileList::Sort() {
+    for (size_t i = 0; i < FileListLength; i++) {
+        if (FileList[i].isEmpty())
+            break;
+
+        for (size_t j = i + 1; i < FileListLength; i++) {
+            if (FileList[j].isEmpty())
+                break;
+            
+            if (FileList[i].FileAddress > FileList[j].FileAddress) {
+                Stm32OptimizedFile_t t = FileList[i];
+                FileList[i] = FileList[j];
+                FileList[j] = t;            
+            }
+        }
+    }
     
     return true;
 }

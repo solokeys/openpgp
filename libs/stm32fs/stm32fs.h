@@ -118,6 +118,8 @@ public:
 
 class Stm32fs {
 private:
+    friend class Stm32fsOptimizer;
+    
     Stm32fsConfig_t FsConfig = {};
     Stm32fsConfigBlock_t *CurrentFsBlock;
     bool Valid;
@@ -129,6 +131,8 @@ private:
     
     uint32_t GetFirstHeaderAddress();
     uint32_t GetNextHeaderAddress(uint32_t previousAddress);
+    uint32_t GetFirstHeader(Stm32FSFileRecord &header);
+    uint32_t GetNextHeader(uint32_t previousAddress, Stm32FSFileRecord &header);
     
     Stm32FSFileHeader SearchFileHeader(std::string_view fileName);
     Stm32FSFileVersion SearchFileVersion(uint16_t fileID);
@@ -165,6 +169,7 @@ struct PACKED Stm32OptimizedFile_t {
     char FileName[FileNameMaxLen];
     uint32_t FileAddress;
     uint16_t FileSize;
+    bool isEmpty() {return (FileName[0] == 0 && FileAddress == 0 && FileSize == 0);}
 };
 
 class Stm32fsWriteCache {
