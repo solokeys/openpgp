@@ -410,5 +410,5 @@ TEST(stm32fsTest, Optimize) {
     ASSERT_FALSE(fs.FileExist("file4"));
     
     ASSERT_NE(restmem, fs.GetFreeMemory());
-    ASSERT_EQ(fs.GetFreeMemory(), SECTOR_SIZE * 3 - sizeof(StdData));
+    ASSERT_EQ(fs.GetFreeMemory(), SECTOR_SIZE * 3);
 }

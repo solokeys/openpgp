@@ -195,6 +195,8 @@ public:
     Stm32fsFileList();
     
     void Clear();
+    bool Empty();
+    int Size();
     bool Append(Stm32FSFileHeader &header, Stm32FSFileVersion &version);
     bool Sort();
     bool Write(Stm32fsWriteCache &cache);
@@ -202,8 +204,9 @@ public:
 
 class Stm32fsOptimizer {
 private:
+    Stm32fs &fs;
 public:
-    Stm32fsOptimizer();
+    Stm32fsOptimizer(Stm32fs &stm32fs);
     
     bool OptimizeViaRam(Stm32fsConfigBlock_t &block);
     bool OptimizeMultiblock(Stm32fsConfigBlock_t &inputBlock, Stm32fsConfigBlock_t &outputBlock);

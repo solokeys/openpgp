@@ -727,7 +727,7 @@ bool Stm32fs::Optimize() {
     if (!Valid)
         return false;
     
-    Stm32fsOptimizer optimizer;
+    Stm32fsOptimizer optimizer(*this);
     if (FsConfig.Blocks.size() > 1) {
         Stm32fsConfigBlock_t *nextBlock = flash.SearchNextFsBlockInFlash();
         if (nextBlock != nullptr) {
@@ -758,6 +758,18 @@ int Stm32fsFileList::FindEmptyID() {
 
 void Stm32fsFileList::Clear() {
     std::memset((void *)FileList, 0x00, sizeof(FileList));
+}
+
+bool Stm32fsFileList::Empty() {
+    return FileList[0].isEmpty();
+}
+
+int Stm32fsFileList::Size() {
+    int id = FindEmptyID();
+    if (id > 0)
+        return id;
+    
+    return 0;        
 }
 
 bool Stm32fsFileList::Append(Stm32FSFileHeader &header, Stm32FSFileVersion &version) {
@@ -804,7 +816,7 @@ bool Stm32fsFileList::Write(Stm32fsWriteCache &cache) {
  * --- Stm32fsOptimizer ---
  */
 
-Stm32fsOptimizer::Stm32fsOptimizer() {
+Stm32fsOptimizer::Stm32fsOptimizer(Stm32fs &stm32fs) : fs{stm32fs} {
     
 }
 
@@ -817,6 +829,31 @@ bool Stm32fsOptimizer::OptimizeMultiblock(Stm32fsConfigBlock_t &inputBlock, Stm3
 bool Stm32fsOptimizer::OptimizeViaRam(Stm32fsConfigBlock_t &block) {
     
     Stm32fsFileList fileList;
+
+    Stm32FSFileRecord filerec;
+    uint32_t addr = fs.GetFirstHeader(filerec);
+    
+    while(true) {
+        if (addr == 0)
+            break;
+
+        if (filerec.header.FileState == fsFileHeader) {
+            Stm32FSFileVersion ver = fs.SearchFileVersion(filerec.header.FileID);
+            if (ver.FileState == fsFileVersion)
+                fileList.Append(filerec.header, ver);
+        }
+        
+        addr = fs.GetNextHeader(addr, filerec);
+    }
+    
+    if (fileList.Empty()) {
+        fs.flash.CreateFsBlock(block, fs.GetCurrentFsBlockSerial() + 1);
+        return true;
+    }
+    
+    printf("----- %s [%d]\n", fileList.Empty()?"EMPTY":"FULL", fileList.Size());
+    fileList.Sort();
+    printf("----- %s [%d]\n", fileList.Empty()?"EMPTY":"FULL", fileList.Size());
     
     return true;
 }
