@@ -382,7 +382,7 @@ TEST(stm32fsTest, DeleteFiles) {
     ASSERT_EQ(restmem, fs.GetFreeMemory());
 }
 
-TEST(stm32fsTest, Optimize) {
+TEST(stm32fsTest, OptimizeEmpty) {
     Stm32fsConfig_t cfg;
     InitFS(cfg, 0xff);
     Stm32fs fs{cfg};
@@ -411,4 +411,32 @@ TEST(stm32fsTest, Optimize) {
     
     ASSERT_NE(restmem, fs.GetFreeMemory());
     ASSERT_EQ(fs.GetFreeMemory(), SECTOR_SIZE * 3);
+}
+
+TEST(stm32fsTest, OptimizeSimple) {
+    Stm32fsConfig_t cfg;
+    InitFS(cfg, 0xff);
+    Stm32fs fs{cfg};
+    
+    ASSERT_TRUE(fs.WriteFile("file1", StdData, 1));
+    ASSERT_TRUE(fs.WriteFile("file2", StdData, 2));
+    ASSERT_TRUE(fs.WriteFile("file3", StdData, 3));
+    ASSERT_TRUE(fs.WriteFile("file4", StdData, 4));
+    
+    uint32_t restmem = fs.GetFreeMemory();
+    
+    ASSERT_TRUE(fs.DeleteFile("file3"));
+        
+    ASSERT_EQ(fs.GetCurrentFsBlockSerial(), 1);
+
+    ASSERT_TRUE(fs.Optimize());
+    
+    ASSERT_EQ(fs.GetCurrentFsBlockSerial(), 2);
+    
+    ASSERT_TRUE(fs.FileExist("file1"));
+    ASSERT_TRUE(fs.FileExist("file2"));
+    ASSERT_FALSE(fs.FileExist("file3"));
+    ASSERT_TRUE(fs.FileExist("file4"));
+    
+    ASSERT_EQ(restmem, fs.GetFreeMemory());
 }
