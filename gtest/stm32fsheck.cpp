@@ -33,6 +33,17 @@ void InitFS2(Stm32fsConfig_t &cfg, uint8_t defaultVal) {
     cfg.fnReadFlash = [](uint32_t address, uint8_t *data, size_t len){std::memcpy(data, &vmem[address], len);return true;};
 }
 
+void InitFS3(Stm32fsConfig_t &cfg, uint8_t defaultVal) {
+    std::memset(vmem, defaultVal, sizeof(vmem));
+    
+    cfg.BaseBlockAddress = (size_t)&vmem;
+    cfg.SectorSize = SECTOR_SIZE;
+    cfg.Blocks = {{{0}, {2,3}}, {{4}, {5,6}}, {{7}, {8,9}}};
+    cfg.fnEraseFlashBlock = [](uint8_t blockNo){std::memset(&vmem[SECTOR_SIZE * blockNo], 0xff, SECTOR_SIZE);return true;};
+    cfg.fnWriteFlash = [](uint32_t address, uint8_t *data, size_t len){std::memcpy(&vmem[address], data, len);return true;};
+    cfg.fnReadFlash = [](uint32_t address, uint8_t *data, size_t len){std::memcpy(data, &vmem[address], len);return true;};
+}
+
 void AssertArrayEQ(uint8_t *data1, uint8_t *data2, uint32_t size) {
     for (uint32_t i = 0; i < size; i++) {
         SCOPED_TRACE(i);
@@ -97,6 +108,23 @@ TEST(stm32fsTest, Create2Blocks) {
     ASSERT_EQ(fs.GetSize(), SECTOR_SIZE * 3);
     ASSERT_EQ(fs.GetFreeMemory(), SECTOR_SIZE * 3);
     ASSERT_EQ(fs.GetFreeFileDescriptors(), (SECTOR_SIZE / 16) * 2 - 1);
+} 
+
+TEST(stm32fsTest, Create3Blocks) {
+    Stm32fsConfig_t cfg;
+    InitFS3(cfg, 0x00);
+    
+    Stm32fs fs{cfg};
+    ASSERT_TRUE(fs.isValid());
+    ASSERT_FALSE(fs.isNeedsOptimization());
+    
+    ASSERT_EQ(fs.GetCurrentFsBlockSerial(), 1);
+  
+    AssertArrayEQ(vmem, StdHeader, sizeof(StdHeader));
+
+    ASSERT_EQ(fs.GetSize(), SECTOR_SIZE * 2);
+    ASSERT_EQ(fs.GetFreeMemory(), SECTOR_SIZE * 2);
+    ASSERT_EQ(fs.GetFreeFileDescriptors(), (SECTOR_SIZE / 16) - 1);
 } 
 
 TEST(stm32fsTest, WriteFile) {
