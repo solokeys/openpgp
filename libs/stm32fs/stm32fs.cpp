@@ -199,16 +199,13 @@ bool Stm32fsFlash::CreateFsBlock(Stm32fsConfigBlock_t &blockCfg, uint32_t serial
 }
 
 Stm32fsConfigBlock_t *Stm32fsFlash::SearchLastFsBlockInFlash() {
-    uint32_t Serial = 0;
+    uint32_t lastSerial = 0;
     Stm32fsConfigBlock_t *xblock = nullptr;
     for (auto &block: FsConfig->Blocks) {
-        Stm32FSHeader_t header;
-        ReadFlash(GetBlockAddress(block.HeaderSectors[0]), (uint8_t *)&header, sizeof(header));
-        if (CheckFsHeader(header)) {
-            if (Serial > header.HeaderStart.Serial) {
-                Serial = header.HeaderStart.Serial;
-                xblock = &block;
-            }
+        uint32_t serial = GetFsSerial(block);
+        if (serial > 0 && lastSerial < serial) {
+            lastSerial = serial;
+            xblock = &block;
         }
     }
     

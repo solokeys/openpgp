@@ -156,6 +156,7 @@ public:
     bool isNeedsOptimization();
 
     uint32_t GetCurrentFsBlockSerial();
+    Stm32fsFlash &GetFlash(){return flash;};
     uint32_t GetSize();
     uint32_t GetFreeMemory();
     uint32_t GetFreeFileDescriptors();
