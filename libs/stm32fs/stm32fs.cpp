@@ -170,6 +170,24 @@ void Stm32fsFlash::FillFsHeader(Stm32FSHeader_t &header, uint32_t serial) {
     header.HeaderStart.Serial = serial;
 }
 
+bool Stm32fsFlash::GetFsHeader(Stm32fsConfigBlock_t &config, Stm32FSHeader_t &header) {
+    ReadFlash(GetBlockAddress(config.HeaderSectors[0]), (uint8_t *)&header, sizeof(Stm32FSHeader_t));
+    if (!CheckFsHeader(header)) 
+        return false;
+    
+    return true;
+}
+
+uint32_t Stm32fsFlash::GetFsSerial(Stm32fsConfigBlock_t &config) {
+    Stm32FSHeader_t header;
+    
+    if (GetFsHeader(config, header))
+        return header.HeaderStart.Serial;
+    
+    return 0;
+}
+
+
 bool Stm32fsFlash::CreateFsBlock(Stm32fsConfigBlock_t &blockCfg, uint32_t serial) {
     if (!EraseFs(blockCfg))
         return false;
@@ -222,27 +240,11 @@ Stm32fsConfigBlock_t *Stm32fsFlash::SearchNextFsBlockInFlash() {
  * --- Stm32fs ---
  */
 
-bool Stm32fs::GetCurrentFsBlockHeader(Stm32FSHeader_t &header) {
-    if (CurrentFsBlock == nullptr)
-        return false;
-    
-    Stm32FSHeader_t iheader;
-    flash.ReadFlash(flash.GetBlockAddress(CurrentFsBlock->HeaderSectors[0]), (uint8_t *)&iheader, sizeof(iheader));
-    if (flash.CheckFsHeader(iheader)) {
-        header = iheader;
-        return true;
-    }
-    
-    return false;
-}
-
 uint32_t Stm32fs::GetCurrentFsBlockSerial() {
-    Stm32FSHeader_t header;
+    if (CurrentFsBlock == nullptr)
+        return 0;
     
-    if (GetCurrentFsBlockHeader(header))
-        return header.HeaderStart.Serial;
-    
-    return 0;
+    return flash.GetFsSerial(*CurrentFsBlock);
 }
 
 uint32_t Stm32fs::GetFirstHeaderAddress() {
@@ -956,6 +958,9 @@ Stm32fsOptimizer::Stm32fsOptimizer(Stm32fs &stm32fs) : fs{stm32fs} {
 
 bool Stm32fsOptimizer::OptimizeMultiblock(Stm32fsConfigBlock_t &inputBlock, Stm32fsConfigBlock_t &outputBlock) {
     // TODO: multiblock optimization. from flash region to flash region.
+    
+    //uint32_t serial = fs.GetCurrentFsBlockSerial();
+    fs.flash.EraseFs(outputBlock);
     
     return false;
 }

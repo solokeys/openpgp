@@ -119,6 +119,8 @@ public:
 
     bool CheckFsHeader(Stm32FSHeader_t &header);
     void FillFsHeader(Stm32FSHeader_t &header, uint32_t serial);
+    bool GetFsHeader(Stm32fsConfigBlock_t &config, Stm32FSHeader_t &header);
+    uint32_t GetFsSerial(Stm32fsConfigBlock_t &config);
     bool EraseFs(Stm32fsConfigBlock_t &config);
     bool CreateFsBlock(Stm32fsConfigBlock_t &blockCfg, uint32_t serial);
     
@@ -136,8 +138,6 @@ private:
     bool NeedsOptimization;
     
     Stm32fsFlash flash;
-    
-    bool GetCurrentFsBlockHeader(Stm32FSHeader_t &header);
     
     uint32_t GetFirstHeaderAddress();
     uint32_t GetNextHeaderAddress(uint32_t previousAddress);
