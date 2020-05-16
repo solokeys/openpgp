@@ -75,7 +75,7 @@ bool Stm32fsFlash::AddressInFlash(uint32_t address, size_t length) {
         address + length <= FlashBlocksCount * BlockSize) 
         return true;
     
-    printf("out of memory[%d]!!! adr=%d len=%zd\n", FlashBlocksCount, address, length);
+    //printf("out of memory[%d]!!! adr=%d len=%zd\n", FlashBlocksCount, address, length);
     return false;
 }
 
@@ -103,7 +103,6 @@ bool Stm32fsFlash::isFlashEmpty(uint32_t address, size_t length, bool reverse, u
     if (!reverse) {
         for (uint32_t i = 0; i < len; i++)
             if (data[i] != 0xffU) {
-                printf("empty except addr=%d len=%zd\n", addr, len);
                 if (exceptAddr)
                     *exceptAddr = addr + i;
                 return false;
@@ -117,7 +116,6 @@ bool Stm32fsFlash::isFlashEmpty(uint32_t address, size_t length, bool reverse, u
             }
     }
     
-    printf("empty OK addr=%d len=%zd\n", addr, len);
     return true;
 }
 
@@ -1013,8 +1011,6 @@ bool Stm32fsOptimizer::OptimizeViaRam(Stm32fsConfigBlock_t &block) {
         
     };
     
-    printf("----- %s [%d]\n", fileList.Empty()?"EMPTY":"FULL", fileList.Size());
-
     Stm32fsWriteCache cache(fs.flash, block.HeaderSectors);
     if (!cache.Init())
         return false;
