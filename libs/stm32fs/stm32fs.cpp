@@ -221,9 +221,9 @@ Stm32fsConfigBlock_t *Stm32fsFlash::SearchNextFsBlockInFlash() {
     if (lastBlk == nullptr)
         return nullptr;
     uint32_t oldSerial = GetFsSerial(*lastBlk); // here max serial
-    uint32_t newSerial = 0;
+    uint32_t newSerial = oldSerial;
     
-    // TODO: search block with empty header or serial less than oldSerial
+    // search block with empty/non recognized header or serial less than oldSerial
     for (auto &block: FsConfig->Blocks) {
         uint32_t serial = GetFsSerial(block);
         if (serial == 0) {
@@ -232,7 +232,7 @@ Stm32fsConfigBlock_t *Stm32fsFlash::SearchNextFsBlockInFlash() {
             break;
         }
         
-        if (serial < oldSerial && serial > newSerial) {
+        if (serial < oldSerial && serial < newSerial) {
             newSerial = serial;
             nextBlk = &block;
         }
