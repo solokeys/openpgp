@@ -36,6 +36,11 @@ void AssertArrayEQConst(uint8_t *data, uint32_t size, uint8_t constval) {
     }
 }
 
+void FillMem(uint8_t *data, uint32_t size) {
+    for (size_t i = 0; i < size; i++)
+        data[i] = (i & 0xffU) ^ ((i >> 8) & 0xffU) ^ 0x5A;
+}
+
 void dump_memory(void* data, size_t len) {
     size_t i;
     for (i=0;i<len;i++) {
@@ -188,7 +193,7 @@ TEST(stm32fsTest, ReadFileMaxLen) {
     
     uint8_t testmem[SECTOR_SIZE * 4] = {0};
     uint8_t testmemr[SECTOR_SIZE * 4] = {0};
-    std::memset(testmem, 0xab, sizeof(testmem));
+    FillMem(testmem, sizeof(testmem));
     std::memset(testmemr, 0x00, sizeof(testmemr));
 
     ASSERT_TRUE(fs.WriteFile("file_6kb", testmem, SECTOR_SIZE * 3));
@@ -487,8 +492,7 @@ TEST(stm32fsTest, OptimizeBifFiles) {
     
     // init arrays
     uint8_t testmem[SECTOR_SIZE * 3] = {0};
-    for (size_t i = 0; i < sizeof(testmem); i++)
-        testmem[i] = (i & 0xffU) ^ 0x5A;
+    FillMem(testmem, sizeof(testmem));
     uint8_t testmemr[SECTOR_SIZE * 3] = {0};
     std::memset(testmemr, 0xab, sizeof(testmemr));
     
@@ -505,31 +509,27 @@ TEST(stm32fsTest, OptimizeBifFiles) {
         
     ASSERT_EQ(fs.GetCurrentFsBlockSerial(), 1);
 
-    dump_memory(vmem, 128);
-
     ASSERT_TRUE(fs.Optimize());
     
-    dump_memory(vmem, 128);
-    dump_memory(&vmem[4096], 128);
+    //dump_memory(vmem, 128);
+    //dump_memory(&vmem[4096], 128);
     
     ASSERT_EQ(fs.GetCurrentFsBlockSerial(), 2);
     
     ASSERT_FALSE(fs.FileExist("file1"));
     ASSERT_TRUE(fs.FileExist("file2"));
     ASSERT_TRUE(fs.FileExist("file3"));
-    
-    
 
     size_t rxlength = 0;
-    ASSERT_FALSE(fs.ReadFile("file2", testmemr, &rxlength, sizeof(testmemr)));
+    ASSERT_TRUE(fs.ReadFile("file2", testmemr, &rxlength, sizeof(testmemr)));
     ASSERT_EQ(rxlength, 3100);
     ASSERT_EQ(std::memcmp(testmem, testmemr, rxlength), 0);
     
     std::memset(testmemr, 0xab, sizeof(testmemr));
     rxlength = 0;
-    ASSERT_FALSE(fs.ReadFile("file3", testmemr, &rxlength, sizeof(testmemr)));
+    ASSERT_TRUE(fs.ReadFile("file3", testmemr, &rxlength, sizeof(testmemr)));
     ASSERT_EQ(rxlength, 2500);
     ASSERT_EQ(std::memcmp(testmem, testmemr, rxlength), 0);
     
-    ASSERT_EQ(startmem - (3100 + 2500 +555), fs.GetFreeMemory());
+    ASSERT_EQ(startmem - (3100 + 2500), fs.GetFreeMemory());
 }
