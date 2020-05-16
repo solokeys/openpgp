@@ -127,6 +127,47 @@ TEST(stm32fsTest, Create3Blocks) {
     ASSERT_EQ(fs.GetFreeFileDescriptors(), (SECTOR_SIZE / 16) - 1);
 } 
 
+TEST(stm32fsTest, FindFs) {
+    Stm32fsConfig_t cfg;
+    InitFS3(cfg, 0x00);
+    
+    Stm32fs fs{cfg};
+    ASSERT_TRUE(fs.isValid());    
+    ASSERT_EQ(fs.GetCurrentFsBlockSerial(), 1);
+
+    // SearchLast current fs
+    Stm32fsConfigBlock_t *blk0 = fs.GetFlash().SearchLastFsBlockInFlash();
+    ASSERT_NE(blk0, nullptr);
+    ASSERT_EQ(fs.GetFlash().GetFsSerial(*blk0), 1);
+    
+    // create block 2
+    Stm32fsConfigBlock_t *blk1 = fs.GetFlash().SearchNextFsBlockInFlash();
+    ASSERT_NE(blk1, nullptr);
+    ASSERT_TRUE(fs.GetFlash().CreateFsBlock(*blk1, 3));
+    ASSERT_EQ(fs.GetFlash().GetFsSerial(*blk1), 3);
+
+    // search last block 2
+    Stm32fsConfigBlock_t *blkr1 = fs.GetFlash().SearchLastFsBlockInFlash();
+    ASSERT_NE(blkr1, nullptr);
+    ASSERT_EQ(fs.GetFlash().GetFsSerial(*blkr1), 3);
+    
+    // create block 3
+    Stm32fsConfigBlock_t *blk2 = fs.GetFlash().SearchNextFsBlockInFlash();
+    ASSERT_NE(blk2, nullptr);
+    ASSERT_TRUE(fs.GetFlash().CreateFsBlock(*blk2, 2));
+    ASSERT_EQ(fs.GetFlash().GetFsSerial(*blk2), 2);
+    
+    // search last block 2. 2nd try
+    Stm32fsConfigBlock_t *blkr2 = fs.GetFlash().SearchLastFsBlockInFlash();
+    ASSERT_NE(blkr2, nullptr);
+    ASSERT_EQ(fs.GetFlash().GetFsSerial(*blkr2), 3);
+    
+    // now next block should point to block 1
+    Stm32fsConfigBlock_t *blkn = fs.GetFlash().SearchNextFsBlockInFlash();
+    ASSERT_NE(blkn, nullptr);
+    ASSERT_EQ(fs.GetFlash().GetFsSerial(*blkn), 1);
+} 
+
 TEST(stm32fsTest, WriteFile) {
     Stm32fsConfig_t cfg;
     InitFS(cfg, 0xff);
