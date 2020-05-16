@@ -876,6 +876,7 @@ bool Stm32fsWriteCache::Write(uint8_t *data, size_t len) {
         return false;
     
     // multisector write
+    size_t totalwrlen = 0;
     while (len > 0) {
         if (CurrentSectorID < 0)
             return false;
@@ -883,10 +884,12 @@ bool Stm32fsWriteCache::Write(uint8_t *data, size_t len) {
         size_t blen = len;
         if (blen > BlockSize - CurrentAddress)
             blen = BlockSize - CurrentAddress;
-        std::memcpy(&cache[CurrentAddress], data, blen);
+
+        std::memcpy(&cache[CurrentAddress], &data[totalwrlen], blen);
         CurrentAddress += blen;                            // flash align not needs because we write it in single block...
 
         len -= blen;
+        totalwrlen += blen;
         
         if (CurrentAddress >= BlockSize) {
             if (!WriteToFlash(sectors[CurrentSectorID]))
@@ -917,8 +920,6 @@ bool Stm32fsWriteCache::WriteFsHeader(uint32_t serial) {
 bool Stm32fsWriteCache::WriteFileHeader(Stm32OptimizedFile_t &fileHeader, uint16_t &fileID) {
     if (CurrentSectorID < 0)
         return false;
-    
-    printf("--wr file %s [%d]\n", fileHeader.FileName, fileHeader.FileAddress);
     
     Stm32FSFullFileRecord fullFile = {0};
     fullFile.header.FileState = fsFileHeader;
