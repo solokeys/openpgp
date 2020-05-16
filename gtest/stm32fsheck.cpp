@@ -9,7 +9,7 @@
 
 static uint8_t StdHeader[] = {0x55, 0xaa, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xaa, 0x55};
 static uint8_t StdData[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10};
-static uint8_t vmem[SECTOR_SIZE * 10] = {0};
+static uint8_t vmem[SECTOR_SIZE * 12] = {0};
 
 void InitFS(Stm32fsConfig_t &cfg, uint8_t defaultVal) {
     std::memset(vmem, defaultVal, sizeof(vmem));
@@ -17,6 +17,17 @@ void InitFS(Stm32fsConfig_t &cfg, uint8_t defaultVal) {
     cfg.BaseBlockAddress = (size_t)&vmem;
     cfg.SectorSize = SECTOR_SIZE;
     cfg.Blocks = {{{0,1}, {2,3,4}}};
+    cfg.fnEraseFlashBlock = [](uint8_t blockNo){std::memset(&vmem[SECTOR_SIZE * blockNo], 0xff, SECTOR_SIZE);return true;};
+    cfg.fnWriteFlash = [](uint32_t address, uint8_t *data, size_t len){std::memcpy(&vmem[address], data, len);return true;};
+    cfg.fnReadFlash = [](uint32_t address, uint8_t *data, size_t len){std::memcpy(data, &vmem[address], len);return true;};
+}
+
+void InitFS2(Stm32fsConfig_t &cfg, uint8_t defaultVal) {
+    std::memset(vmem, defaultVal, sizeof(vmem));
+    
+    cfg.BaseBlockAddress = (size_t)&vmem;
+    cfg.SectorSize = SECTOR_SIZE;
+    cfg.Blocks = {{{0,1}, {2,3,4}}, {{5,6}, {7,8,9}}};
     cfg.fnEraseFlashBlock = [](uint8_t blockNo){std::memset(&vmem[SECTOR_SIZE * blockNo], 0xff, SECTOR_SIZE);return true;};
     cfg.fnWriteFlash = [](uint32_t address, uint8_t *data, size_t len){std::memcpy(&vmem[address], data, len);return true;};
     cfg.fnReadFlash = [](uint32_t address, uint8_t *data, size_t len){std::memcpy(data, &vmem[address], len);return true;};
@@ -69,6 +80,25 @@ TEST(stm32fsTest, Create) {
     ASSERT_EQ(fs.GetFreeFileDescriptors(), (SECTOR_SIZE / 16) * 2 - 1);
 } 
 
+TEST(stm32fsTest, Create2Blocks) {
+    Stm32fsConfig_t cfg;
+    InitFS2(cfg, 0x00);
+    
+    Stm32fs fs{cfg};
+    ASSERT_TRUE(fs.isValid());
+    ASSERT_FALSE(fs.isNeedsOptimization());
+    
+    ASSERT_EQ(fs.GetCurrentFsBlockSerial(), 1);
+  
+    AssertArrayEQ(vmem, StdHeader, sizeof(StdHeader));
+    AssertArrayEQConst(vmem + 16, SECTOR_SIZE * 5 - 16, 0xff); // 5 sectors of filesystem
+    AssertArrayEQConst(vmem + SECTOR_SIZE * 5, SECTOR_SIZE * 5, 0x00); // 2nd block of filesystem
+    
+    ASSERT_EQ(fs.GetSize(), SECTOR_SIZE * 3);
+    ASSERT_EQ(fs.GetFreeMemory(), SECTOR_SIZE * 3);
+    ASSERT_EQ(fs.GetFreeFileDescriptors(), (SECTOR_SIZE / 16) * 2 - 1);
+} 
+
 TEST(stm32fsTest, WriteFile) {
     Stm32fsConfig_t cfg;
     InitFS(cfg, 0xff);
@@ -91,7 +121,7 @@ TEST(stm32fsTest, WriteFile) {
     ASSERT_EQ(version->FileAddress, 2 * SECTOR_SIZE);
     ASSERT_EQ(version->FileSize, sizeof(StdData));
     
-    ASSERT_TRUE(std::memcmp(vmem + 2 * SECTOR_SIZE, StdData, sizeof(StdData)) == 0);
+    AssertArrayEQ(vmem + 2 * SECTOR_SIZE, StdData, sizeof(StdData));
     
     ASSERT_TRUE(fs.FileExist("testfile"));
 
@@ -174,7 +204,7 @@ TEST(stm32fsTest, ReadFile) {
     ASSERT_TRUE(fs.ReadFile("testfile", testmem, &rxlength, sizeof(StdData)));
     
     ASSERT_EQ(rxlength, sizeof(StdData));
-    ASSERT_EQ(std::memcmp(testmem, StdData, sizeof(StdData)), 0);
+    AssertArrayEQ(testmem, StdData, sizeof(StdData));
     
     ASSERT_TRUE(fs.ReadFile("testfile", testmem, nullptr, sizeof(StdData)));
     
@@ -182,7 +212,7 @@ TEST(stm32fsTest, ReadFile) {
     rxlength = 0;
     ASSERT_TRUE(fs.ReadFile("testfile", testmem, &rxlength, 5));
     ASSERT_EQ(rxlength, 5);
-    ASSERT_EQ(std::memcmp(testmem, StdData, 5), 0);
+    AssertArrayEQ(testmem, StdData, 5);
     ASSERT_NE(std::memcmp(testmem, StdData, sizeof(StdData)), 0);
 }
 
@@ -202,7 +232,7 @@ TEST(stm32fsTest, ReadFileMaxLen) {
     ASSERT_TRUE(fs.ReadFile("file_6kb", testmemr, &rxlength, sizeof(testmemr)));
     
     ASSERT_EQ(rxlength, SECTOR_SIZE * 3);
-    ASSERT_EQ(std::memcmp(testmem, testmemr, SECTOR_SIZE * 3), 0);    
+    AssertArrayEQ(testmem, testmemr, SECTOR_SIZE * 3);    
 }
 
 TEST(stm32fsTest, WriteFileBadFS) {
@@ -225,7 +255,7 @@ TEST(stm32fsTest, WriteFileBadFS) {
     ASSERT_TRUE(fs.ReadFile("file", testmem, &rxlength, sizeof(testmem)));
     
     ASSERT_EQ(rxlength, sizeof(StdData) - 1);
-    ASSERT_EQ(std::memcmp(testmem, StdData, rxlength), 0);
+    AssertArrayEQ(testmem, StdData, rxlength);
     ASSERT_EQ(restmem - 24, fs.GetFreeMemory());
 }
 
@@ -251,7 +281,7 @@ TEST(stm32fsTest, DeleteFile) {
     ASSERT_FALSE(fs.ReadFile("testfile", testmem, &rxlength, sizeof(StdData)));
     
     ASSERT_EQ(rxlength, 0);
-    ASSERT_EQ(std::memcmp(testmem, testmemr, sizeof(testmem)), 0);
+    AssertArrayEQ(testmem, testmemr, sizeof(testmem));
     
     Stm32FSFileVersion *version = (Stm32FSFileVersion *)&vmem[32 + 16];
     ASSERT_EQ(version->FileState, fsDeleted);
@@ -523,13 +553,13 @@ TEST(stm32fsTest, OptimizeBigFiles) {
     size_t rxlength = 0;
     ASSERT_TRUE(fs.ReadFile("file2", testmemr, &rxlength, sizeof(testmemr)));
     ASSERT_EQ(rxlength, 3100);
-    ASSERT_EQ(std::memcmp(testmem, testmemr, rxlength), 0);
+    AssertArrayEQ(testmem, testmemr, rxlength);
     
     std::memset(testmemr, 0xab, sizeof(testmemr));
     rxlength = 0;
     ASSERT_TRUE(fs.ReadFile("file3", testmemr, &rxlength, sizeof(testmemr)));
     ASSERT_EQ(rxlength, 2500);
-    ASSERT_EQ(std::memcmp(testmem, testmemr, rxlength), 0);
+    AssertArrayEQ(testmem, testmemr, rxlength);
     
     ASSERT_EQ(startmem - (3100 + 2500), fs.GetFreeMemory());
 }
