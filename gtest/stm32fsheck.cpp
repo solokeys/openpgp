@@ -485,7 +485,7 @@ TEST(stm32fsTest, OptimizeSimple) {
     ASSERT_EQ(startmem - 8, fs.GetFreeMemory());
 }
 
-TEST(stm32fsTest, OptimizeBifFiles) {
+TEST(stm32fsTest, OptimizeBigFiles) {
     Stm32fsConfig_t cfg;
     InitFS(cfg, 0xff);
     Stm32fs fs{cfg};
