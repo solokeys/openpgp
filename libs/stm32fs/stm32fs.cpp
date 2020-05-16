@@ -216,24 +216,29 @@ Stm32fsConfigBlock_t *Stm32fsFlash::SearchLastFsBlockInFlash() {
 }
 
 Stm32fsConfigBlock_t *Stm32fsFlash::SearchNextFsBlockInFlash() {
-    uint32_t oldSerial = 0;
+    Stm32fsConfigBlock_t *nextBlk = nullptr;
     Stm32fsConfigBlock_t *lastBlk = SearchLastFsBlockInFlash();
     if (lastBlk == nullptr)
         return nullptr;
-    
-    Stm32FSHeader_t header;
-    if (ReadFlash(GetBlockAddress(lastBlk->HeaderSectors[0]), (uint8_t *)&header, sizeof(header))) {
-        if (CheckFsHeader(header))
-            oldSerial = header.HeaderStart.Serial;
-        
-        if (oldSerial == 0)
-            return nullptr;
-    } else
-        return nullptr;
+    uint32_t oldSerial = GetFsSerial(*lastBlk); // here max serial
+    uint32_t newSerial = 0;
     
     // TODO: search block with empty header or serial less than oldSerial
+    for (auto &block: FsConfig->Blocks) {
+        uint32_t serial = GetFsSerial(block);
+        if (serial == 0) {
+            newSerial = 0;
+            nextBlk = &block;
+            break;
+        }
+        
+        if (serial < oldSerial && serial > newSerial) {
+            newSerial = serial;
+            nextBlk = &block;
+        }
+    }
     
-    return nullptr;
+    return nextBlk;
 }
 
 /*
