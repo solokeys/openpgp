@@ -110,7 +110,8 @@ public:
     size_t GetBaseAddress();
     uint32_t GetBlockAddress(uint8_t blockNum);
     uint32_t GetBlockFromAddress(uint32_t address);
-    bool AddressInFlash(uint32_t address, size_t length);
+    bool FindBlockInCfg(std::vector<Stm32fsConfigBlock_t> blocks, uint32_t sectorNo);
+    bool AddressInFlash(uint32_t address, size_t length, bool searchAllBlocks = false);
     bool EraseFlashBlock(uint8_t blockNo);
     bool isFlashEmpty(uint32_t address, size_t length, bool reverse, uint32_t *exceptAddr);
     bool isFlashBlockEmpty(uint8_t blockNo);

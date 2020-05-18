@@ -70,12 +70,47 @@ uint32_t Stm32fsFlash::GetBlockFromAddress(uint32_t address) {
     return address / BlockSize;
 }
 
-bool Stm32fsFlash::AddressInFlash(uint32_t address, size_t length) {
+bool Stm32fsFlash::FindBlockInCfg(std::vector<Stm32fsConfigBlock_t> blocks, uint32_t sectorNo) {
+    for (auto &block : blocks) {
+        if (std::find(block.HeaderSectors.begin(), block.HeaderSectors.end(), sectorNo) != block.HeaderSectors.end())
+            return true;
+
+        if (std::find(block.DataSectors.begin(), block.DataSectors.end(), sectorNo) != block.DataSectors.end())
+            return true;
+        
+        /*for (auto &sector : block.HeaderSectors)
+            if (sector == sectorNo)
+                return true;
+
+        for (auto &sector : block.DataSectors)
+            if (sector == sectorNo)
+                return true;*/
+    }
+    return false;
+}
+
+
+bool Stm32fsFlash::AddressInFlash(uint32_t address, size_t length, bool searchAllBlocks) {
     if (address <= FlashBlocksCount * BlockSize && 
         address + length <= FlashBlocksCount * BlockSize) 
         return true;
     
-    //printf("out of memory[%d]!!! adr=%d len=%zd\n", FlashBlocksCount, address, length);
+    if (searchAllBlocks && FsConfig != nullptr) {
+        uint32_t curAddress = address;
+        
+        while (true) {
+            uint32_t blockNo = GetBlockFromAddress(curAddress);
+            if (!FindBlockInCfg(FsConfig->Blocks, blockNo))
+                break;
+                
+            curAddress = GetBlockAddress(blockNo) + BlockSize;
+            if (curAddress > address + length - 1)
+                return true;
+        }
+        
+    }
+    
+    printf("out of memory[%d]!!! adr=%d len=%zd\n", FlashBlocksCount, address, length);
     return false;
 }
 
@@ -95,7 +130,7 @@ bool Stm32fsFlash::isFlashEmpty(uint32_t address, size_t length, bool reverse, u
     if (len != length)
         len += FlashPadding;
     
-    if (!AddressInFlash(addr, len))
+    if (!AddressInFlash(addr, len, true))
         return false;
     
     uint8_t *data = (uint8_t *)(FsConfig->BaseBlockAddress + addr);
@@ -124,13 +159,13 @@ bool Stm32fsFlash::isFlashBlockEmpty(uint8_t blockNo) {
 }
 
 bool Stm32fsFlash::WriteFlash(uint32_t address, uint8_t *data, size_t length) {
-    if (!AddressInFlash(address, length))
+    if (!AddressInFlash(address, length, true))
         return false;
     return FsConfig->fnWriteFlash(address, data, length);
 }
 
 bool Stm32fsFlash::ReadFlash(uint32_t address, uint8_t *data, size_t length) {
-    if (!AddressInFlash(address, length))
+    if (!AddressInFlash(address, length, true))
         return false;
     return FsConfig->fnReadFlash(address, data, length);
 }
