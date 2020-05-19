@@ -38,21 +38,32 @@ Stm32fsConfigBlock_t *Stm32fsFlash::Init(Stm32fsConfig_t *config) {
             return nullptr;
     }
 
-    FlashBlocksCount = 1;
+    SetFlashBlocksCount(1);
     auto blk = SearchLastFsBlockInFlash();
     
     if (blk == nullptr) {
         blk = &FsConfig->Blocks[0];
-        FlashBlocksCount = blk->HeaderSectors.size() + blk->DataSectors.size();
+        SetFlashBlocksCountByCfg(blk);
         if(!CreateFsBlock(FsConfig->Blocks[0], 1)) {
             FlashBlocksCount = 0;
             return nullptr;        
         }
     }
     
-    FlashBlocksCount = blk->HeaderSectors.size() + blk->DataSectors.size();
+    SetFlashBlocksCountByCfg(blk);
     
     return blk;
+}
+
+void Stm32fsFlash::SetFlashBlocksCount(uint32_t count) {
+    FlashBlocksCount = count;    
+}
+
+void Stm32fsFlash::SetFlashBlocksCountByCfg(Stm32fsConfigBlock_t *cfg) {
+    if (cfg == nullptr)
+        SetFlashBlocksCount(1);
+    else
+        SetFlashBlocksCount(cfg->HeaderSectors.size() + cfg->DataSectors.size());
 }
 
 size_t Stm32fsFlash::GetBaseAddress() {
@@ -276,6 +287,15 @@ Stm32fsConfigBlock_t *Stm32fsFlash::SearchNextFsBlockInFlash() {
 /*
  * --- Stm32fs ---
  */
+
+bool Stm32fs::SetCurrentFsBlock(Stm32fsConfigBlock_t *block) {
+    if (block == nullptr)
+        return false;
+    
+    CurrentFsBlock = block;
+    flash.SetFlashBlocksCount(CurrentFsBlock->HeaderSectors.size() + CurrentFsBlock->DataSectors.size());
+    return true;
+}
 
 uint32_t Stm32fs::GetCurrentFsBlockSerial() {
     if (CurrentFsBlock == nullptr)
@@ -998,6 +1018,24 @@ bool Stm32fsOptimizer::OptimizeMultiblock(Stm32fsConfigBlock_t &inputBlock, Stm3
     
     //uint32_t serial = fs.GetCurrentFsBlockSerial();
     fs.flash.EraseFs(outputBlock);
+    
+    
+    
+    
+    
+    
+    
+    
+    // switching to the new filesystem
+    auto blk = fs.GetFlash().SearchLastFsBlockInFlash();
+    if (blk == nullptr)
+        return false;
+    
+    if (!fs.SetCurrentFsBlock(blk))
+        return false;
+    
+    fs.GetFlash().SetFlashBlocksCountByCfg(blk);
+    
     
     return false;
 }

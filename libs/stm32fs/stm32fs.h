@@ -107,6 +107,9 @@ public:
     
     Stm32fsConfigBlock_t *Init(Stm32fsConfig_t *config);
     
+    void SetFlashBlocksCount(uint32_t count);
+    void SetFlashBlocksCountByCfg(Stm32fsConfigBlock_t *cfg);
+    
     size_t GetBaseAddress();
     uint32_t GetBlockAddress(uint8_t blockNum);
     uint32_t GetBlockFromAddress(uint32_t address);
@@ -156,6 +159,7 @@ public:
     bool isValid();
     bool isNeedsOptimization();
 
+    bool SetCurrentFsBlock(Stm32fsConfigBlock_t *block);
     uint32_t GetCurrentFsBlockSerial();
     Stm32fsFlash &GetFlash(){return flash;};
     uint32_t GetSize();
