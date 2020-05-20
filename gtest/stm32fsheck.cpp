@@ -633,3 +633,78 @@ TEST(stm32fsTest, OptimizeBigFiles) {
     
     ASSERT_EQ(startmem - (3100 + 2500), fs.GetFreeMemory());
 }
+
+TEST(stm32fsTest, Optimize2Blocks) {
+    Stm32fsConfig_t cfg;
+    InitFS2(cfg, 0x00);
+    
+    Stm32fs fs{cfg};
+    ASSERT_TRUE(fs.isValid());
+
+    ASSERT_EQ(fs.GetSize(), SECTOR_SIZE * 3);
+    ASSERT_EQ(fs.GetFreeMemory(), SECTOR_SIZE * 3);
+    
+    // init arrays
+    uint8_t testmem[SECTOR_SIZE * 3] = {0};
+    FillMem(testmem, sizeof(testmem));
+    uint8_t testmemr[SECTOR_SIZE * 3] = {0};
+    std::memset(testmemr, 0xab, sizeof(testmemr));
+    
+    uint32_t startmem = fs.GetFreeMemory();
+
+    ASSERT_TRUE(fs.WriteFile("file1", StdData, 15));
+    ASSERT_TRUE(fs.WriteFile("file2", testmem, 3100));
+    ASSERT_EQ(fs.FileLength("file2"), 3100);
+    ASSERT_TRUE(fs.WriteFile("file3", testmem, 2500));
+    ASSERT_EQ(fs.FileLength("file3"), 2500);
+    
+    ASSERT_TRUE(fs.DeleteFile("file1"));
+    ASSERT_FALSE(fs.FileExist("file1"));
+        
+    ASSERT_EQ(fs.GetCurrentFsBlockSerial(), 1);
+
+    ASSERT_TRUE(fs.Optimize());
+    
+    //dump_memory(vmem, 128);
+    //dump_memory(&vmem[4096], 128);
+    
+    ASSERT_EQ(fs.GetCurrentFsBlockSerial(), 2);
+    
+    ASSERT_FALSE(fs.FileExist("file1"));
+    ASSERT_TRUE(fs.FileExist("file2"));
+    ASSERT_TRUE(fs.FileExist("file3"));
+
+    size_t rxlength = 0;
+    ASSERT_TRUE(fs.ReadFile("file2", testmemr, &rxlength, sizeof(testmemr)));
+    ASSERT_EQ(rxlength, 3100);
+    AssertArrayEQ(testmem, testmemr, rxlength);
+    
+    std::memset(testmemr, 0xab, sizeof(testmemr));
+    rxlength = 0;
+    ASSERT_TRUE(fs.ReadFile("file3", testmemr, &rxlength, sizeof(testmemr)));
+    ASSERT_EQ(rxlength, 2500);
+    AssertArrayEQ(testmem, testmemr, rxlength);
+    
+    ASSERT_EQ(startmem - (3100 + 2500), fs.GetFreeMemory());
+} 
+
+/*
+TEST(stm32fsTest, Create3Blocks) {
+    Stm32fsConfig_t cfg;
+    InitFS3(cfg, 0x00);
+    
+    Stm32fs fs{cfg};
+    ASSERT_TRUE(fs.isValid());
+    ASSERT_FALSE(fs.isNeedsOptimization());
+    
+    ASSERT_EQ(fs.GetCurrentFsBlockSerial(), 1);
+  
+    AssertArrayEQ(vmem, StdHeader, sizeof(StdHeader));
+
+    ASSERT_EQ(fs.GetSize(), SECTOR_SIZE * 2);
+    ASSERT_EQ(fs.GetFreeMemory(), SECTOR_SIZE * 2);
+    ASSERT_EQ(fs.GetFreeFileDescriptors(), (SECTOR_SIZE / 16) - 1);
+} 
+*/
+
+
