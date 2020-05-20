@@ -181,19 +181,23 @@ bool Stm32fsFlash::ReadFlash(uint32_t address, uint8_t *data, size_t length) {
     return FsConfig->fnReadFlash(address, data, length);
 }
 
+bool Stm32fsFlash::EraseSectors(UVector &sectors) {
+    for (auto &sector: sectors) {
+        if (!isFlashBlockEmpty(sector)) {
+            if (!EraseFlashBlock(sector))
+                return false;
+        }
+    }
+    return true;
+}
+
 bool Stm32fsFlash::EraseFs(Stm32fsConfigBlock_t &config) {
-    for (auto &sector: config.HeaderSectors) {
-        if (!isFlashBlockEmpty(sector)) {
-            if (!EraseFlashBlock(sector))
-                return false;
-        }
-    }
-    for (auto &sector: config.DataSectors) {
-        if (!isFlashBlockEmpty(sector)) {
-            if (!EraseFlashBlock(sector))
-                return false;
-        }
-    }
+    if (!EraseSectors(config.HeaderSectors))
+        return false;
+
+    if (!EraseSectors(config.DataSectors))
+        return false;
+    
     return true;
 }
 
@@ -897,6 +901,103 @@ Stm32OptimizedFile_t &Stm32fsFileList::GetFileByID(size_t id) {
 }
 
 /*
+ * --- Stm32fsWriter ---
+ */
+
+bool Stm32fsWriter::Init() {
+    if (sectors.size() == 0)
+        return false;
+    
+    CurrentSectorID = 0;
+    CurrentAddress = 0;
+    
+    if (!flash.EraseSectors(sectors))
+        return false;
+    
+    return true;
+}
+
+bool Stm32fsWriter::Write(uint8_t *data, size_t len) {
+    if (CurrentSectorID < 0)
+        return false;
+    
+    // multisector write
+/*    size_t totalwrlen = 0;
+    while (len > 0) {
+        if (CurrentSectorID < 0)
+            return false;
+        
+        size_t blen = len;
+        if (blen > BlockSize - CurrentAddress)
+            blen = BlockSize - CurrentAddress;
+
+        if !(flash.WriteFlash(flash.GetBlockAddress(sectorNum), cache, BlockSize))
+            return false;
+        std::memcpy(&cache[CurrentAddress], &data[totalwrlen], blen);
+        CurrentAddress += blen;                            // flash align not needs because we write it in single block...
+
+        len -= blen;
+        totalwrlen += blen;
+        
+        if (CurrentAddress >= BlockSize) {
+            if (!WriteToFlash(sectors[CurrentSectorID]))
+                return false;
+
+            CurrentSectorID++;
+            if (CurrentSectorID >= (int)sectors.size())
+                CurrentSectorID = -1;
+
+            if (!flash.isFlashBlockEmpty(CurrentSectorID))
+                if (!flash.EraseFlashBlock(CurrentSectorID))
+                    return false;
+                
+            CurrentAddress = 0;
+        }
+    }
+  */  
+    return true;
+}
+
+bool Stm32fsWriter::WriteFsHeaderToTop(uint32_t serial) {
+    if (CurrentSectorID < 0 || sectors.size() == 0)
+        return false;
+    
+    Stm32FSHeader_t header;
+    flash.FillFsHeader(header, serial);
+    
+    return flash.WriteFlash(flash.GetBlockAddress(sectors[0]), (uint8_t *)&header, sizeof(header));
+}
+
+bool Stm32fsWriter::WriteFileHeader(Stm32FSFileHeader &header) {
+    if (CurrentSectorID < 0)
+        return false;
+    
+    return Write((uint8_t *)&header, sizeof(header));
+}
+
+bool Stm32fsWriter::WriteFileVersion(Stm32FSFileVersion &version) {
+    if (CurrentSectorID < 0)
+        return false;
+    
+    return Write((uint8_t *)&version, sizeof(version));
+}
+
+bool Stm32fsWriter::AppendFileDesc(Stm32FSFileHeader &header, Stm32FSFileVersion &version) {
+    if (!WriteFileHeader(header))
+        return false;
+    return WriteFileVersion(version);
+}
+
+bool Stm32fsWriter::Finish() {
+    if (CurrentSectorID < 0)
+        return false;
+    
+    CurrentSectorID = -1;
+    CurrentAddress = 0;
+    return true;
+}
+
+/*
  * --- Stm32fsWriteCache ---
  */
 
@@ -1013,18 +1114,40 @@ Stm32fsOptimizer::Stm32fsOptimizer(Stm32fs &stm32fs) : fs{stm32fs} {
     
 }
 
+// multiblock optimization. from flash region to flash region.
 bool Stm32fsOptimizer::OptimizeMultiblock(Stm32fsConfigBlock_t &inputBlock, Stm32fsConfigBlock_t &outputBlock) {
-    // TODO: multiblock optimization. from flash region to flash region.
-    
-    //uint32_t serial = fs.GetCurrentFsBlockSerial();
+    uint32_t serial = fs.GetCurrentFsBlockSerial();
     fs.flash.EraseFs(outputBlock);
     
+    Stm32fsWriter fhdrdata(fs.flash, outputBlock.HeaderSectors);
+    fhdrdata.Init();
+    Stm32fsWriter fdata(fs.flash, outputBlock.DataSectors);
+    fdata.Init();
     
+    Stm32FSFileRecord filerec;
+    uint32_t addr = fs.GetFirstHeader(filerec);
     
+    while(true) {
+        if (addr == 0)
+            break;
+
+        if (filerec.header.FileState == fsFileHeader) {
+            Stm32FSFileVersion ver = fs.SearchFileVersion(filerec.header.FileID);
+            if (ver.FileState == fsFileVersion) {
+                if (!fhdrdata.AppendFileDesc(filerec.header, ver))
+                    return false;
+                if (!fdata.Write((uint8_t *)(fs.flash.GetBaseAddress() + ver.FileAddress), ver.FileSize))
+                    return false;
+            }
+        }        
+        addr = fs.GetNextHeader(addr, filerec);
+    }
     
-    
-    
-    
+    if (!fhdrdata.WriteFsHeaderToTop(serial + 1))
+        return false;
+
+    fhdrdata.Finish();
+    fdata.Finish();
     
     // switching to the new filesystem
     auto blk = fs.GetFlash().SearchLastFsBlockInFlash();
@@ -1035,7 +1158,6 @@ bool Stm32fsOptimizer::OptimizeMultiblock(Stm32fsConfigBlock_t &inputBlock, Stm3
         return false;
     
     fs.GetFlash().SetFlashBlocksCountByCfg(blk);
-    
     
     return false;
 }
@@ -1054,7 +1176,8 @@ bool Stm32fsOptimizer::OptimizeViaRam(Stm32fsConfigBlock_t &block) {
         if (filerec.header.FileState == fsFileHeader) {
             Stm32FSFileVersion ver = fs.SearchFileVersion(filerec.header.FileID);
             if (ver.FileState == fsFileVersion)
-                fileList.Append(filerec.header, ver);
+                if (!fileList.Append(filerec.header, ver))
+                    return false;
         }
         
         addr = fs.GetNextHeader(addr, filerec);
@@ -1063,8 +1186,7 @@ bool Stm32fsOptimizer::OptimizeViaRam(Stm32fsConfigBlock_t &block) {
     uint32_t serial = fs.GetCurrentFsBlockSerial();
     
     if (fileList.Empty()) {
-        fs.flash.CreateFsBlock(block, serial + 1);
-        return true;
+        return fs.flash.CreateFsBlock(block, serial + 1);
     }
     
     fileList.Sort();

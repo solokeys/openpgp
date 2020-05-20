@@ -125,6 +125,7 @@ public:
     void FillFsHeader(Stm32FSHeader_t &header, uint32_t serial);
     bool GetFsHeader(Stm32fsConfigBlock_t &config, Stm32FSHeader_t &header);
     uint32_t GetFsSerial(Stm32fsConfigBlock_t &config);
+    bool EraseSectors(UVector &sectors);
     bool EraseFs(Stm32fsConfigBlock_t &config);
     bool CreateFsBlock(Stm32fsConfigBlock_t &blockCfg, uint32_t serial);
     
@@ -186,6 +187,24 @@ struct PACKED Stm32OptimizedFile_t {
     uint32_t FileAddress;
     uint16_t FileSize;
     bool isEmpty() {return (FileName[0] == 0 && FileAddress == 0 && FileSize == 0);}
+};
+
+class Stm32fsWriter {
+private:
+    Stm32fsFlash &flash;
+    UVector &sectors;
+    int CurrentSectorID = -1;
+    size_t CurrentAddress = 0;
+public:
+    Stm32fsWriter(Stm32fsFlash &fsFlash, UVector &sec) :flash{fsFlash}, sectors{sec}{};
+    
+    bool Init();
+    bool Write(uint8_t *data, size_t len);
+    bool WriteFsHeaderToTop(uint32_t serial);
+    bool WriteFileHeader(Stm32FSFileHeader &header);
+    bool WriteFileVersion(Stm32FSFileVersion &version);
+    bool AppendFileDesc(Stm32FSFileHeader &header, Stm32FSFileVersion &version);
+    bool Finish();
 };
 
 class Stm32fsWriteCache {
