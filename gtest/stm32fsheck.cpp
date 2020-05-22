@@ -696,11 +696,11 @@ TEST(stm32fsTest, Optimize2Blocks) {
 
     ASSERT_TRUE(fs.Optimize());
     
-    dump_memory(vmem, 128);
-    dump_memory(&vmem[2048 * 5], 128);
+    //dump_memory(vmem, 128);
+    //dump_memory(&vmem[2048 * 5], 128);
 
-    dump_memory(&vmem[2048 * 2], 128);
-    dump_memory(&vmem[2048 * 7], 128);
+    //dump_memory(&vmem[2048 * 2], 128);
+    //dump_memory(&vmem[2048 * 7], 128);
     //dump_memory(&vmem[4096], 128);
     
     ASSERT_EQ(fs.GetCurrentFsBlockSerial(), 2);
@@ -720,7 +720,8 @@ TEST(stm32fsTest, Optimize2Blocks) {
     ASSERT_EQ(rxlength, 2500);
     AssertArrayEQ(testmem, testmemr, rxlength);
     
-    ASSERT_EQ(startmem - (3100 + 2500), fs.GetFreeMemory());
+    // added padding...
+    ASSERT_EQ(startmem - (3104 + 2504), fs.GetFreeMemory());
 } 
 
 /*

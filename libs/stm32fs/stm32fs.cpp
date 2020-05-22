@@ -935,7 +935,7 @@ bool Stm32fsWriter::Write(uint8_t *data, size_t len, uint32_t *newaddr) {
         return false;
 
     if (newaddr != nullptr)
-        *newaddr = CurrentAddress;
+        *newaddr = flash.GetBlockAddress(sectors[CurrentSectorID]) + CurrentAddress;
     
     // multisector write
     size_t totalwrlen = 0;
@@ -947,7 +947,6 @@ bool Stm32fsWriter::Write(uint8_t *data, size_t len, uint32_t *newaddr) {
         if (blen > BlockSize - CurrentAddress)
             blen = BlockSize - CurrentAddress;
 
-printf("--writer write %zd [%zd]\n", flash.GetBlockAddress(sectors[CurrentSectorID]) + CurrentAddress, blen);
         if (!flash.WriteFlash(flash.GetBlockAddress(sectors[CurrentSectorID]) + CurrentAddress, &data[totalwrlen], blen))
             return false;
        
