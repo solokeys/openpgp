@@ -634,6 +634,37 @@ TEST(stm32fsTest, OptimizeBigFiles) {
     ASSERT_EQ(startmem - (3100 + 2500), fs.GetFreeMemory());
 }
 
+TEST(stm32fsTest, Optimize2BlocksEmpty) {
+    Stm32fsConfig_t cfg;
+    InitFS2(cfg, 0xff);
+    Stm32fs fs{cfg};
+    
+    ASSERT_TRUE(fs.WriteFile("file1", StdData, 1));
+    ASSERT_TRUE(fs.WriteFile("file2", StdData, 2));
+    ASSERT_TRUE(fs.WriteFile("file3", StdData, 3));
+    ASSERT_TRUE(fs.WriteFile("file4", StdData, 4));
+    
+    uint32_t restmem = fs.GetFreeMemory();
+    
+    ASSERT_TRUE(fs.DeleteFiles("*"));
+    ASSERT_FALSE(fs.FileExist("file1"));
+    ASSERT_EQ(restmem, fs.GetFreeMemory());
+        
+    ASSERT_EQ(fs.GetCurrentFsBlockSerial(), 1);
+
+    ASSERT_TRUE(fs.Optimize());
+    
+    ASSERT_EQ(fs.GetCurrentFsBlockSerial(), 2);
+    
+    ASSERT_FALSE(fs.FileExist("file1"));
+    ASSERT_FALSE(fs.FileExist("file2"));
+    ASSERT_FALSE(fs.FileExist("file3"));
+    ASSERT_FALSE(fs.FileExist("file4"));
+    
+    ASSERT_NE(restmem, fs.GetFreeMemory());
+    ASSERT_EQ(fs.GetFreeMemory(), SECTOR_SIZE * 3);
+}
+
 TEST(stm32fsTest, Optimize2Blocks) {
     Stm32fsConfig_t cfg;
     InitFS2(cfg, 0x00);
@@ -665,7 +696,11 @@ TEST(stm32fsTest, Optimize2Blocks) {
 
     ASSERT_TRUE(fs.Optimize());
     
-    //dump_memory(vmem, 128);
+    dump_memory(vmem, 128);
+    dump_memory(&vmem[2048 * 5], 128);
+
+    dump_memory(&vmem[2048 * 2], 128);
+    dump_memory(&vmem[2048 * 7], 128);
     //dump_memory(&vmem[4096], 128);
     
     ASSERT_EQ(fs.GetCurrentFsBlockSerial(), 2);
