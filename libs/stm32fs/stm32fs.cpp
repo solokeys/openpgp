@@ -39,19 +39,18 @@ Stm32fsConfigBlock_t *Stm32fsFlash::Init(Stm32fsConfig_t *config) {
             return nullptr;
     }
 
-    SetFlashBlocksCount(1);
     auto blk = SearchLastFsBlockInFlash();
     
     if (blk == nullptr) {
         blk = &FsConfig->Blocks[0];
-        SetFlashBlocksCountByCfg(blk);
+        SetCurrentFsBlock(blk);
         if(!CreateFsBlock(FsConfig->Blocks[0], 1)) {
             FlashBlocksCount = 0;
             return nullptr;        
         }
     }
     
-    SetFlashBlocksCountByCfg(blk);
+    SetCurrentFsBlock(blk);
     
     return blk;
 }
@@ -61,7 +60,7 @@ bool Stm32fsFlash::SetCurrentFsBlock(Stm32fsConfigBlock_t *block) {
         return  false;
     
     CurrentFsBlock = block;
-    SetFlashBlocksCount(CurrentFsBlock->HeaderSectors.size() + CurrentFsBlock->DataSectors.size());
+    SetFlashBlocksCountByCfg(block);
     return true;
 }
 
@@ -92,30 +91,47 @@ uint32_t Stm32fsFlash::GetBlockFromAddress(uint32_t address) {
     return address / BlockSize;
 }
 
+bool Stm32fsFlash::FindBlockInConfigBlock(Stm32fsConfigBlock_t &block, uint32_t sectorNo) {
+    if (std::find(block.HeaderSectors.begin(), block.HeaderSectors.end(), sectorNo) != block.HeaderSectors.end())
+        return true;
+
+    if (std::find(block.DataSectors.begin(), block.DataSectors.end(), sectorNo) != block.DataSectors.end())
+        return true;
+    
+    /*for (auto &sector : block.HeaderSectors)
+        if (sector == sectorNo)
+            return true;
+
+    for (auto &sector : block.DataSectors)
+        if (sector == sectorNo)
+            return true;*/
+    return false;
+}
+
+
 bool Stm32fsFlash::FindBlockInCfg(std::vector<Stm32fsConfigBlock_t> blocks, uint32_t sectorNo) {
     for (auto &block : blocks) {
-        if (std::find(block.HeaderSectors.begin(), block.HeaderSectors.end(), sectorNo) != block.HeaderSectors.end())
+        if (FindBlockInConfigBlock(block, sectorNo))
             return true;
-
-        if (std::find(block.DataSectors.begin(), block.DataSectors.end(), sectorNo) != block.DataSectors.end())
-            return true;
-        
-        /*for (auto &sector : block.HeaderSectors)
-            if (sector == sectorNo)
-                return true;
-
-        for (auto &sector : block.DataSectors)
-            if (sector == sectorNo)
-                return true;*/
     }
     return false;
 }
 
 
 bool Stm32fsFlash::AddressInFlash(uint32_t address, size_t length, bool searchAllBlocks) {
-    if (address <= FlashBlocksCount * BlockSize && 
-        address + length <= FlashBlocksCount * BlockSize) 
-        return true;
+    if (CurrentFsBlock != nullptr) {
+        uint32_t curAddress = address;
+        
+        while (true) {
+            uint32_t blockNo = GetBlockFromAddress(curAddress);
+            if (!FindBlockInConfigBlock(*CurrentFsBlock, blockNo))
+                break;
+                
+            curAddress = GetBlockAddress(blockNo) + BlockSize;
+            if (curAddress > address + length - 1)
+                return true;
+        }
+    }
     
     if (searchAllBlocks && FsConfig != nullptr) {
         uint32_t curAddress = address;
