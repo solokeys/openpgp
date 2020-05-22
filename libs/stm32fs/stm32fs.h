@@ -101,11 +101,13 @@ struct Stm32fsConfig_t {
 class Stm32fsFlash {
 private:
     Stm32fsConfig_t *FsConfig;
+    Stm32fsConfigBlock_t *CurrentFsBlock;
     uint32_t FlashBlocksCount;
 public:
     Stm32fsFlash();
     
     Stm32fsConfigBlock_t *Init(Stm32fsConfig_t *config);
+    bool SetCurrentFsBlock(Stm32fsConfigBlock_t *block);
     
     void SetFlashBlocksCount(uint32_t count);
     void SetFlashBlocksCountByCfg(Stm32fsConfigBlock_t *cfg);
@@ -198,8 +200,8 @@ private:
 public:
     Stm32fsWriter(Stm32fsFlash &fsFlash, UVector &sec) :flash{fsFlash}, sectors{sec}{};
     
-    bool Init();
-    bool Write(uint8_t *data, size_t len);
+    bool Init(uint32_t offset = 0);
+    bool Write(uint8_t *data, size_t len, uint32_t *newaddr = nullptr);
     bool WriteFsHeaderToTop(uint32_t serial);
     bool WriteFileHeader(Stm32FSFileHeader &header);
     bool WriteFileVersion(Stm32FSFileVersion &version);

@@ -21,6 +21,7 @@ static const uint8_t FlashPadding = 8;
 
 Stm32fsFlash::Stm32fsFlash() {
     FsConfig = nullptr;
+    CurrentFsBlock = nullptr;
     FlashBlocksCount = 0;
 }
     
@@ -54,6 +55,16 @@ Stm32fsConfigBlock_t *Stm32fsFlash::Init(Stm32fsConfig_t *config) {
     
     return blk;
 }
+
+bool Stm32fsFlash::SetCurrentFsBlock(Stm32fsConfigBlock_t *block) {
+    if (block == nullptr)
+        return  false;
+    
+    CurrentFsBlock = block;
+    SetFlashBlocksCount(CurrentFsBlock->HeaderSectors.size() + CurrentFsBlock->DataSectors.size());
+    return true;
+}
+
 
 void Stm32fsFlash::SetFlashBlocksCount(uint32_t count) {
     FlashBlocksCount = count;    
@@ -297,7 +308,7 @@ bool Stm32fs::SetCurrentFsBlock(Stm32fsConfigBlock_t *block) {
         return false;
     
     CurrentFsBlock = block;
-    flash.SetFlashBlocksCount(CurrentFsBlock->HeaderSectors.size() + CurrentFsBlock->DataSectors.size());
+    flash.SetCurrentFsBlock(CurrentFsBlock);
     return true;
 }
 
@@ -904,12 +915,12 @@ Stm32OptimizedFile_t &Stm32fsFileList::GetFileByID(size_t id) {
  * --- Stm32fsWriter ---
  */
 
-bool Stm32fsWriter::Init() {
+bool Stm32fsWriter::Init(uint32_t offset) {
     if (sectors.size() == 0)
         return false;
     
     CurrentSectorID = 0;
-    CurrentAddress = 0;
+    CurrentAddress = offset;
     
     if (!flash.EraseSectors(sectors))
         return false;
@@ -917,12 +928,15 @@ bool Stm32fsWriter::Init() {
     return true;
 }
 
-bool Stm32fsWriter::Write(uint8_t *data, size_t len) {
+bool Stm32fsWriter::Write(uint8_t *data, size_t len, uint32_t *newaddr) {
     if (CurrentSectorID < 0)
         return false;
+
+    if (newaddr != nullptr)
+        *newaddr = CurrentAddress;
     
     // multisector write
-/*    size_t totalwrlen = 0;
+    size_t totalwrlen = 0;
     while (len > 0) {
         if (CurrentSectorID < 0)
             return false;
@@ -931,30 +945,33 @@ bool Stm32fsWriter::Write(uint8_t *data, size_t len) {
         if (blen > BlockSize - CurrentAddress)
             blen = BlockSize - CurrentAddress;
 
-        if !(flash.WriteFlash(flash.GetBlockAddress(sectorNum), cache, BlockSize))
+printf("--writer write %zd [%zd]\n", flash.GetBlockAddress(sectors[CurrentSectorID]) + CurrentAddress, blen);
+        if (!flash.WriteFlash(flash.GetBlockAddress(sectors[CurrentSectorID]) + CurrentAddress, &data[totalwrlen], blen))
             return false;
-        std::memcpy(&cache[CurrentAddress], &data[totalwrlen], blen);
-        CurrentAddress += blen;                            // flash align not needs because we write it in single block...
+       
+        CurrentAddress += blen;
+        // flash align
+        uint32_t aladdr = (CurrentAddress / FlashPadding) * FlashPadding;
+        if (CurrentAddress != aladdr)
+            CurrentAddress = aladdr + FlashPadding;
 
         len -= blen;
         totalwrlen += blen;
         
         if (CurrentAddress >= BlockSize) {
-            if (!WriteToFlash(sectors[CurrentSectorID]))
-                return false;
-
             CurrentSectorID++;
-            if (CurrentSectorID >= (int)sectors.size())
+            if (CurrentSectorID >= (int)sectors.size()) {
                 CurrentSectorID = -1;
-
-            if (!flash.isFlashBlockEmpty(CurrentSectorID))
-                if (!flash.EraseFlashBlock(CurrentSectorID))
-                    return false;
+            } else {
+                if (!flash.isFlashBlockEmpty(sectors[CurrentSectorID]))
+                    if (!flash.EraseFlashBlock(sectors[CurrentSectorID]))
+                        return false;
+            }
                 
             CurrentAddress = 0;
         }
     }
-  */  
+
     return true;
 }
 
@@ -1120,7 +1137,7 @@ bool Stm32fsOptimizer::OptimizeMultiblock(Stm32fsConfigBlock_t &inputBlock, Stm3
     fs.flash.EraseFs(outputBlock);
     
     Stm32fsWriter fhdrdata(fs.flash, outputBlock.HeaderSectors);
-    fhdrdata.Init();
+    fhdrdata.Init(sizeof(Stm32FSHeader_t));
     Stm32fsWriter fdata(fs.flash, outputBlock.DataSectors);
     fdata.Init();
     
@@ -1134,9 +1151,13 @@ bool Stm32fsOptimizer::OptimizeMultiblock(Stm32fsConfigBlock_t &inputBlock, Stm3
         if (filerec.header.FileState == fsFileHeader) {
             Stm32FSFileVersion ver = fs.SearchFileVersion(filerec.header.FileID);
             if (ver.FileState == fsFileVersion) {
-                if (!fhdrdata.AppendFileDesc(filerec.header, ver))
+                uint32_t newAddr = 0;
+                // 1st - data
+                if (!fdata.Write((uint8_t *)(fs.flash.GetBaseAddress() + ver.FileAddress), ver.FileSize, &newAddr))
                     return false;
-                if (!fdata.Write((uint8_t *)(fs.flash.GetBaseAddress() + ver.FileAddress), ver.FileSize))
+                // 2nd - header
+                ver.FileAddress = newAddr;
+                if (!fhdrdata.AppendFileDesc(filerec.header, ver))
                     return false;
             }
         }        
@@ -1157,9 +1178,7 @@ bool Stm32fsOptimizer::OptimizeMultiblock(Stm32fsConfigBlock_t &inputBlock, Stm3
     if (!fs.SetCurrentFsBlock(blk))
         return false;
     
-    fs.GetFlash().SetFlashBlocksCountByCfg(blk);
-    
-    return false;
+    return true;
 }
 
 bool Stm32fsOptimizer::OptimizeViaRam(Stm32fsConfigBlock_t &block) {
