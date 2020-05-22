@@ -102,7 +102,6 @@ class Stm32fsFlash {
 private:
     Stm32fsConfig_t *FsConfig;
     Stm32fsConfigBlock_t *CurrentFsBlock;
-    uint32_t FlashBlocksCount;
 public:
     Stm32fsFlash();
     

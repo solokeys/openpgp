@@ -22,7 +22,6 @@ static const uint8_t FlashPadding = 8;
 Stm32fsFlash::Stm32fsFlash() {
     FsConfig = nullptr;
     CurrentFsBlock = nullptr;
-    FlashBlocksCount = 0;
 }
     
 Stm32fsConfigBlock_t *Stm32fsFlash::Init(Stm32fsConfig_t *config) {
@@ -45,7 +44,6 @@ Stm32fsConfigBlock_t *Stm32fsFlash::Init(Stm32fsConfig_t *config) {
         blk = &FsConfig->Blocks[0];
         SetCurrentFsBlock(blk);
         if(!CreateFsBlock(FsConfig->Blocks[0], 1)) {
-            FlashBlocksCount = 0;
             return nullptr;        
         }
     }
@@ -60,21 +58,9 @@ bool Stm32fsFlash::SetCurrentFsBlock(Stm32fsConfigBlock_t *block) {
         return  false;
     
     CurrentFsBlock = block;
-    SetFlashBlocksCountByCfg(block);
     return true;
 }
 
-
-void Stm32fsFlash::SetFlashBlocksCount(uint32_t count) {
-    FlashBlocksCount = count;    
-}
-
-void Stm32fsFlash::SetFlashBlocksCountByCfg(Stm32fsConfigBlock_t *cfg) {
-    if (cfg == nullptr)
-        SetFlashBlocksCount(1);
-    else
-        SetFlashBlocksCount(cfg->HeaderSectors.size() + cfg->DataSectors.size());
-}
 
 size_t Stm32fsFlash::GetBaseAddress() {
     if (FsConfig == nullptr)
@@ -148,7 +134,7 @@ bool Stm32fsFlash::AddressInFlash(uint32_t address, size_t length, bool searchAl
         
     }
     
-    printf("out of memory[%d]!!! adr=%d len=%zd\n", FlashBlocksCount, address, length);
+    printf("out of memory!!! adr=%d len=%zd\n", address, length);
     return false;
 }
 
