@@ -9,7 +9,7 @@
 
 static uint8_t StdHeader[] = {0x55, 0xaa, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xaa, 0x55};
 static uint8_t StdData[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10};
-static uint8_t vmem[SECTOR_SIZE * 14] = {0};
+static uint8_t vmem[SECTOR_SIZE * 30] = {0};
 
 void InitFS(Stm32fsConfig_t &cfg, uint8_t defaultVal) {
     std::memset(vmem, defaultVal, sizeof(vmem));
@@ -125,6 +125,38 @@ TEST(stm32fsTest, Create3Blocks) {
     ASSERT_EQ(fs.GetSize(), SECTOR_SIZE * 2);
     ASSERT_EQ(fs.GetFreeMemory(), SECTOR_SIZE * 2);
     ASSERT_EQ(fs.GetFreeFileDescriptors(), (SECTOR_SIZE / 16) - 1);
+} 
+
+TEST(stm32fsTest, CreateFarFromBeginning) {
+    Stm32fsConfig_t cfg;
+    std::memset(vmem, 0x00, sizeof(vmem));
+    
+    cfg.BaseBlockAddress = (size_t)&vmem;
+    cfg.SectorSize = SECTOR_SIZE;
+    cfg.Blocks = {{{25}, {27,28,29}}};
+    cfg.fnEraseFlashBlock = [](uint8_t blockNo){std::memset(&vmem[SECTOR_SIZE * blockNo], 0xff, SECTOR_SIZE);return true;};
+    cfg.fnWriteFlash = [](uint32_t address, uint8_t *data, size_t len){std::memcpy(&vmem[address], data, len);return true;};
+    cfg.fnReadFlash = [](uint32_t address, uint8_t *data, size_t len){std::memcpy(data, &vmem[address], len);return true;};
+    
+    Stm32fs fs{cfg};
+    ASSERT_TRUE(fs.isValid());
+    ASSERT_EQ(fs.GetCurrentFsBlockSerial(), 1);
+  
+    ASSERT_EQ(fs.GetSize(), SECTOR_SIZE * 3);
+    ASSERT_EQ(fs.GetFreeMemory(), SECTOR_SIZE * 3);
+
+    uint8_t testmem[SECTOR_SIZE] = {0};
+    std::memset(testmem, 0xab, sizeof(testmem));
+
+    ASSERT_TRUE(fs.WriteFile("testfile", StdData, sizeof(StdData)));
+    
+    ASSERT_EQ(fs.FileLength("testfile"), sizeof(StdData));
+    
+    size_t rxlength = 0;
+    ASSERT_TRUE(fs.ReadFile("testfile", testmem, &rxlength, sizeof(StdData)));
+    
+    ASSERT_EQ(rxlength, sizeof(StdData));
+    AssertArrayEQ(testmem, StdData, sizeof(StdData));
 } 
 
 TEST(stm32fsTest, FindFs) {
