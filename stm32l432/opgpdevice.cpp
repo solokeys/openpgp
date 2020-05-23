@@ -70,11 +70,15 @@ void sprintfs() {
     printf_device("Memory total: %d free: %d free descriptors: %d\n",
                   fs.GetSize(), fs.GetFreeMemory(), fs.GetFreeFileDescriptors());
 
-    /*SPIFFS_opendir(&fs, "/", &d);
-	while ((pe = SPIFFS_readdir(&d, pe))) {
-		printf_device("  [%4d] %s\n", pe->size, pe->name);
-	}
-    SPIFFS_closedir(&d);*/
+    Stm32File_t filerec;
+    Stm32File_t *rc = nullptr;
+
+    rc = fs.FindFirst("*", &filerec);
+    while (rc != nullptr) {
+        printf_device("  [%4d] %s\n", rc->FileSize, rc->FileName);
+        rc = fs.FindNext(rc);
+    }
+
 	return;
 }
 
