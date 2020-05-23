@@ -83,14 +83,7 @@ bool Stm32fsFlash::FindBlockInConfigBlock(Stm32fsConfigBlock_t &block, uint32_t 
 
     if (std::find(block.DataSectors.begin(), block.DataSectors.end(), sectorNo) != block.DataSectors.end())
         return true;
-    
-    /*for (auto &sector : block.HeaderSectors)
-        if (sector == sectorNo)
-            return true;
 
-    for (auto &sector : block.DataSectors)
-        if (sector == sectorNo)
-            return true;*/
     return false;
 }
 
@@ -193,7 +186,7 @@ bool Stm32fsFlash::WriteFlash(uint32_t address, uint8_t *data, size_t length) {
 bool Stm32fsFlash::ReadFlash(uint32_t address, uint8_t *data, size_t length) {
     if (!AddressInFlash(address, length, true))
         return false;
-    printf("--read flash %d %d\n", address, length);
+    //printf("--read flash %d %d\n", address, length);
     return FsConfig->fnReadFlash(address, data, length);
 }
 
@@ -645,22 +638,22 @@ bool Stm32fs::ReadFile(std::string_view fileName, uint8_t *data, size_t *length,
     if (!CheckValid())
         return false;
 
-    if (length)
+    if (length != nullptr)
         *length = 0;
 
     Stm32FSFileHeader header = SearchFileHeader(fileName);
     if (header.FileState != fsFileHeader)
         return false;
-    
+
     Stm32FSFileVersion ver = SearchFileVersion(header.FileID);
     if (ver.FileState != fsFileVersion)
         return false;
-    
+
     size_t len = std::min((size_t)ver.FileSize, maxlength);
     if (!flash.ReadFlash(ver.FileAddress, data, len))
         return false;
     
-    if (length)
+    if (length != nullptr)
         *length = len;
      
     return true;
