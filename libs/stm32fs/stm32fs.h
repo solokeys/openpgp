@@ -146,6 +146,7 @@ private:
     
     Stm32fsFlash flash;
     
+    bool CheckValid();
     uint32_t GetFirstHeaderAddress();
     uint32_t GetNextHeaderAddress(uint32_t previousAddress);
     uint32_t GetFirstHeader(Stm32FSFileRecord &header);
@@ -157,8 +158,9 @@ private:
     bool AppendFileVersion(Stm32FSFileVersion &version);
     uint32_t FindEmptyDataArea(size_t length);
 public:
-	Stm32fs(Stm32fsConfig_t config);
-    
+    Stm32fs(Stm32fsConfig_t config);
+    Stm32fs();
+
     bool isValid();
     bool isNeedsOptimization();
 

@@ -323,6 +323,10 @@ uint32_t Stm32fs::GetCurrentFsBlockSerial() {
     return flash.GetFsSerial(*CurrentFsBlock);
 }
 
+bool Stm32fs::CheckValid() {
+    return (Valid && CurrentFsBlock != nullptr);
+}
+
 uint32_t Stm32fs::GetFirstHeaderAddress() {
     if (CurrentFsBlock == nullptr)
         return 0;
@@ -546,8 +550,14 @@ Stm32fs::Stm32fs(Stm32fsConfig_t config) {
     Valid = true;
 }
 
+Stm32fs::Stm32fs() {
+    Valid = false;
+    NeedsOptimization = false;
+    CurrentFsBlock = nullptr;
+}
+
 bool Stm32fs::isValid() {
-    return Valid;
+    return CheckValid();
 }
 
 bool Stm32fs::isNeedsOptimization() {
@@ -555,14 +565,14 @@ bool Stm32fs::isNeedsOptimization() {
 }
 
 uint32_t Stm32fs::GetSize() {
-    if (!Valid || CurrentFsBlock == nullptr)
+    if (!CheckValid())
         return 0;
     
     return CurrentFsBlock->DataSectors.size() * BlockSize;
 }
 
 uint32_t Stm32fs::GetFreeMemory() {
-    if (!Valid || CurrentFsBlock == nullptr)
+    if (!CheckValid())
         return 0;
 
     int size = FindEmptyDataArea(8) - flash.GetBlockAddress(CurrentFsBlock->DataSectors[0]);
@@ -575,7 +585,7 @@ uint32_t Stm32fs::GetFreeMemory() {
 }
 
 uint32_t Stm32fs::GetFreeFileDescriptors() {
-    if (!Valid || CurrentFsBlock == nullptr)
+    if (!CheckValid())
         return 0;
 
     uint32_t addr = GetFirstHeaderAddress();
@@ -602,6 +612,9 @@ uint32_t Stm32fs::GetFreeFileDescriptors() {
 }
 
 bool Stm32fs::FileExist(std::string_view fileName) {
+    if (!CheckValid())
+        return false;
+
     Stm32FSFileHeader header = SearchFileHeader(fileName);
     if (header.FileState != fsFileHeader)
         return false;
@@ -614,6 +627,9 @@ bool Stm32fs::FileExist(std::string_view fileName) {
 }
 
 int Stm32fs::FileLength(std::string_view fileName) {
+    if (!CheckValid())
+        return false;
+
     Stm32FSFileHeader header = SearchFileHeader(fileName);
     if (header.FileState != fsFileHeader)
         return -1;
@@ -626,6 +642,9 @@ int Stm32fs::FileLength(std::string_view fileName) {
 }
 
 bool Stm32fs::ReadFile(std::string_view fileName, uint8_t *data, size_t *length, size_t maxlength) {
+    if (!CheckValid())
+        return false;
+
     if (length)
         *length = 0;
 
@@ -648,6 +667,9 @@ bool Stm32fs::ReadFile(std::string_view fileName, uint8_t *data, size_t *length,
 }
 
 bool Stm32fs::GetFilePtr(std::string_view fileName, uint8_t **ptr, size_t *length) {
+    if (!CheckValid())
+        return false;
+
     Stm32FSFileHeader header = SearchFileHeader(fileName);
     if (header.FileState != fsFileHeader)
         return false;
@@ -663,6 +685,9 @@ bool Stm32fs::GetFilePtr(std::string_view fileName, uint8_t **ptr, size_t *lengt
 }
 
 bool Stm32fs::WriteFile(std::string_view fileName, uint8_t *data, size_t length) {
+    if (!CheckValid())
+        return false;
+
     Stm32FSFileHeader header = SearchFileHeader(fileName);
     if (header.FileState == fsEmpty) {
         header = AppendFileHeader(fileName);
@@ -692,6 +717,9 @@ bool Stm32fs::WriteFile(std::string_view fileName, uint8_t *data, size_t length)
 }
 
 bool Stm32fs::DeleteFile(std::string_view fileName) {
+    if (!CheckValid())
+        return false;
+
     Stm32FSFileHeader header = SearchFileHeader(fileName);
     if (header.FileState != fsFileHeader)
         return false;
@@ -731,7 +759,7 @@ bool fnmatch(std::string_view &pattern, std::string_view &name){
 }
 
 Stm32File_t *Stm32fs::FindFirst(std::string_view fileFilter, Stm32File_t *filePtr) {
-    if (filePtr == nullptr)
+    if (!CheckValid() || filePtr == nullptr)
         return nullptr;
     
     size_t slen = std::min(fileFilter.size(), sizeof(filePtr->FileFilterChr));
@@ -750,7 +778,7 @@ Stm32File_t *Stm32fs::FindFirst(std::string_view fileFilter, Stm32File_t *filePt
 }
 
 Stm32File_t *Stm32fs::FindNext(Stm32File_t *filePtr) {
-    if (filePtr == nullptr)
+    if (!CheckValid() || filePtr == nullptr)
         return nullptr;
     
     if (filePtr->HeaderAddress == 0)
@@ -796,6 +824,9 @@ Stm32File_t *Stm32fs::FindNext(Stm32File_t *filePtr) {
 }
 
 bool Stm32fs::DeleteFiles(std::string_view fileFilter) {
+    if (!CheckValid())
+        return false;
+
     Stm32File_t srecm;
     Stm32File_t *rc = nullptr;
     
@@ -811,9 +842,9 @@ bool Stm32fs::DeleteFiles(std::string_view fileFilter) {
 }
 
 bool Stm32fs::Optimize() {
-    if (!Valid)
+    if (!CheckValid())
         return false;
-    
+
     Stm32fsOptimizer optimizer(*this);
     if (FsConfig.Blocks.size() > 1) {
         Stm32fsConfigBlock_t *nextBlock = flash.SearchNextFsBlockInFlash();
