@@ -16,7 +16,7 @@ DEP_FILES = $(OBJ_FILES:.o=.d)
 
 
 INC = -I. -Ipc/ -Isrc/ -Ilibs/mbedtls/ -Ilibs/mbedtls/mbedtls/crypto/include/\
-    -Ilibs/spiffs/ -Ilibs/spiffs/spiffs/src/ -Ilibs/stm32fs/
+    -Ilibs/stm32fs/
 
 CPPFLAGS = -std=c++17 -Os -Wall -g3 $(INC)
 LDFLAGS = -Wl,-Bdynamic -lpthread
@@ -25,18 +25,16 @@ LIBS=libs/mbedtls/mbedtls.a
 
 TARGET=openpgp_test
 
-include libs/spiffs/spiffs.mk
-
 $(OBJ_DIR)/%.o:  
 	$(CC) $(CPPFLAGS) -c -o $@ $(filter %/$(strip $(patsubst %.o, %.cpp, $(notdir $@))), $(SRC_FILES))
 
-all:  $(SPIFFS_OBJ) $(OBJ_FILES) $(LIBS)
+all:  $(OBJ_FILES) $(LIBS)
 	$(CC) -o $(TARGET) $^ $(LDFLAGS)
 
 include libs/mbedtls/mbedtls.mk
 
 clean:
-	$(RM) $(OBJ_FILES) $(DEP_FILES) $(TARGET) $(MBEDTLS_OBJ) $(MBEDTLS_A) $(SPIFFS_OBJ)
+    $(RM) $(OBJ_FILES) $(DEP_FILES) $(TARGET) $(MBEDTLS_OBJ) $(MBEDTLS_A)
 	
 testpy:
 	#cd ./pytest
