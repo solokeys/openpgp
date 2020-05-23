@@ -8,14 +8,15 @@ OBJ_DIR := ./obj
 SRC_DIRS := ./pc \
 			./src \
 			./src/applets \
-			./src/applets/openpgp
+            ./src/applets/openpgp \
+            ./libs/stm32fs
 SRC_FILES := $(sort $(foreach var, $(SRC_DIRS), $(wildcard $(var)/*.cpp)))
 OBJ_FILES := $(patsubst %.cpp, $(OBJ_DIR)/%.o, $(notdir $(SRC_FILES)))
 DEP_FILES = $(OBJ_FILES:.o=.d)
 
 
 INC = -I. -Ipc/ -Isrc/ -Ilibs/mbedtls/ -Ilibs/mbedtls/mbedtls/crypto/include/\
-	-Ilibs/spiffs/ -Ilibs/spiffs/spiffs/src/
+    -Ilibs/spiffs/ -Ilibs/spiffs/spiffs/src/ -Ilibs/stm32fs/
 
 CPPFLAGS = -std=c++17 -Os -Wall -g3 $(INC)
 LDFLAGS = -Wl,-Bdynamic -lpthread
