@@ -21,7 +21,7 @@
 
 #include "stm32fs.h"
 
-static Stm32fs fs;
+static Stm32fs *fs = nullptr;
 
 void sprintfs();
 
@@ -34,56 +34,70 @@ void hw_stm32fs_init() {
     cfg.fnWriteFlash = [](uint32_t address, uint8_t *data, size_t len){flash_write_ex(address, data, len);return true;};
     cfg.fnReadFlash = [](uint32_t address, uint8_t *data, size_t len){memcpy(data, (uint8_t *)address, len);return true;};
 
-    fs = Stm32fs(cfg);
+    static Stm32fs xfs = Stm32fs(cfg);
+    fs = &xfs;
     // TODO: check if it needs to call optimize...
-    if (fs.isValid())
-        printf_device("stm32fs [%d] OK.\n", fs.GetCurrentFsBlockSerial());
-    else
+    if (fs->isValid()) {
+        sprintfs();
+        printf_device("stm32fs [%d] OK.\n", fs->GetCurrentFsBlockSerial());
+    } else {
         printf_device("stm32fs error\n");
+    }
 }
 
 int hwinit() {
-device_led(COLOR_BLUE);
     hw_stm32fs_init();
-device_led(COLOR_GREEN);
 
 	return 0;
 }
 
 bool fileexist(char* name) {
-    return fs.FileExist(name);
+    if (!fs)
+        return false;
+    return fs->FileExist(std::string_view(name));
 }
 
 int readfile(char* name, uint8_t * buf, size_t max_size, size_t *size) {
-    return fs.ReadFile(name, buf, size, max_size);
+    if (!fs) {
+        printf("__read %s %d\n", name, max_size);
+        return 1;
+    }
+
+    return fs->ReadFile(std::string_view(name), buf, size, 0) ? 0 : 1;
 }
 
 int writefile(char* name, uint8_t * buf, size_t size) {
-    return fs.WriteFile(name, buf, size);
+    if (!fs)
+        return 1;
+    return fs->WriteFile(std::string_view(name), buf, size) ? 0 : 1;
 }
 
 int deletefile(char* name) {
-    return fs.DeleteFile(name);
+    if (!fs)
+        return 1;
+    return fs->DeleteFile(std::string_view(name)) ? 0 : 1;
 }
 
 void sprintfs() {
     printf_device("Memory total: %d free: %d free descriptors: %d\n",
-                  fs.GetSize(), fs.GetFreeMemory(), fs.GetFreeFileDescriptors());
+                  fs->GetSize(), fs->GetFreeMemory(), fs->GetFreeFileDescriptors());
 
     Stm32File_t filerec;
     Stm32File_t *rc = nullptr;
 
-    rc = fs.FindFirst("*", &filerec);
+    rc = fs->FindFirst("*", &filerec);
     while (rc != nullptr) {
-        printf_device("  [%4d] %s\n", rc->FileSize, rc->FileName);
-        rc = fs.FindNext(rc);
+        printf_device("  [%4d] %.*s\n", rc->FileSize, rc->FileName.size(), rc->FileNameChr);
+        rc = fs->FindNext(rc);
     }
 
 	return;
 }
 
 int deletefiles(char* name_filter) {
-    return fs.DeleteFiles(name_filter);
+    if (!fs)
+        return 1;
+    return fs->DeleteFiles(std::string_view(name_filter)) ? 0 : 1;
 }
 
 int hw_reset_fs_and_reboot(bool reboot) {
