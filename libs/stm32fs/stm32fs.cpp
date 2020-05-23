@@ -29,7 +29,7 @@ Stm32fsConfigBlock_t *Stm32fsFlash::Init(Stm32fsConfig_t *config) {
 
     if (FsConfig == nullptr)
         return nullptr;
-    
+
     if (FsConfig->Blocks.size() == 0)
         return nullptr;
 
@@ -39,7 +39,7 @@ Stm32fsConfigBlock_t *Stm32fsFlash::Init(Stm32fsConfig_t *config) {
     }
 
     auto blk = SearchLastFsBlockInFlash();
-    
+
     if (blk == nullptr) {
         blk = &FsConfig->Blocks[0];
         SetCurrentFsBlock(blk);
@@ -47,9 +47,9 @@ Stm32fsConfigBlock_t *Stm32fsFlash::Init(Stm32fsConfig_t *config) {
             return nullptr;        
         }
     }
-    
+
     SetCurrentFsBlock(blk);
-    
+
     return blk;
 }
 
@@ -139,11 +139,12 @@ bool Stm32fsFlash::AddressInFlash(uint32_t address, size_t length, bool searchAl
 }
 
 bool Stm32fsFlash::EraseFlashBlock(uint8_t blockNo) {
+    printf("--erase  flash %d\n", blockNo);
     return FsConfig->fnEraseFlashBlock(blockNo);
 }
 
 bool Stm32fsFlash::isFlashEmpty(uint32_t address, size_t length, bool reverse, uint32_t *exceptAddr) {
-    if(exceptAddr)
+    if(exceptAddr != nullptr)
         *exceptAddr = 0;
     
     // address - start of flash block
@@ -156,7 +157,7 @@ bool Stm32fsFlash::isFlashEmpty(uint32_t address, size_t length, bool reverse, u
     
     if (!AddressInFlash(addr, len, true))
         return false;
-    
+
     uint8_t *data = (uint8_t *)(FsConfig->BaseBlockAddress + addr);
     
     if (!reverse) {
@@ -169,7 +170,7 @@ bool Stm32fsFlash::isFlashEmpty(uint32_t address, size_t length, bool reverse, u
     } else {
         for (int i = len - 1; i >= 0; i--)
             if (data[i] != 0xffU) {
-                if (exceptAddr)
+                if (exceptAddr != nullptr)
                     *exceptAddr = addr + i;
                 return false;
             }
@@ -185,12 +186,14 @@ bool Stm32fsFlash::isFlashBlockEmpty(uint8_t blockNo) {
 bool Stm32fsFlash::WriteFlash(uint32_t address, uint8_t *data, size_t length) {
     if (!AddressInFlash(address, length, true))
         return false;
+    printf("--write flash %d %d\n", address, length);
     return FsConfig->fnWriteFlash(address, data, length);
 }
 
 bool Stm32fsFlash::ReadFlash(uint32_t address, uint8_t *data, size_t length) {
     if (!AddressInFlash(address, length, true))
         return false;
+    printf("--read flash %d %d\n", address, length);
     return FsConfig->fnReadFlash(address, data, length);
 }
 
@@ -243,21 +246,20 @@ bool Stm32fsFlash::GetFsHeader(Stm32fsConfigBlock_t &config, Stm32FSHeader_t &he
 
 uint32_t Stm32fsFlash::GetFsSerial(Stm32fsConfigBlock_t &config) {
     Stm32FSHeader_t header;
-    
+
     if (GetFsHeader(config, header))
         return header.HeaderStart.Serial;
-    
+
     return 0;
 }
-
 
 bool Stm32fsFlash::CreateFsBlock(Stm32fsConfigBlock_t &blockCfg, uint32_t serial) {
     if (!EraseFs(blockCfg))
         return false;
-    
-    Stm32FSHeader_t header = {0};
+
+    Stm32FSHeader_t header = {{0,0,0},{0,0,0}};
     FillFsHeader(header, serial);
-    
+
     return WriteFlash(GetBlockAddress(blockCfg.HeaderSectors[0]), (uint8_t *)&header, sizeof(header));
 }
 
@@ -397,7 +399,7 @@ Stm32FSFileHeader Stm32fs::SearchFileHeader(std::string_view fileName) {
 }
 
 Stm32FSFileVersion Stm32fs::SearchFileVersion(uint16_t fileID) {
-    Stm32FSFileVersion fver = {0};
+    Stm32FSFileVersion fver = {0,0,0,0,0,0};
     fver.FileState = fsEmpty;
     
     if (fileID == 0)
@@ -536,7 +538,7 @@ Stm32fs::Stm32fs(Stm32fsConfig_t config) {
     NeedsOptimization = false;
     CurrentFsBlock = nullptr;
     FsConfig = config;
-    
+
     CurrentFsBlock = flash.Init(&FsConfig);
     if (CurrentFsBlock == nullptr)
         return;

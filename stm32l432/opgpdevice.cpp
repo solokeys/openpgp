@@ -105,23 +105,25 @@ void hw_spiffs_mount() {
 
 void hw_stm32fs_init() {
     static Stm32fsConfig_t cfg;
-    cfg.BaseBlockAddress = OPENPGP_START_PAGE_ADDR;
+    cfg.BaseBlockAddress = 0;
     cfg.SectorSize = BLOCK_SIZE;
     cfg.Blocks = {{{OPENPGP_START_PAGE}, {OPENPGP_START_PAGE + 1, OPENPGP_START_PAGE + 2, OPENPGP_START_PAGE + 3}}};
-    cfg.fnEraseFlashBlock = [](uint8_t blockNo){std::memset(&vmem[SECTOR_SIZE * blockNo], 0xff, SECTOR_SIZE);return true;};
-    cfg.fnWriteFlash = [](uint32_t address, uint8_t *data, size_t len){std::memcpy(&vmem[address], data, len);return true;};
-    cfg.fnReadFlash = [](uint32_t address, uint8_t *data, size_t len){std::memcpy(data, &vmem[address], len);return true;};
+    cfg.fnEraseFlashBlock = [](uint8_t blockNo){flash_erase_page(blockNo);return true;};
+    cfg.fnWriteFlash = [](uint32_t address, uint8_t *data, size_t len){flash_write_ex(address, data, len);return true;};
+    cfg.fnReadFlash = [](uint32_t address, uint8_t *data, size_t len){memcpy(data, (u8_t *)address, len);return true;};
 
     Stm32fs fs{cfg};
     if (fs.isValid())
-        printf_device("stm32fs OK.\n");
+        printf_device("stm32fs [%d] OK.\n", fs.GetCurrentFsBlockSerial());
     else
         printf_device("stm32fs error\n");
 }
 
 int hwinit() {
 	hw_spiffs_mount();
-  hw_stm32fs_init();
+device_led(COLOR_BLUE);
+    hw_stm32fs_init();
+device_led(COLOR_GREEN);
 
 	return 0;
 }
