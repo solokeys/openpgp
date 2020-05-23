@@ -134,7 +134,7 @@ bool Stm32fsFlash::AddressInFlash(uint32_t address, size_t length, bool searchAl
         
     }
     
-    printf("out of memory!!! adr=%d len=%zd\n", address, length);
+    printf("out of memory!!! adr=%ld len=%zd\n", address, length);
     return false;
 }
 

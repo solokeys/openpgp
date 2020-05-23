@@ -257,4 +257,9 @@ public:
     bool OptimizeMultiblock(Stm32fsConfigBlock_t &inputBlock, Stm32fsConfigBlock_t &outputBlock);
 };
 
+template<typename T>
+size_t strnlen(const T* s, size_t max_len) {
+    return std::find(s, s + max_len, 0) - s;
+}
+
 #endif  // SRC_STM32FS_H_
