@@ -13,4 +13,4 @@ void stop_and_show_error() {
     while (true);
 }
 
-void std::__throw_out_of_range_fmt(char const*, ...) {stop_and_show_error();};
+//void std::__throw_out_of_range_fmt(char const*, ...) {stop_and_show_error();};
