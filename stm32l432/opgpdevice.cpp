@@ -45,8 +45,10 @@ void hw_stm32fs_init() {
         printf_device("stm32fs error\n");
     }
 
-    // TODO: check if it needs to call optimize...
-    if (true) {
+    // check if it needs to call optimize...
+    Stm32fsStatistic stat = fs->GetStatistic();
+    stat.Print();
+    if (stat.OptimizationNeeded()) {
         bool res = fs->Optimize();
         printf_device("stm32fs optimization %s\n", res ? "OK" : "ERROR");
     }

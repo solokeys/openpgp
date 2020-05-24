@@ -393,8 +393,32 @@ Stm32FSFileHeader Stm32fs::SearchFileHeader(std::string_view fileName) {
     return header;
 }
 
+Stm32FSFileHeader Stm32fs::SearchFileHeaderByID(uint16_t fileId) {
+    Stm32FSFileHeader header;
+    header.FileState = fsEmpty;
+
+    if (fileId == 0)
+        return header;
+
+    Stm32FSFileRecord filerec;
+    uint32_t addr = GetFirstHeader(filerec);
+
+    while(true) {
+        if (addr == 0)
+            break;
+
+        if (filerec.header.FileState == fsFileHeader && filerec.header.FileID == fileId)
+            return filerec.header;
+
+        addr = GetNextHeader(addr, filerec);
+    }
+
+
+    return header;
+}
+
 Stm32FSFileVersion Stm32fs::SearchFileVersion(uint16_t fileID) {
-    Stm32FSFileVersion fver = {0,0,0,0,0,0};
+    Stm32FSFileVersion fver = {};
     fver.FileState = fsEmpty;
     
     if (fileID == 0)
@@ -600,6 +624,94 @@ uint32_t Stm32fs::GetFreeFileDescriptors() {
     }
 
     return (CurrentFsBlock->HeaderSectors.size() * BlockSize - size) / 16;
+}
+
+Stm32fsStatistic Stm32fs::GetStatistic() {
+    Stm32fsConfigBlock_t *block = CurrentFsBlock;
+    Stm32fsStatistic stat = {};
+    stat.Valid = false;
+    if (!CheckValid())
+        return stat;
+
+    stat.HeaderSize = block->HeaderSectors.size() * BlockSize;
+    stat.DataSize = block->DataSectors.size() * BlockSize;
+
+    Stm32fsStatFileState StatIndex[stat.HeaderSize / 16];
+    std::memset(StatIndex, 0x00, sizeof(StatIndex));
+
+    size_t StatIndexId = 0;
+    StatIndex[StatIndexId] = Stm32fsStatFileState::Header;
+    StatIndexId++;
+
+    uint32_t addr = GetFirstHeaderAddress();
+
+    Stm32FSFileRecord filerec;
+    while(StatIndexId < sizeof(StatIndex)) {
+        if (addr == 0)
+            break;
+
+        if(!flash.ReadFlash(addr, (uint8_t *)&filerec, sizeof(filerec)))
+            break;
+
+        if (filerec.header.FileState == fsEmpty)
+            StatIndex[StatIndexId] = Stm32fsStatFileState::Free;
+
+        if (filerec.header.FileState == fsDeleted)
+            StatIndex[StatIndexId] = Stm32fsStatFileState::DeletedFileVersion;
+
+        if (filerec.header.FileState == fsFileHeader) {
+            Stm32FSFileVersion ver = SearchFileVersion(filerec.header.FileID);
+            if (ver.FileState == fsFileVersion)
+                StatIndex[StatIndexId] = Stm32fsStatFileState::FileName;
+            else
+                StatIndex[StatIndexId] = Stm32fsStatFileState::DeletedFileName;
+        }
+
+        if (filerec.version.FileState == fsFileVersion) {
+            Stm32FSFileVersion ver = SearchFileVersion(filerec.header.FileID);
+            if (ver.FileState == fsFileVersion && ver.FileAddress == filerec.version.FileAddress)
+                StatIndex[StatIndexId] = Stm32fsStatFileState::FileVersion;
+            else {
+                StatIndex[StatIndexId] = Stm32fsStatFileState::DeletedFileVersion;
+                size_t sz = ver.FileSize;
+                // if address is aligned - maybe the next next address should be aligned too
+                if (ver.FileAddress % 8 == 0)
+                    sz = sz + (8 - sz % 8);
+
+                stat.DataDeletedSize += sz;
+            }
+        }
+
+        addr = GetNextHeaderAddress(addr);
+        StatIndexId++;
+    }
+
+    for (auto &val : StatIndex) {
+        switch (val) {
+        case Stm32fsStatFileState::Free:
+            stat.HeaderFreeDescriptors++;
+            break;
+        case Stm32fsStatFileState::FileName:
+            stat.HeaderFileDescriptors++;
+            break;
+        case Stm32fsStatFileState::FileVersion:
+            stat.HeaderVersionDescriptors++;
+            break;
+        case Stm32fsStatFileState::DeletedFileName:
+            stat.HeaderDeletedFileDescriptors++;
+            break;
+        case Stm32fsStatFileState::DeletedFileVersion:
+            stat.HeaderDeletedVersionDescriptors++;
+            break;
+        default:
+            stat.HeaderSystemDescriptors++;
+        }
+    }
+
+    stat.HeaderFreeSize = stat.HeaderFreeDescriptors * FileHeaderSize;
+
+    stat.Valid = true;
+    return stat;
 }
 
 bool Stm32fs::FileExist(std::string_view fileName) {
@@ -1268,4 +1380,14 @@ bool Stm32fsOptimizer::OptimizeViaRam(Stm32fsConfigBlock_t &block) {
         return false;
 
     return true;
+}
+
+void Stm32fsStatistic::Print() {
+    printf("---- stm32fs statistic ----\n");
+    printf("Header size: %d free: %d bytes\n", HeaderSize, HeaderFreeSize);
+    printf("Descriptors free: %d sys: %d file: %d version: %d del file: %d del version %d\n",
+           HeaderFreeDescriptors, HeaderSystemDescriptors,
+           HeaderFileDescriptors, HeaderVersionDescriptors,
+           HeaderDeletedFileDescriptors, HeaderDeletedVersionDescriptors);
+    printf("Data size: %d free: %d bytes\n", DataSize, DataFreeSize);
 }

@@ -98,6 +98,46 @@ struct Stm32fsConfig_t {
     std::function<bool (uint32_t, uint8_t*, size_t)> fnReadFlash;  // address, data, length
 };
 
+enum class Stm32fsStatFileState {
+    None = 0,
+    Header,
+    FileName,
+    FileVersion,
+    DeletedFileName,
+    DeletedFileVersion,
+    Free
+};
+
+struct Stm32fsStatistic {
+    bool Valid = false;
+
+    size_t HeaderSize;
+    size_t HeaderFreeSize;
+    size_t HeaderSystemDescriptors;
+    size_t HeaderFreeDescriptors;
+    size_t HeaderFileDescriptors;
+    size_t HeaderVersionDescriptors;
+    size_t HeaderDeletedFileDescriptors;
+    size_t HeaderDeletedVersionDescriptors;
+
+    size_t DataSize;
+    size_t DataFreeSize;
+    size_t DataDeletedSize;
+
+    bool OptimizationNeeded(){
+        if (!Valid)
+            return false;
+        if (HeaderDeletedFileDescriptors + HeaderDeletedVersionDescriptors > 0) {
+            if (HeaderDeletedFileDescriptors + HeaderDeletedVersionDescriptors > HeaderSize / BlockSize / 2)
+                return true;
+            if (HeaderFreeSize < HeaderSize * 0.4)
+                return true;
+        };
+        return false;
+    };
+    void Print();
+};
+
 class Stm32fsFlash {
 private:
     Stm32fsConfig_t *FsConfig;
@@ -145,7 +185,7 @@ private:
     bool NeedsOptimization;
     
     Stm32fsFlash flash;
-    
+
     bool CheckValid();
     uint32_t GetFirstHeaderAddress();
     uint32_t GetNextHeaderAddress(uint32_t previousAddress);
@@ -153,6 +193,7 @@ private:
     uint32_t GetNextHeader(uint32_t previousAddress, Stm32FSFileRecord &header);
     
     Stm32FSFileHeader SearchFileHeader(std::string_view fileName);
+    Stm32FSFileHeader SearchFileHeaderByID(uint16_t fileId);
     Stm32FSFileVersion SearchFileVersion(uint16_t fileID);
     Stm32FSFileHeader AppendFileHeader(std::string_view fileName);
     bool AppendFileVersion(Stm32FSFileVersion &version);
@@ -170,7 +211,8 @@ public:
     uint32_t GetSize();
     uint32_t GetFreeMemory();
     uint32_t GetFreeFileDescriptors();
-    
+    Stm32fsStatistic GetStatistic();
+
     Stm32File_t *FindFirst(std::string_view fileFilter, Stm32File_t *filePtr);
     Stm32File_t *FindNext(Stm32File_t *filePtr);
 
