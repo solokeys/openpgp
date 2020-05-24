@@ -18,6 +18,7 @@
 #include "memory_layout.h"
 #include "device.h"
 #include "util.h"
+#include "opgputil.h"
 
 #include "stm32fs.h"
 
@@ -36,12 +37,18 @@ void hw_stm32fs_init() {
 
     static Stm32fs xfs = Stm32fs(cfg);
     fs = &xfs;
-    // TODO: check if it needs to call optimize...
+
     if (fs->isValid()) {
         sprintfs();
         printf_device("stm32fs [%d] OK.\n", fs->GetCurrentFsBlockSerial());
     } else {
         printf_device("stm32fs error\n");
+    }
+
+    // TODO: check if it needs to call optimize...
+    if (true) {
+        bool res = fs->Optimize();
+        printf_device("stm32fs optimization %s\n", res ? "OK" : "ERROR");
     }
 }
 
@@ -54,27 +61,32 @@ int hwinit() {
 bool fileexist(char* name) {
     if (!fs)
         return false;
+
     return fs->FileExist(std::string_view(name));
 }
 
 int readfile(char* name, uint8_t * buf, size_t max_size, size_t *size) {
     if (!fs) {
-        printf("__read %s %d\n", name, max_size);
+        printf("__error read %s %d\n", name, max_size);
         return 1;
     }
+    if (fs->GetCurrentFsBlockSerial() == 0) printf("ERROR fs!!!\n");
 
-    return fs->ReadFile(std::string_view(name), buf, size, 0) ? 0 : 1;
+    return fs->ReadFile(std::string_view(name), buf, size, max_size) ? 0 : 1;
 }
 
 int writefile(char* name, uint8_t * buf, size_t size) {
     if (!fs)
         return 1;
+    if (fs->GetCurrentFsBlockSerial() == 0) printf("ERROR fs!!!\n");
+
     return fs->WriteFile(std::string_view(name), buf, size) ? 0 : 1;
 }
 
 int deletefile(char* name) {
     if (!fs)
         return 1;
+
     return fs->DeleteFile(std::string_view(name)) ? 0 : 1;
 }
 
@@ -97,6 +109,7 @@ void sprintfs() {
 int deletefiles(char* name_filter) {
     if (!fs)
         return 1;
+
     return fs->DeleteFiles(std::string_view(name_filter)) ? 0 : 1;
 }
 

@@ -303,7 +303,7 @@ bool FileSystem::isTagComposite(Util::tag_t tag) {
 	return false;
 }
 
-Util::Error FileSystem::ReadFile(AppID_t AppId, KeyID_t FileID,
+OPTIMIZATION_O2 Util::Error FileSystem::ReadFile(AppID_t AppId, KeyID_t FileID,
 		FileType FileType, bstr& data) {
 
 	data.clear();

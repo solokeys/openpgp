@@ -87,7 +87,6 @@ bool Stm32fsFlash::FindBlockInConfigBlock(Stm32fsConfigBlock_t &block, uint32_t 
     return false;
 }
 
-
 bool Stm32fsFlash::FindBlockInCfg(std::vector<Stm32fsConfigBlock_t> blocks, uint32_t sectorNo) {
     for (auto &block : blocks) {
         if (FindBlockInConfigBlock(block, sectorNo))
@@ -95,7 +94,6 @@ bool Stm32fsFlash::FindBlockInCfg(std::vector<Stm32fsConfigBlock_t> blocks, uint
     }
     return false;
 }
-
 
 bool Stm32fsFlash::AddressInFlash(uint32_t address, size_t length, bool searchAllBlocks) {
     if (CurrentFsBlock != nullptr) {
@@ -266,7 +264,7 @@ Stm32fsConfigBlock_t *Stm32fsFlash::SearchLastFsBlockInFlash() {
             xblock = &block;
         }
     }
-    
+
     return xblock;
 }
 
@@ -426,7 +424,7 @@ Stm32FSFileHeader Stm32fs::AppendFileHeader(std::string_view fileName) {
     
     uint16_t fileID = 0;
     uint32_t addr = GetFirstHeaderAddress();
-    
+
     Stm32FSFileRecord filerec;
     while(true) {
         if (addr == 0)
@@ -1268,6 +1266,6 @@ bool Stm32fsOptimizer::OptimizeViaRam(Stm32fsConfigBlock_t &block) {
 
     if (!fileList.Write(cache))
         return false;
-    
+
     return true;
 }
