@@ -11,57 +11,61 @@
 
 namespace Factory {
 
-PUT_TO_SRAM2 static SoloFactory soloFactory;
-
 using namespace Crypto;
 using namespace Applet;
 using namespace OpenPGP;
 using namespace File;
 
-PUT_TO_SRAM2 OpenPGPFactory openPGPFactory;
-
-PUT_TO_SRAM2 AppletStorage appletStorage;
-PUT_TO_SRAM2 APDUExecutor apduExecutor;
-
-PUT_TO_SRAM2 CryptoEngine cryptoEngine;
-
-PUT_TO_SRAM2 FileSystem fileSystem;
-
 SoloFactory &SoloFactory::GetSoloFactory() {
+    PUT_TO_SRAM2 static SoloFactory soloFactory;
 	return soloFactory;
 }
 
+SoloFactory::SoloFactory() {
+}
+
 Util::Error SoloFactory::Init() {
+    static PUT_TO_SRAM2 OpenPGPFactory sopenPGPFactory;
+    static PUT_TO_SRAM2 AppletStorage sappletStorage;
+    static PUT_TO_SRAM2 APDUExecutor sapduExecutor;
+    static PUT_TO_SRAM2 CryptoEngine scryptoEngine;
+    static PUT_TO_SRAM2 FileSystem sfileSystem;
+
+    openPGPFactory = &sopenPGPFactory;
+    appletStorage = &sappletStorage;
+    apduExecutor = &sapduExecutor;
+    cryptoEngine = &scryptoEngine;
+    fileSystem = &sfileSystem;
 
 	return Util::NoError;
 }
 
 APDUExecutor& Factory::SoloFactory::GetAPDUExecutor() {
-	return apduExecutor;
+    return *apduExecutor;
 }
 
 AppletStorage& SoloFactory::GetAppletStorage() {
-	return appletStorage;
+    return *appletStorage;
 }
 
 CryptoEngine& SoloFactory::GetCryptoEngine() {
-	return cryptoEngine;
+    return *cryptoEngine;
 }
 
 CryptoLib& SoloFactory::GetCryptoLib() {
-	return cryptoEngine.getCryptoLib();
+    return cryptoEngine->getCryptoLib();
 }
 
 KeyStorage& Factory::SoloFactory::GetKeyStorage() {
-	return cryptoEngine.getKeyStorage();
+    return cryptoEngine->getKeyStorage();
 }
 
 OpenPGPFactory& SoloFactory::GetOpenPGPFactory() {
-	return openPGPFactory;
+    return *openPGPFactory;
 }
 
 FileSystem& Factory::SoloFactory::GetFileSystem() {
-	return fileSystem;
+    return *fileSystem;
 }
 
 }

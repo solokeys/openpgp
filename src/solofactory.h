@@ -25,7 +25,15 @@ namespace Factory {
 	using namespace File;
 
 	class SoloFactory {
-	public:
+    private:
+        OpenPGPFactory *openPGPFactory;
+        AppletStorage *appletStorage;
+        APDUExecutor *apduExecutor;
+        CryptoEngine *cryptoEngine;
+        FileSystem *fileSystem;
+    public:
+        SoloFactory();
+
 		Util::Error Init();
 
 		APDUExecutor &GetAPDUExecutor();
