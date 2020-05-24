@@ -18,6 +18,7 @@ Install Python test tools to run Gnuk tests.
 
 ```
 sudo apt install python3-pytest python3-usb python3-cffi libmbedtls-dev linux-tools-common linux-tools-generic linux-cloud-tools-generic
+python -m pip install pycryptodome
 ```
 
 Build our `CCID/OpenPGP` application

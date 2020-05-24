@@ -23,6 +23,10 @@ Gnuk Token is supported as well.
 You need to install:
 
    `$ sudo apt install python3-pytest python3-usb python3-cffi`
+   
+and install crypto library
+
+   `python -m pip install pycryptodome`
 
 Please run test by typing:
 
