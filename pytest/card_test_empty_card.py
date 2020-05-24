@@ -38,8 +38,7 @@ def test_reset_card(card):
     card.cmd_activate_file()
 
     card.cmd_restart_card()
-    card.cmd_select_openpgp()
-    assert True
+    assert card.cmd_select_openpgp()
 
 def test_login(card):
     login = get_data_object(card, 0x5e)
