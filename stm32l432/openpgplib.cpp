@@ -12,6 +12,8 @@
 #include "solofactory.h"
 #include "applets/apduconst.h"
 
+#include "device.h"
+
 // result buffer
 PUT_TO_SRAM2 static uint8_t apdu_result[4096] = {0};
 
@@ -53,10 +55,10 @@ void OpenpgpInit() {
     Applet::APDUExecutor executor = factory.GetAPDUExecutor();
     fexecutor = &executor;
 
-	OpenPGP::OpenPGPFactory &opgp_factory = factory.GetOpenPGPFactory();
-	OpenPGP::Security &security = opgp_factory.GetSecurity();
+    OpenPGP::OpenPGPFactory &opgp_factory = factory.GetOpenPGPFactory();
+    OpenPGP::Security &security = opgp_factory.GetSecurity();
     fsecurity = &security;    
     printf_device("OpenPGP init: ok.\n");
-    
+
     return;
 }
