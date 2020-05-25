@@ -635,6 +635,7 @@ Stm32fsStatistic Stm32fs::GetStatistic() {
 
     stat.HeaderSize = block->HeaderSectors.size() * BlockSize;
     stat.DataSize = block->DataSectors.size() * BlockSize;
+    stat.DataFreeSize = GetFreeMemory();
 
     Stm32fsStatFileState StatIndex[stat.HeaderSize / 16];
     std::memset(StatIndex, 0x00, sizeof(StatIndex));
@@ -669,15 +670,18 @@ Stm32fsStatistic Stm32fs::GetStatistic() {
 
         if (filerec.version.FileState == fsFileVersion) {
             Stm32FSFileVersion ver = SearchFileVersion(filerec.header.FileID);
-            if (ver.FileState == fsFileVersion && ver.FileAddress == filerec.version.FileAddress)
-                StatIndex[StatIndexId] = Stm32fsStatFileState::FileVersion;
-            else {
-                StatIndex[StatIndexId] = Stm32fsStatFileState::DeletedFileVersion;
-                size_t sz = ver.FileSize;
-                // if address is aligned - maybe the next next address should be aligned too
-                if (ver.FileAddress % 8 == 0)
-                    sz = sz + (8 - sz % 8);
 
+            size_t sz = ver.FileSize;
+            // if address is aligned - maybe the size of file should be aligned too
+            if (ver.FileAddress % FlashPadding == 0)
+                if (sz % FlashPadding != 0)
+                    sz = sz + (FlashPadding - sz % FlashPadding);
+
+            if (ver.FileState == fsFileVersion && ver.FileAddress == filerec.version.FileAddress) {
+                StatIndex[StatIndexId] = Stm32fsStatFileState::FileVersion;
+                stat.DataOccupiedSize += sz;
+            } else {
+                StatIndex[StatIndexId] = Stm32fsStatFileState::DeletedFileVersion;
                 stat.DataDeletedSize += sz;
             }
         }
@@ -1389,5 +1393,7 @@ void Stm32fsStatistic::Print() {
            HeaderFreeDescriptors, HeaderSystemDescriptors,
            HeaderFileDescriptors, HeaderVersionDescriptors,
            HeaderDeletedFileDescriptors, HeaderDeletedVersionDescriptors);
-    printf("Data size: %d free: %d bytes\n", DataSize, DataFreeSize);
+    printf("Data size: %d free: %d occupied: %d deleted: %d delta: %d bytes\n",
+           DataSize, DataFreeSize, DataOccupiedSize, DataDeletedSize,
+           (int)DataSize - DataFreeSize - DataOccupiedSize - DataDeletedSize);
 }

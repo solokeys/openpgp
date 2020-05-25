@@ -122,6 +122,7 @@ struct Stm32fsStatistic {
 
     size_t DataSize;
     size_t DataFreeSize;
+    size_t DataOccupiedSize;
     size_t DataDeletedSize;
 
     bool OptimizationNeeded(){
