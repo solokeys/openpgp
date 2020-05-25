@@ -49,8 +49,10 @@ void hw_stm32fs_init() {
     Stm32fsStatistic stat = fs->GetStatistic();
     stat.Print();
     if (stat.OptimizationNeeded()) {
+        device_led(COLOR_RED);
         bool res = fs->Optimize();
         printf_device("stm32fs optimization %s\n", res ? "OK" : "ERROR");
+        device_led(COLOR_GREEN);
     }
 }
 
@@ -82,7 +84,20 @@ int writefile(char* name, uint8_t * buf, size_t size) {
         return 1;
     if (fs->GetCurrentFsBlockSerial() == 0) printf("ERROR fs!!!\n");
 
-    return fs->WriteFile(std::string_view(name), buf, size) ? 0 : 1;
+    bool res = fs->WriteFile(std::string_view(name), buf, size);
+
+    // maybe we need to optimize
+    if (!res && fs->isNeedsOptimization()) {
+        device_led(COLOR_RED);
+        res = fs->Optimize();
+        printf_device("stm32fs write optimization %s\n", res ? "OK" : "ERROR");
+        device_led(COLOR_GREEN);
+
+        // try again
+        if (res && fs->GetFreeMemory() >= size && fs->GetFreeFileDescriptors() > 0)
+            res = fs->WriteFile(std::string_view(name), buf, size);
+    }
+    return res ? 0 : 1;
 }
 
 int deletefile(char* name) {
