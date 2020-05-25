@@ -9,11 +9,12 @@
 
 #include "cryptolib.h"
 
-#include <mbedtls/config.h>
+/*#include <mbedtls/config.h>
 #include <mbedtls/rsa.h>
 #include <mbedtls/aes.h>
 #include "mbedtls/ecdh.h"
 #include "mbedtls/platform.h"
+*/
 
 #include <string.h>
 #include <stdlib.h>
@@ -44,15 +45,9 @@ void CryptoLib::ClearKeyBuffer() {
 	KeyBuffer.clear();
 }
 
-
 Util::Error CryptoLib::GenerateRandom(size_t length, bstr& dataOut) {
 	if (length > dataOut.max_size())
 		return Util::Error::OutOfMemory;
-
-	//mbedtls_havege_state state;
-	//mbedtls_havege_init(&state);
-	//mbedtls_havege_random(nullptr, dataOut.uint8Data(), length);
-	//mbedtls_havege_free(&state);
 
     gen_random_device(dataOut.uint8Data(), length);
 	dataOut.set_length(length);
@@ -63,52 +58,37 @@ Util::Error CryptoLib::GenerateRandom(size_t length, bstr& dataOut) {
 Util::Error CryptoLib::AESEncrypt(bstr key, bstr dataIn,
 		bstr& dataOut) {
 	dataOut.clear();
-	uint8_t iv[64] = {0};
 
-	mbedtls_aes_context aes;
-	mbedtls_aes_init(&aes);
-	if (mbedtls_aes_setkey_enc(&aes, key.uint8Data(), key.length() * 8))
-		return Util::Error::StoredKeyError;
-	if (mbedtls_aes_crypt_cbc(&aes, MBEDTLS_AES_ENCRYPT, dataIn.length(), iv, dataIn.uint8Data(), dataOut.uint8Data()))
-		return Util::Error::CryptoOperationError;
-	mbedtls_aes_free(&aes);
 
-	dataOut.set_length(dataIn.length());
-	return Util::Error::NoError;
+
+    return Util::Error::NoError;
 }
 
 Util::Error CryptoLib::AESDecrypt(bstr key, bstr dataIn,
 		bstr& dataOut) {
 	dataOut.clear();
-	uint8_t iv[64] = {0};
+    //uint8_t iv[64] = {0};
 
-	mbedtls_aes_context aes;
-	mbedtls_aes_init(&aes);
-	if (mbedtls_aes_setkey_dec(&aes, key.uint8Data(), key.length() * 8))
-		return Util::Error::StoredKeyError;
-	if (mbedtls_aes_crypt_cbc(&aes, MBEDTLS_AES_DECRYPT, dataIn.length(), iv, dataIn.uint8Data(), dataOut.uint8Data()))
-		return Util::Error::CryptoOperationError;
-	mbedtls_aes_free(&aes);
 
-	dataOut.set_length(dataIn.length());
-	return Util::Error::NoError;
+
+    return Util::Error::NoError;
 }
-
+/*
 Util::Error CryptoLib::AppendKeyPart(bstr &buffer, bstr &keypart, mbedtls_mpi *mpi) {
-	size_t mpi_len = mbedtls_mpi_size(mpi);
+    size_t mpi_len = mbedtls_mpi_size(mpi);
 	if (mpi_len > 0) {
 		if (mbedtls_mpi_write_binary(mpi, buffer.uint8Data() + buffer.length(), mpi_len))
 			return Util::Error::CryptoDataError;
 
 		keypart = bstr(buffer.uint8Data() + buffer.length(), mpi_len);
 		buffer.set_length(buffer.length() + mpi_len);
-	}
+    }
 	return Util::Error::NoError;
 }
 
 Util::Error CryptoLib::AppendKeyPartEcpPoint(bstr &buffer, bstr &keypart,  mbedtls_ecp_group *grp, mbedtls_ecp_point  *point) {
-	size_t mpi_len = 0;
-	if (mbedtls_ecp_point_write_binary(
+    size_t mpi_len = 0;
+    if (mbedtls_ecp_point_write_binary(
 			grp,
 			point,
 			MBEDTLS_ECP_PF_UNCOMPRESSED,
@@ -122,67 +102,25 @@ Util::Error CryptoLib::AppendKeyPartEcpPoint(bstr &buffer, bstr &keypart,  mbedt
 
 	return Util::Error::NoError;
 }
-
+*/
 Util::Error CryptoLib::RSAGenKey(RSAKey& keyOut, size_t keySize) {
 
 	Util::Error ret = Util::Error::NoError;
 	ClearKeyBuffer();
 
-	mbedtls_rsa_context rsa;
-	mbedtls_mpi N, P, Q, D, E;
 
-	mbedtls_rsa_init(&rsa, MBEDTLS_RSA_PKCS_V15, 0);
-    mbedtls_mpi_init(&N);
-    mbedtls_mpi_init(&P);
-    mbedtls_mpi_init(&Q);
-    mbedtls_mpi_init(&D);
-    mbedtls_mpi_init(&E);
 
-	while (true) {
-		// OpenPGP 3.3.1 pages 33,34
-		if (mbedtls_rsa_gen_key(&rsa, &gen_random_device_callback, NULL, keySize, 65537)) {
-			ret = Util::Error::CryptoOperationError;
-			break;
-		}
 
-        // crt: mbedtls_rsa_export_crt(&rsa, &DP, &DQ, &QP)
-	    if (mbedtls_rsa_export(&rsa, &N, &P, &Q, &D, &E)) {
-			ret = Util::Error::CryptoOperationError;
-			break;
-	    }
-
-	    KeyBuffer.clear();
-
-	    AppendKeyPart(KeyBuffer, keyOut.Exp, &E);
-	    AppendKeyPart(KeyBuffer, keyOut.P, &P);
-	    AppendKeyPart(KeyBuffer, keyOut.Q, &Q);
-	    AppendKeyPart(KeyBuffer, keyOut.N, &N);
-
-		// check
-		if (keyOut.P.length() == 0 || keyOut.Q.length() == 0 || keyOut.Exp.length() == 0) {
-			ret = Util::Error::CryptoDataError;
-			break;
-		}
-
-		break;
-	}
-
-    mbedtls_mpi_free(&N);
-    mbedtls_mpi_free(&P);
-    mbedtls_mpi_free(&Q);
-    mbedtls_mpi_free(&D);
-    mbedtls_mpi_free(&E);
-	mbedtls_rsa_free(&rsa);
 
 	return ret;
 }
-
+/*
 Util::Error CryptoLib::RSAFillPrivateKey(mbedtls_rsa_context *context,
 		RSAKey key) {
 
 	Util::Error ret = Util::Error::NoError;
 
-	mbedtls_mpi N, P, Q, E;
+    mbedtls_mpi N, P, Q, E;
 
 	mbedtls_mpi_init(&N);
 	mbedtls_mpi_init(&P);
@@ -240,12 +178,12 @@ Util::Error CryptoLib::RSAFillPrivateKey(mbedtls_rsa_context *context,
 
 	return ret;
 }
-
+*/
 Util::Error CryptoLib::RSASign(RSAKey key, bstr data, bstr& signature) {
 
 	Util::Error ret = Util::Error::NoError;
 
-	if (key.P.length() == 0 ||
+/*	if (key.P.length() == 0 ||
 		key.Q.length() == 0 ||
 		key.Exp.length() == 0
 		)
@@ -289,14 +227,14 @@ Util::Error CryptoLib::RSASign(RSAKey key, bstr data, bstr& signature) {
 	}
 
 	mbedtls_rsa_free(&rsa);
-
+*/
 	return ret;
 }
 
 Util::Error CryptoLib::RSADecipher(RSAKey key, bstr data, bstr &dataOut) {
 	Util::Error ret = Util::Error::NoError;
 
-	if (key.P.length() == 0 ||
+    /*if (key.P.length() == 0 ||
 		key.Q.length() == 0 ||
 		key.Exp.length() == 0
 		)
@@ -351,7 +289,7 @@ Util::Error CryptoLib::RSADecipher(RSAKey key, bstr data, bstr &dataOut) {
 	}
 
 	dataOut.del(0, ptr + 1);
-
+*/
 	return ret;
 }
 
@@ -359,7 +297,7 @@ Util::Error CryptoLib::RSAVerify(bstr publicKey, bstr data, bstr signature) {
 	return Util::Error::InternalError;
 }
 
-static int ecdsa_init(mbedtls_ecdsa_context *ctx, mbedtls_ecp_group_id curveID, bstr *key_d, bstr *key_xy) {
+/*static int ecdsa_init(mbedtls_ecdsa_context *ctx, mbedtls_ecp_group_id curveID, bstr *key_d, bstr *key_xy) {
 	if (!ctx)
 		return 1;
 
@@ -385,12 +323,13 @@ static int ecdsa_init(mbedtls_ecdsa_context *ctx, mbedtls_ecp_group_id curveID, 
 
 	return 0;
 };
-
+*/
 Util::Error CryptoLib::ECDSAGenKey(ECDSAaid curveID, ECDSAKey& keyOut) {
 	ClearKeyBuffer();
 	keyOut.clear();
+    Util::Error err = Util::Error::InternalError;
 
-	if (curveID == ECDSAaid::none)
+    /*if (curveID == ECDSAaid::none)
 		return  Util::Error::StoredKeyParamsError;
 
 	mbedtls_ecdsa_context ctx;
@@ -416,7 +355,7 @@ Util::Error CryptoLib::ECDSAGenKey(ECDSAaid curveID, ECDSAKey& keyOut) {
 		break;
 	}
 
-	mbedtls_ecdsa_free(&ctx);
+    mbedtls_ecdsa_free(&ctx);*/
 	return err;
 
 }
@@ -424,6 +363,8 @@ Util::Error CryptoLib::ECDSAGenKey(ECDSAaid curveID, ECDSAKey& keyOut) {
 Util::Error CryptoLib::ECDSASign(ECDSAKey key, bstr data, bstr& signature) {
 	signature.clear();
 
+    Util::Error ret = Util::Error::InternalError;
+/*
 	mbedtls_mpi r, s;
 	mbedtls_ecdsa_context ctx;
 
@@ -485,14 +426,14 @@ Util::Error CryptoLib::ECDSASign(ECDSAKey key, bstr data, bstr& signature) {
 
 	mbedtls_ecdsa_free(&ctx);
 	mbedtls_mpi_free(&r);
-	mbedtls_mpi_free(&s);
+    mbedtls_mpi_free(&s);*/
 	return ret;
 }
 
 Util::Error CryptoLib::RSACalcPublicKey(bstr strP, bstr strQ, bstr &strN) {
 	Util::Error ret = Util::Error::NoError;
 
-	mbedtls_rsa_context rsa;
+    /*mbedtls_rsa_context rsa;
 	mbedtls_mpi N, P, Q;
 
 	mbedtls_rsa_init(&rsa, MBEDTLS_RSA_PKCS_V15, 0);
@@ -529,13 +470,13 @@ Util::Error CryptoLib::RSACalcPublicKey(bstr strP, bstr strQ, bstr &strN) {
 	mbedtls_mpi_free(&N);
 	mbedtls_mpi_free(&P);
 	mbedtls_mpi_free(&Q);
-
+*/
 	return ret;
 }
 
 Util::Error CryptoLib::ECDSACalcPublicKey(ECDSAaid curveID, bstr privateKey, bstr &publicKey) {
 	Util::Error ret = Util::Error::NoError;
-
+/*
 	mbedtls_ecdsa_context ctx;
 	while (true) {
 		if (ecdsa_init(&ctx, MbedtlsCurvefromAid(curveID), &privateKey, NULL)) {
@@ -570,7 +511,7 @@ Util::Error CryptoLib::ECDSACalcPublicKey(ECDSAaid curveID, bstr privateKey, bst
 		break;
 	}
 
-	mbedtls_ecdsa_free(&ctx);
+    mbedtls_ecdsa_free(&ctx);*/
 	return ret;
 }
 
@@ -582,7 +523,8 @@ Util::Error CryptoLib::ECDSAVerify(ECDSAKey key, bstr data,
 Util::Error CryptoLib::ECDHComputeShared(ECDSAKey key, bstr anotherPublicKey, bstr &sharedSecret) {
 
 	sharedSecret.clear();
-
+    Util::Error ret = Util::Error::InternalError;
+/*
 	mbedtls_ecdh_context ctx;
 	mbedtls_ecp_point anotherQ;
 	mbedtls_mpi z;
@@ -661,7 +603,7 @@ Util::Error CryptoLib::ECDHComputeShared(ECDSAKey key, bstr anotherPublicKey, bs
 
 	mbedtls_mpi_free(&z);
 	mbedtls_ecp_point_free(&anotherQ);
-	
+    */
 	return ret;
 }
 

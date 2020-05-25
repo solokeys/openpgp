@@ -16,10 +16,10 @@
 #include <errors.h>
 #include "tlv.h"
 
-#include <mbedtls/config.h>
-#include <mbedtls/rsa.h>
-#include <mbedtls/aes.h>
-#include <mbedtls/havege.h>
+//#include <mbedtls/config.h>
+///#include <mbedtls/rsa.h>
+//#include <mbedtls/aes.h>
+//#include <mbedtls/havege.h>
 #include <mbedtls/ecdsa.h>
 
 namespace Crypto {
@@ -197,9 +197,9 @@ class CryptoLib {
 private:
 	CryptoEngine &cryptoEngine;
 
-	Util::Error RSAFillPrivateKey(mbedtls_rsa_context *context, RSAKey key);
-	Util::Error AppendKeyPart(bstr &buffer, bstr &keypart, mbedtls_mpi *mpi);
-	Util::Error AppendKeyPartEcpPoint(bstr &buffer, bstr &keypart,  mbedtls_ecp_group *grp, mbedtls_ecp_point  *point);
+    //Util::Error RSAFillPrivateKey(mbedtls_rsa_context *context, RSAKey key);
+    //Util::Error AppendKeyPart(bstr &buffer, bstr &keypart, mbedtls_mpi *mpi);
+    //Util::Error AppendKeyPartEcpPoint(bstr &buffer, bstr &keypart,  mbedtls_ecp_group *grp, mbedtls_ecp_point  *point);
 public:
 	CryptoLib(CryptoEngine &_cryptoEngine);
     
