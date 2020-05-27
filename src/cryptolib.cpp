@@ -9,13 +9,6 @@
 
 #include "cryptolib.h"
 
-/*#include <mbedtls/config.h>
-#include <mbedtls/rsa.h>
-#include <mbedtls/aes.h>
-#include "mbedtls/ecdh.h"
-#include "mbedtls/platform.h"
-*/
-
 #include <string.h>
 #include <stdlib.h>
 
@@ -183,12 +176,13 @@ Util::Error CryptoLib::RSASign(RSAKey key, bstr data, bstr& signature) {
 
 	Util::Error ret = Util::Error::NoError;
 
-/*	if (key.P.length() == 0 ||
-		key.Q.length() == 0 ||
-		key.Exp.length() == 0
-		)
-		return Util::Error::CryptoDataError;
+    if (key.P.length() == 0 ||
+        key.Q.length() == 0 ||
+        key.Exp.length() == 0
+       )
+        return Util::Error::CryptoDataError;
 
+/*
 	mbedtls_rsa_context rsa;
 
 	mbedtls_rsa_init(&rsa, MBEDTLS_RSA_PKCS_V15, 0);
@@ -234,13 +228,17 @@ Util::Error CryptoLib::RSASign(RSAKey key, bstr data, bstr& signature) {
 Util::Error CryptoLib::RSADecipher(RSAKey key, bstr data, bstr &dataOut) {
 	Util::Error ret = Util::Error::NoError;
 
-    /*if (key.P.length() == 0 ||
+    if (key.P.length() == 0 ||
 		key.Q.length() == 0 ||
 		key.Exp.length() == 0
 		)
 		return Util::Error::CryptoDataError;
 
-	mbedtls_rsa_context rsa;
+    //br_rsa_private_key pk;
+    //br_rsa_verify(sig, sizeof sig, n, e, br_sha1_ID, hv);
+
+
+    /*mbedtls_rsa_context rsa;
 
 	mbedtls_rsa_init(&rsa, MBEDTLS_RSA_PKCS_V15, 0);
 
@@ -433,44 +431,21 @@ Util::Error CryptoLib::ECDSASign(ECDSAKey key, bstr data, bstr& signature) {
 Util::Error CryptoLib::RSACalcPublicKey(bstr strP, bstr strQ, bstr &strN) {
 	Util::Error ret = Util::Error::NoError;
 
-    /*mbedtls_rsa_context rsa;
-	mbedtls_mpi N, P, Q;
+    if (strP.length() == 0 ||
+        strQ.length() == 0
+        )
+        return Util::Error::CryptoDataError;
 
-	mbedtls_rsa_init(&rsa, MBEDTLS_RSA_PKCS_V15, 0);
-	mbedtls_mpi_init(&N);
-	mbedtls_mpi_init(&P);
-	mbedtls_mpi_init(&Q);
+    br_rsa_private_key sk = {};
+    sk.p = (uint8_t *)strP.data();
+    sk.plen = strP.length();
+    sk.q = (uint8_t *)strQ.data();
+    sk.qlen = strQ.length();
 
-	while (true) {
-		if (mbedtls_mpi_read_binary(&P, strP.uint8Data(), strP.length())) {
-			ret = Util::Error::CryptoDataError;
-			break;
-		}
-		if (mbedtls_mpi_read_binary(&Q, strQ.uint8Data(), strQ.length())) {
-			ret = Util::Error::CryptoDataError;
-			break;
-		}
 
-		if (mbedtls_mpi_mul_mpi(&N, &P, &Q)) {
-			ret = Util::Error::CryptoOperationError;
-			break;
-		}
+    size_t length = br_rsa_i15_compute_modulus((void *)strN.data(), &sk);
+    strN.set_length(length);
 
-		size_t length = mbedtls_mpi_size(&N);
-		if (mbedtls_mpi_write_binary(&N, strN.uint8Data(), length)) {
-			ret = Util::Error::CryptoDataError;
-			break;
-		}
-		strN.set_length(length);
-
-		break;
-	}
-
-	mbedtls_rsa_free(&rsa);
-	mbedtls_mpi_free(&N);
-	mbedtls_mpi_free(&P);
-	mbedtls_mpi_free(&Q);
-*/
 	return ret;
 }
 

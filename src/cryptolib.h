@@ -16,6 +16,7 @@
 #include <errors.h>
 #include "tlv.h"
 
+#include "bearssl.h"
 //#include <mbedtls/config.h>
 ///#include <mbedtls/rsa.h>
 //#include <mbedtls/aes.h>
