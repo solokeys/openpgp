@@ -437,6 +437,7 @@ Util::Error CryptoLib::RSACalcPublicKey(bstr strP, bstr strQ, bstr &strN) {
         return Util::Error::CryptoDataError;
 
     br_rsa_private_key sk = {};
+    sk.n_bitlen = strP.length() * 8 * 2;
     sk.p = (uint8_t *)strP.data();
     sk.plen = strP.length();
     sk.q = (uint8_t *)strQ.data();
