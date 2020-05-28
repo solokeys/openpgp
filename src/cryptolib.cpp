@@ -21,6 +21,7 @@
 namespace Crypto {
 
 static const bstr RSADefaultExponent = "\x01\x00\x01"_bstr;
+static const size_t MaxRsaLengthBit = 4096;
 
 PUT_TO_SRAM2 uint8_t _KeyBuffer[2049] = {0}; // needs for placing RSA 4096 key
 PUT_TO_SRAM2 bstr KeyBuffer;
@@ -172,9 +173,25 @@ Util::Error CryptoLib::RSAFillPrivateKey(mbedtls_rsa_context *context,
 	return ret;
 }
 */
-Util::Error CryptoLib::RSASign(RSAKey key, bstr data, bstr& signature) {
 
-	Util::Error ret = Util::Error::NoError;
+size_t RSAKeyLenFromPQ(size_t PQlen) {
+    return PQlen * 2 *8;
+}
+
+// from inner.h of bearssl
+uint32_t br_dec32be(const unsigned char *buf) {
+    return ((uint32_t)buf[0] << 24)
+        | ((uint32_t)buf[1] << 16)
+        | ((uint32_t)buf[2] << 8)
+        | (uint32_t)buf[3];
+}
+
+size_t RSAKeyLenFromBitlen(size_t bitlen) {
+    return (bitlen + 7) >> 3;
+}
+
+Util::Error RSAFillPrivateKey(br_rsa_private_key &sk, RSAKey &key) {
+    Util::Error ret = Util::Error::NoError;
 
     if (key.P.length() == 0 ||
         key.Q.length() == 0 ||
@@ -182,17 +199,45 @@ Util::Error CryptoLib::RSASign(RSAKey key, bstr data, bstr& signature) {
        )
         return Util::Error::CryptoDataError;
 
-/*
-	mbedtls_rsa_context rsa;
+    sk.n_bitlen = RSAKeyLenFromPQ(MAX(key.P.length(), key.Q.length()));
+    sk.p = (uint8_t *)key.P.data();
+    sk.plen = key.P.length();
+    sk.q = (uint8_t *)key.Q.data();
+    sk.qlen = key.Q.length();
 
-	mbedtls_rsa_init(&rsa, MBEDTLS_RSA_PKCS_V15, 0);
+    size_t compSize = RSAKeyLenFromBitlen(MaxRsaLengthBit);
+    uint8_t keybuf[compSize * 2];
+    std::memset(keybuf, 0, sizeof(keybuf));
 
+    uint32_t exp = br_dec32be(key.Exp.data()); // inner.h
+    size_t dlen = br_rsa_i15_compute_privexp(&keybuf[0], &sk, exp);
+    printf("--dlen %d\n", dlen);
+
+    if (key.DP1.length() != 0) {
+        sk.dp = (uint8_t *)key.DP1.data();
+        sk.dplen = key.DP1.length();
+    } else {
+
+    }
+    sk.dq = (uint8_t *)key.DQ1.data();
+    sk.dqlen = key.DQ1.length();
+    sk.iq = (uint8_t *)key.PQ.data();
+    sk.iqlen = key.PQ.length();
+
+    return ret;
+}
+
+Util::Error CryptoLib::RSASign(RSAKey key, bstr data, bstr& signature) {
+
+	Util::Error ret = Util::Error::NoError;
+
+    br_rsa_private_key sk = {};
 	while (true) {
-		ret = RSAFillPrivateKey(&rsa, key);
+        ret = RSAFillPrivateKey(sk, key);
 		if (ret != Util::Error::NoError)
 			break;
 
-		size_t keylen = mbedtls_mpi_size(&rsa.N);
+        size_t keylen = sk.n_bitlen;
 
 		// OpenPGP 3.3.1 page 54. PKCS#1
 		// command data field is not longer than 40% of the length of the modulus
@@ -203,25 +248,26 @@ Util::Error CryptoLib::RSASign(RSAKey key, bstr data, bstr& signature) {
 		}
 
 		// OpenPGP 3.3.1 page 53
-		uint8_t vdata[keylen] = {0};
+        uint8_t vdata[keylen];
+        std::memset(vdata, 0, keylen);
 		vdata[1] = 0x01; // Block type
 		memset(&vdata[2], 0xff, keylen - data.length() - 3);
 		memcpy(&vdata[keylen - data.length()], data.uint8Data(), data.length());
 
 		memset(signature.uint8Data(), 0x00, keylen);
 
-		int res = mbedtls_rsa_private(&rsa, nullptr, nullptr, vdata, signature.uint8Data());
-		if (res) {
-			printf_device("crypto oper error: %d\n", res);
-			ret = Util::Error::CryptoOperationError;
-			break;
-		}
+        int res = br_rsa_i15_private(vdata, &sk);
+        if (res) {
+            printf_device("crypto oper error: %d\n", res);
+            ret = Util::Error::CryptoOperationError;
+            break;
+        }
+        std::memcpy(signature.uint8Data(), vdata, keylen);
 		signature.set_length(keylen);
+
 		break;
 	}
 
-	mbedtls_rsa_free(&rsa);
-*/
 	return ret;
 }
 
@@ -437,7 +483,7 @@ Util::Error CryptoLib::RSACalcPublicKey(bstr strP, bstr strQ, bstr &strN) {
         return Util::Error::CryptoDataError;
 
     br_rsa_private_key sk = {};
-    sk.n_bitlen = strP.length() * 8 * 2;
+    sk.n_bitlen = RSAKeyLenFromPQ(MAX(strP.length(), strQ.length()));
     sk.p = (uint8_t *)strP.data();
     sk.plen = strP.length();
     sk.q = (uint8_t *)strQ.data();
