@@ -130,7 +130,7 @@ bool Stm32fsFlash::AddressInFlash(uint32_t address, size_t length, bool searchAl
 }
 
 bool Stm32fsFlash::EraseFlashBlock(uint8_t blockNo) {
-    printf("--erase  flash %d\n", blockNo);
+    //printf("--erase  flash %d\n", blockNo);
     return FsConfig->fnEraseFlashBlock(blockNo);
 }
 
@@ -177,7 +177,7 @@ bool Stm32fsFlash::isFlashBlockEmpty(uint8_t blockNo) {
 bool Stm32fsFlash::WriteFlash(uint32_t address, uint8_t *data, size_t length) {
     if (!AddressInFlash(address, length, true))
         return false;
-    printf("--write flash %d %d\n", address, length);
+    //printf("--write flash %d %d\n", address, length);
     return FsConfig->fnWriteFlash(address, data, length);
 }
 
