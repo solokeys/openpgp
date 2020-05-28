@@ -26,7 +26,7 @@ static Stm32fs *fs = nullptr;
 
 void sprintfs();
 
-void hw_stm32fs_init() {
+void OPTIMIZATION_O2 hw_stm32fs_init() {
     static Stm32fsConfig_t cfg;
     cfg.BaseBlockAddress = 0;
     cfg.SectorSize = PAGE_SIZE;
@@ -57,6 +57,7 @@ void hw_stm32fs_init() {
 }
 
 int hwinit() {
+    //hw_reset_fs_and_reboot(false);  // fully erase fs...
     hw_stm32fs_init();
 
 	return 0;
@@ -69,7 +70,7 @@ bool fileexist(char* name) {
     return fs->FileExist(std::string_view(name));
 }
 
-int readfile(char* name, uint8_t * buf, size_t max_size, size_t *size) {
+int OPTIMIZATION_O2 readfile(char* name, uint8_t * buf, size_t max_size, size_t *size) {
     if (!fs) {
         printf("__error read %s %d\n", name, max_size);
         return 1;
@@ -79,7 +80,7 @@ int readfile(char* name, uint8_t * buf, size_t max_size, size_t *size) {
     return fs->ReadFile(std::string_view(name), buf, size, max_size) ? 0 : 1;
 }
 
-int writefile(char* name, uint8_t * buf, size_t size) {
+int OPTIMIZATION_O2 writefile(char* name, uint8_t * buf, size_t size) {
     if (!fs)
         return 1;
     if (fs->GetCurrentFsBlockSerial() == 0) printf("ERROR fs!!!\n");

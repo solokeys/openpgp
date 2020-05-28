@@ -15,6 +15,14 @@
 static const size_t FileHeaderSize = 16;
 static const uint8_t FlashPadding = 8;
 
+#ifndef OPTIMIZATION_O2
+#define OPTIMIZATION_O2 __attribute__((optimize("O2")))
+#endif
+
+#ifndef OPTIMIZATION_O0
+#define OPTIMIZATION_O0 __attribute__((optimize("O0")))
+#endif
+
 /*
  * --- Stm32fsFlash ---
  */
@@ -95,7 +103,7 @@ bool Stm32fsFlash::FindBlockInCfg(std::vector<Stm32fsConfigBlock_t> blocks, uint
     return false;
 }
 
-bool Stm32fsFlash::AddressInFlash(uint32_t address, size_t length, bool searchAllBlocks) {
+bool OPTIMIZATION_O2 Stm32fsFlash::AddressInFlash(uint32_t address, size_t length, bool searchAllBlocks) {
     if (CurrentFsBlock != nullptr) {
         uint32_t curAddress = address;
         
@@ -129,12 +137,12 @@ bool Stm32fsFlash::AddressInFlash(uint32_t address, size_t length, bool searchAl
     return false;
 }
 
-bool Stm32fsFlash::EraseFlashBlock(uint8_t blockNo) {
+bool OPTIMIZATION_O0 Stm32fsFlash::EraseFlashBlock(uint8_t blockNo) {
     //printf("--erase  flash %d\n", blockNo);
     return FsConfig->fnEraseFlashBlock(blockNo);
 }
 
-bool Stm32fsFlash::isFlashEmpty(uint32_t address, size_t length, bool reverse, uint32_t *exceptAddr) {
+bool OPTIMIZATION_O2 Stm32fsFlash::isFlashEmpty(uint32_t address, size_t length, bool reverse, uint32_t *exceptAddr) {
     if(exceptAddr != nullptr)
         *exceptAddr = 0;
     
@@ -174,14 +182,14 @@ bool Stm32fsFlash::isFlashBlockEmpty(uint8_t blockNo) {
     return isFlashEmpty(GetBlockAddress(blockNo), BlockSize, false, nullptr);
 }
 
-bool Stm32fsFlash::WriteFlash(uint32_t address, uint8_t *data, size_t length) {
+bool OPTIMIZATION_O0 Stm32fsFlash::WriteFlash(uint32_t address, uint8_t *data, size_t length) {
     if (!AddressInFlash(address, length, true))
         return false;
-    //printf("--write flash %d %d\n", address, length);
+    printf("--write flash %d %d\n", address, length); // TODO: otimization error!!!
     return FsConfig->fnWriteFlash(address, data, length);
 }
 
-bool Stm32fsFlash::ReadFlash(uint32_t address, uint8_t *data, size_t length) {
+bool OPTIMIZATION_O0 Stm32fsFlash::ReadFlash(uint32_t address, uint8_t *data, size_t length) {
     if (!AddressInFlash(address, length, true))
         return false;
     //printf("--read flash %d %d\n", address, length);
@@ -1273,7 +1281,7 @@ Stm32fsOptimizer::Stm32fsOptimizer(Stm32fs &stm32fs) : fs{stm32fs} {
 }
 
 // multiblock optimization. from flash region to flash region.
-bool Stm32fsOptimizer::OptimizeMultiblock(Stm32fsConfigBlock_t &inputBlock, Stm32fsConfigBlock_t &outputBlock) {
+bool OPTIMIZATION_O2 Stm32fsOptimizer::OptimizeMultiblock(Stm32fsConfigBlock_t &inputBlock, Stm32fsConfigBlock_t &outputBlock) {
     uint32_t serial = fs.GetCurrentFsBlockSerial();
     fs.flash.EraseFs(outputBlock);
     
@@ -1322,7 +1330,7 @@ bool Stm32fsOptimizer::OptimizeMultiblock(Stm32fsConfigBlock_t &inputBlock, Stm3
     return true;
 }
 
-bool Stm32fsOptimizer::OptimizeViaRam(Stm32fsConfigBlock_t &block) {
+bool OPTIMIZATION_O2 Stm32fsOptimizer::OptimizeViaRam(Stm32fsConfigBlock_t &block) {
     
     Stm32fsFileList fileList;
 
