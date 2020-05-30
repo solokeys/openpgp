@@ -18,6 +18,8 @@
 #include "filesystem.h"
 #include "applets/openpgp/openpgpconst.h"
 
+#include "i15_addon.h"
+
 namespace Crypto {
 
 static const bstr RSADefaultExponent = "\x01\x00\x01"_bstr;
@@ -190,7 +192,7 @@ size_t RSAKeyLenFromBitlen(size_t bitlen) {
     return (bitlen + 7) >> 3;
 }
 
-Util::Error RSAFillPrivateKey(br_rsa_private_key &sk, RSAKey &key) {
+Util::Error RSAFillPrivateKey(uint8_t *keybuf, br_rsa_private_key &sk, RSAKey &key) {
     Util::Error ret = Util::Error::NoError;
 
     if (key.P.length() == 0 ||
@@ -200,29 +202,26 @@ Util::Error RSAFillPrivateKey(br_rsa_private_key &sk, RSAKey &key) {
         return Util::Error::CryptoDataError;
 
     sk.n_bitlen = RSAKeyLenFromPQ(MAX(key.P.length(), key.Q.length()));
-    sk.p = (uint8_t *)key.P.data();
+    sk.p = key.P.uint8Data();
     sk.plen = key.P.length();
-    sk.q = (uint8_t *)key.Q.data();
+    sk.q = key.Q.uint8Data();
     sk.qlen = key.Q.length();
 
-    size_t compSize = RSAKeyLenFromBitlen(MaxRsaLengthBit);
-    uint8_t keybuf[compSize * 2];
-    std::memset(keybuf, 0, sizeof(keybuf));
-
-    uint32_t exp = br_dec32be(key.Exp.data()); // inner.h
-    size_t dlen = br_rsa_i15_compute_privexp(&keybuf[0], &sk, exp);
-    printf("--dlen %d\n", dlen);
-
     if (key.DP1.length() != 0) {
-        sk.dp = (uint8_t *)key.DP1.data();
+        sk.dp = key.DP1.uint8Data();
         sk.dplen = key.DP1.length();
-    } else {
-
     }
-    sk.dq = (uint8_t *)key.DQ1.data();
-    sk.dqlen = key.DQ1.length();
-    sk.iq = (uint8_t *)key.PQ.data();
-    sk.iqlen = key.PQ.length();
+    if (key.DQ1.length() != 0) {
+        sk.dq = key.DQ1.uint8Data();
+        sk.dqlen = key.DQ1.length();
+    }
+    if (key.PQ.length() != 0) {
+        sk.iq = key.PQ.uint8Data();
+        sk.iqlen = key.PQ.length();
+    }
+
+    if (sk.dplen == 0 || sk.dqlen == 0 || sk.iqlen == 0)
+        br_rsa_deduce_crt(keybuf, &sk, key.Exp.uint8Data());
 
     return ret;
 }
@@ -231,9 +230,12 @@ Util::Error CryptoLib::RSASign(RSAKey key, bstr data, bstr& signature) {
 
 	Util::Error ret = Util::Error::NoError;
 
+    uint8_t keybuf[RSAKeyLenFromBitlen(MaxRsaLengthBit) * 3];
+    std::memset(keybuf, 0, sizeof(keybuf));
+
     br_rsa_private_key sk = {};
 	while (true) {
-        ret = RSAFillPrivateKey(sk, key);
+        ret = RSAFillPrivateKey(keybuf, sk, key);
 		if (ret != Util::Error::NoError)
 			break;
 
@@ -484,9 +486,9 @@ Util::Error CryptoLib::RSACalcPublicKey(bstr strP, bstr strQ, bstr &strN) {
 
     br_rsa_private_key sk = {};
     sk.n_bitlen = RSAKeyLenFromPQ(MAX(strP.length(), strQ.length()));
-    sk.p = (uint8_t *)strP.data();
+    sk.p = strP.uint8Data();
     sk.plen = strP.length();
-    sk.q = (uint8_t *)strQ.data();
+    sk.q = strQ.uint8Data();
     sk.qlen = strQ.length();
 
 
