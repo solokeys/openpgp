@@ -230,7 +230,7 @@ Util::Error CryptoLib::RSASign(RSAKey key, bstr data, bstr& signature) {
 
 	Util::Error ret = Util::Error::NoError;
 
-    uint8_t keybuf[RSAKeyLenFromBitlen(MaxRsaLengthBit) * 3 + 500];
+    uint8_t keybuf[RSAKeyLenFromBitlen(MaxRsaLengthBit) * 3];
     std::memset(keybuf, 0, sizeof(keybuf));
 
     br_rsa_private_key sk = {};
@@ -239,7 +239,7 @@ Util::Error CryptoLib::RSASign(RSAKey key, bstr data, bstr& signature) {
 		if (ret != Util::Error::NoError)
 			break;
 
-        size_t keylen = sk.n_bitlen / 8;
+        size_t keylen = RSAKeyLenFromBitlen(sk.n_bitlen);
 
 		// OpenPGP 3.3.1 page 54. PKCS#1
 		// command data field is not longer than 40% of the length of the modulus
