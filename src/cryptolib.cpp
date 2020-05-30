@@ -177,7 +177,7 @@ Util::Error CryptoLib::RSAFillPrivateKey(mbedtls_rsa_context *context,
 */
 
 size_t RSAKeyLenFromPQ(size_t PQlen) {
-    return PQlen * 2 *8;
+    return PQlen * 2 * 8;
 }
 
 // from inner.h of bearssl
@@ -230,7 +230,7 @@ Util::Error CryptoLib::RSASign(RSAKey key, bstr data, bstr& signature) {
 
 	Util::Error ret = Util::Error::NoError;
 
-    uint8_t keybuf[RSAKeyLenFromBitlen(MaxRsaLengthBit) * 3];
+    uint8_t keybuf[RSAKeyLenFromBitlen(MaxRsaLengthBit) * 3 + 500];
     std::memset(keybuf, 0, sizeof(keybuf));
 
     br_rsa_private_key sk = {};
@@ -239,7 +239,7 @@ Util::Error CryptoLib::RSASign(RSAKey key, bstr data, bstr& signature) {
 		if (ret != Util::Error::NoError)
 			break;
 
-        size_t keylen = sk.n_bitlen;
+        size_t keylen = sk.n_bitlen / 8;
 
 		// OpenPGP 3.3.1 page 54. PKCS#1
 		// command data field is not longer than 40% of the length of the modulus
@@ -259,7 +259,7 @@ Util::Error CryptoLib::RSASign(RSAKey key, bstr data, bstr& signature) {
 		memset(signature.uint8Data(), 0x00, keylen);
 
         int res = br_rsa_i15_private(vdata, &sk);
-        if (res) {
+        if (res == 0) {
             printf_device("crypto oper error: %d\n", res);
             ret = Util::Error::CryptoOperationError;
             break;

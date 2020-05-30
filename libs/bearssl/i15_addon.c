@@ -204,8 +204,15 @@ bool br_rsa_deduce_crt(uint8_t *buffer, br_rsa_private_key *sk, uint8_t *exp) {
     br_i15_encode(sk->iq, sk->iqlen, iq);
 
     printf("--plen %d qlen %d iqlen %d\n", plen, qlen, sk->iqlen);
-    br_i15_print_int("q", q);
-    br_i15_print_int("iq", iq);
+    //br_i15_print_int("q", q);
+    //br_i15_print_int("iq", iq);
+
+    printf("bitlen %d\n", sk->n_bitlen);
+    printf("p  %02x %02x %02x %02x\n", sk->p[0], sk->p[1], sk->p[2], sk->p[3]);
+    printf("q  %02x %02x %02x %02x\n", sk->q[0], sk->q[1], sk->q[2], sk->q[3]);
+    printf("dp %02x %02x %02x %02x\n", sk->dp[0], sk->dp[1], sk->dp[2], sk->dp[3]);
+    printf("dq %02x %02x %02x %02x\n", sk->dq[0], sk->dq[1], sk->dq[2], sk->dq[3]);
+    printf("iq %02x %02x %02x %02x\n", sk->iq[0], sk->iq[1], sk->iq[2], sk->iq[3]);
 
     return true;
 }
