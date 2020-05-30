@@ -12,6 +12,7 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include "device.h"
 #include "opgpdevice.h"
 #include "tlv.h"
 #include "solofactory.h"
@@ -282,37 +283,38 @@ Util::Error CryptoLib::RSADecipher(RSAKey key, bstr data, bstr &dataOut) {
 		)
 		return Util::Error::CryptoDataError;
 
-    //br_rsa_private_key pk;
-    //br_rsa_verify(sig, sizeof sig, n, e, br_sha1_ID, hv);
+    uint8_t keybuf[RSAKeyLenFromBitlen(MaxRsaLengthBit) * 3];
+    std::memset(keybuf, 0, sizeof(keybuf));
 
-
-    /*mbedtls_rsa_context rsa;
-
-	mbedtls_rsa_init(&rsa, MBEDTLS_RSA_PKCS_V15, 0);
-
-	while (true) {
-		ret = RSAFillPrivateKey(&rsa, key);
+    br_rsa_private_key sk = {};
+    while (true) {
+        ret = RSAFillPrivateKey(keybuf, sk, key);
 		if (ret != Util::Error::NoError)
 			break;
 
-		size_t keylen = mbedtls_mpi_size(&rsa.N);
+        size_t keylen = RSAKeyLenFromBitlen(sk.n_bitlen);
 
 		if (keylen != data.length()) {
 			ret = Util::Error::CryptoDataError;
 			break;
 		}
 
-		int res = mbedtls_rsa_private(&rsa, nullptr, nullptr, data.uint8Data(), dataOut.uint8Data());
-		if (res) {
-			printf_device("crypto oper error: %d\n", res);
-			ret = Util::Error::CryptoOperationError;
-			break;
-		}
-		dataOut.set_length(keylen);
+        uint8_t vdata[keylen];
+        std::memset(vdata, 0, keylen);
+        memcpy(vdata, data.uint8Data(), data.length());
+
+        int res = br_rsa_i15_private(vdata, &sk);
+        if (res == 0) {
+            printf_device("crypto oper error: %d\n", res);
+            ret = Util::Error::CryptoOperationError;
+            break;
+        }
+
+        std::memcpy(dataOut.uint8Data(), vdata, keylen);
+        dataOut.set_length(keylen);
+
 		break;
 	}
-
-	mbedtls_rsa_free(&rsa);
 
 	// check and get rid of PKCS#1 header
 	// OpenPGP 3.3.1 page 57
@@ -335,7 +337,7 @@ Util::Error CryptoLib::RSADecipher(RSAKey key, bstr data, bstr &dataOut) {
 	}
 
 	dataOut.del(0, ptr + 1);
-*/
+
 	return ret;
 }
 
