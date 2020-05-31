@@ -204,7 +204,8 @@ Util::Error RSAFillPrivateKey(uint8_t *keybuf, br_rsa_private_key &sk, RSAKey &k
     }
 
     if (sk.dplen == 0 || sk.dqlen == 0 || sk.iqlen == 0)
-        br_rsa_deduce_crt(keybuf, &sk, key.Exp.uint8Data());
+        if(!br_rsa_deduce_crt(keybuf, &sk, key.Exp.uint8Data()))
+            return Util::Error::StoredKeyError;
 
     return ret;
 }
