@@ -141,9 +141,9 @@ Util::Error CryptoLib::RSAGenKey(RSAKey& keyOut, size_t keySize) {
 	Util::Error ret = Util::Error::NoError;
 	ClearKeyBuffer();
 
-    uint8_t keybufsk[2048];
+    uint8_t keybufsk[2048]; // TODO
     std::memset(keybufsk, 0, sizeof(keybufsk));
-    uint8_t keybufpk[1024];
+    uint8_t keybufpk[1024]; // TODO
     std::memset(keybufpk, 0, sizeof(keybufpk));
 
     br_rsa_private_key sk = {};
@@ -152,7 +152,7 @@ Util::Error CryptoLib::RSAGenKey(RSAKey& keyOut, size_t keySize) {
     while (true) {
         // OpenPGP 3.3.1 pages 33,34
         const br_prng_class *rng = &br_hw_drbg_vtable;
-        if (br_rsa_i15_keygen(&rng, &sk, keybufsk, &pk, keybufpk, keySize, 65537) == 100500) {
+        if (br_rsa_i15_keygen(&rng, &sk, keybufsk, &pk, keybufpk, keySize, 65537) == 100500) { // TODO
             ret = Util::Error::CryptoOperationError;
             break;
         }
