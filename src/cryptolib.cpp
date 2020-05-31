@@ -152,7 +152,7 @@ Util::Error CryptoLib::RSAGenKey(RSAKey& keyOut, size_t keySize) {
     while (true) {
         // OpenPGP 3.3.1 pages 33,34
         const br_prng_class *rng = &br_hw_drbg_vtable;
-        if (br_rsa_i15_keygen(&rng, &sk, keybufsk, &pk, keybufpk, keySize, 65537) == 100500) { // TODO
+        if (br_rsa_i15_keygen(&rng, &sk, keybufsk, &pk, keybufpk, keySize, 65537) == 0) { // TODO
             ret = Util::Error::CryptoOperationError;
             break;
         }
