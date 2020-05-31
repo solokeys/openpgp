@@ -70,19 +70,17 @@ Util::Error CryptoLib::AESDecrypt(bstr key, bstr dataIn,
 
     return Util::Error::NoError;
 }
-/*
-Util::Error CryptoLib::AppendKeyPart(bstr &buffer, bstr &keypart, mbedtls_mpi *mpi) {
-    size_t mpi_len = mbedtls_mpi_size(mpi);
+
+Util::Error CryptoLib::AppendKeyPart(bstr &buffer, bstr &keypart, uint8_t *mpi, size_t mpi_len) {
 	if (mpi_len > 0) {
-		if (mbedtls_mpi_write_binary(mpi, buffer.uint8Data() + buffer.length(), mpi_len))
-			return Util::Error::CryptoDataError;
+        memcpy(buffer.uint8Data() + buffer.length(), mpi, mpi_len);
 
 		keypart = bstr(buffer.uint8Data() + buffer.length(), mpi_len);
 		buffer.set_length(buffer.length() + mpi_len);
     }
 	return Util::Error::NoError;
 }
-
+/*
 Util::Error CryptoLib::AppendKeyPartEcpPoint(bstr &buffer, bstr &keypart,  mbedtls_ecp_group *grp, mbedtls_ecp_point  *point) {
     size_t mpi_len = 0;
     if (mbedtls_ecp_point_write_binary(
@@ -100,82 +98,6 @@ Util::Error CryptoLib::AppendKeyPartEcpPoint(bstr &buffer, bstr &keypart,  mbedt
 	return Util::Error::NoError;
 }
 */
-Util::Error CryptoLib::RSAGenKey(RSAKey& keyOut, size_t keySize) {
-
-	Util::Error ret = Util::Error::NoError;
-	ClearKeyBuffer();
-
-
-
-
-
-	return ret;
-}
-/*
-Util::Error CryptoLib::RSAFillPrivateKey(mbedtls_rsa_context *context,
-		RSAKey key) {
-
-	Util::Error ret = Util::Error::NoError;
-
-    mbedtls_mpi N, P, Q, E;
-
-	mbedtls_mpi_init(&N);
-	mbedtls_mpi_init(&P);
-	mbedtls_mpi_init(&Q);
-	mbedtls_mpi_init(&E);
-
-	while (true) {
-		if (mbedtls_mpi_read_binary(&P, key.P.uint8Data(), key.P.length())) {
-			ret = Util::Error::CryptoDataError;
-			break;
-		}
-		if (mbedtls_mpi_read_binary(&Q, key.Q.uint8Data(), key.Q.length())) {
-			ret = Util::Error::CryptoDataError;
-			break;
-		}
-		if (mbedtls_mpi_read_binary(&E, key.Exp.uint8Data(), key.Exp.length())) {
-			ret = Util::Error::CryptoDataError;
-			break;
-		}
-		if (mbedtls_rsa_import(context, NULL, &P, &Q, NULL, &E)) {
-			ret = Util::Error::CryptoDataError;
-			break;
-		}
-		if (key.N.length()) {
-			if (mbedtls_mpi_read_binary(&N, key.N.uint8Data(), key.N.length())) {
-				ret = Util::Error::CryptoDataError;
-				break;
-			}
-
-			if (mbedtls_rsa_import(context, &N, NULL, NULL, NULL, NULL)) {
-				ret = Util::Error::CryptoDataError;
-				break;
-			}
-		}
-
-		if (int res=mbedtls_rsa_complete(context)) {
-			printf_device("error: cant complete key %d %x\n",res,-res);
-			ret = Util::Error::CryptoDataError;
-			break;
-		}
-
-		if (mbedtls_rsa_check_privkey(context)) {
-			printf_device("error: cant check key\n");
-			ret = Util::Error::CryptoDataError;
-			break;
-		}
-
-		break;
-	}
-
-	mbedtls_mpi_free(&N);
-	mbedtls_mpi_free(&P);
-	mbedtls_mpi_free(&Q);
-	mbedtls_mpi_free(&E);
-
-	return ret;
-}
-*/
 
 size_t RSAKeyLenFromPQ(size_t PQlen) {
     return PQlen * 2 * 8;
@@ -191,6 +113,66 @@ uint32_t br_dec32be(const unsigned char *buf) {
 
 size_t RSAKeyLenFromBitlen(size_t bitlen) {
     return (bitlen + 7) >> 3;
+}
+
+void br_hw_drbg_init(void *ctx,
+    const void *params, const void *seed, size_t len) {
+}
+
+void br_hw_drbg_generate(void *ctx, void *out, size_t len) {
+    gen_random_device((uint8_t *)out, len);
+}
+
+void br_hw_drbg_update(void *ctx, const void *seed, size_t len) {
+}
+
+const br_prng_class br_hw_drbg_vtable = {
+    sizeof(br_hmac_drbg_context),
+    (void (*)(const br_prng_class **, const void *, const void *, size_t))
+        &br_hw_drbg_init,
+    (void (*)(const br_prng_class **, void *, size_t))
+        &br_hw_drbg_generate,
+    (void (*)(const br_prng_class **, const void *, size_t))
+        &br_hw_drbg_update
+};
+
+Util::Error CryptoLib::RSAGenKey(RSAKey& keyOut, size_t keySize) {
+
+	Util::Error ret = Util::Error::NoError;
+	ClearKeyBuffer();
+
+    uint8_t keybufsk[2048];
+    std::memset(keybufsk, 0, sizeof(keybufsk));
+    uint8_t keybufpk[1024];
+    std::memset(keybufpk, 0, sizeof(keybufpk));
+
+    br_rsa_private_key sk = {};
+    br_rsa_public_key pk = {};
+
+    while (true) {
+        // OpenPGP 3.3.1 pages 33,34
+        const br_prng_class *rng = &br_hw_drbg_vtable;
+        if (br_rsa_i15_keygen(&rng, &sk, keybufsk, &pk, keybufpk, keySize, 65537) == 100500) {
+            ret = Util::Error::CryptoOperationError;
+            break;
+        }
+
+        KeyBuffer.clear();
+
+        AppendKeyPart(KeyBuffer, keyOut.Exp, pk.e, pk.elen);
+        AppendKeyPart(KeyBuffer, keyOut.P, sk.p, sk.plen);
+        AppendKeyPart(KeyBuffer, keyOut.Q, sk.q, sk.qlen);
+        AppendKeyPart(KeyBuffer, keyOut.N, pk.n, pk.nlen);
+
+        // check
+        if (keyOut.P.length() == 0 || keyOut.Q.length() == 0 || keyOut.Exp.length() == 0) {
+            ret = Util::Error::CryptoDataError;
+            break;
+        }
+
+        break;
+    }
+	return ret;
 }
 
 Util::Error RSAFillPrivateKey(uint8_t *keybuf, br_rsa_private_key &sk, RSAKey &key) {
@@ -276,6 +258,7 @@ Util::Error CryptoLib::RSASign(RSAKey key, bstr data, bstr& signature) {
 
 Util::Error CryptoLib::RSADecipher(RSAKey key, bstr data, bstr &dataOut) {
 	Util::Error ret = Util::Error::NoError;
+    dataOut.set_length(0);
 
     if (key.P.length() == 0 ||
 		key.Q.length() == 0 ||
@@ -300,7 +283,6 @@ Util::Error CryptoLib::RSADecipher(RSAKey key, bstr data, bstr &dataOut) {
 		}
 
         uint8_t vdata[keylen];
-        std::memset(vdata, 0, keylen);
         memcpy(vdata, data.uint8Data(), data.length());
 
         int res = br_rsa_i15_private(vdata, &sk);

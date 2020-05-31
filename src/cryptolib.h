@@ -199,7 +199,7 @@ private:
 	CryptoEngine &cryptoEngine;
 
     //Util::Error RSAFillPrivateKey(mbedtls_rsa_context *context, RSAKey key);
-    //Util::Error AppendKeyPart(bstr &buffer, bstr &keypart, mbedtls_mpi *mpi);
+    Util::Error AppendKeyPart(bstr &buffer, bstr &keypart, uint8_t *mpi, size_t mpi_len);
     //Util::Error AppendKeyPartEcpPoint(bstr &buffer, bstr &keypart,  mbedtls_ecp_group *grp, mbedtls_ecp_point  *point);
 public:
 	CryptoLib(CryptoEngine &_cryptoEngine);
