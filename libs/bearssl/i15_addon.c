@@ -33,8 +33,9 @@ uint32_t br_i15_sub_uint(uint16_t *a, const uint32_t b, uint32_t ctl) {
 
         aw = a[u];
         bw = 0;
-        if (u == 1) bw = b & 0xffffU;
-        if (u == 2) bw = b >> 16;
+        if (u == 1) bw = b & 0x7FFFU;
+        if (u == 2) bw = (b >> 15) & 0x7FFFU;
+        if (u == 3) bw = (b >> 30) & 0x7FFFU;
 
         naw = aw - bw - cc;
         cc = naw >> 31;
@@ -54,8 +55,9 @@ uint32_t br_i15_add_uint(uint16_t *a, const uint32_t b, uint32_t ctl) {
 
         aw = a[u];
         bw = 0;
-        if (u == 1) bw = b & 0xffffU;
-        if (u == 2) bw = b >> 16;
+        if (u == 1) bw = b & 0x7FFFU;
+        if (u == 2) bw = (b >> 15) & 0x7FFFU;
+        if (u == 3) bw = (b >> 30) & 0x7FFFU;
 
         naw = aw + bw + cc;
         cc = naw >> 15;
