@@ -66,49 +66,27 @@ uint32_t br_i15_add_uint(uint16_t *a, const uint32_t b, uint32_t ctl) {
     return cc;
 }
 
-uint32_t br_i15_size_int_u16(uint16_t *a) {
-    return (a[0] + 31) >> 4;
+inline uint16_t br_i15_size_bitlen(uint16_t *a) {
+    return a[0];
 }
 
-uint32_t br_i15_size_u16(uint16_t *a) {
+inline uint32_t br_i15_size_int_u16(uint16_t *a) {
+    return (br_i15_size_bitlen(a) + 31) >> 4;
+}
+
+inline uint32_t br_i15_size_u16(uint16_t *a) {
     return br_i15_size_int_u16(a) + 1; // plus length u16
 }
 
-// from rsa_i15_keygen.c
-static uint32_t
-invert_pubexp(uint16_t *d, const uint16_t *m, uint32_t e, uint16_t *t)
-{
-    uint16_t *f;
-    uint32_t r;
+void br_i15_u32(uint16_t *x, uint16_t bit_len, uint32_t val) {
+    br_i15_zero(x, bit_len);
+    x[1] = val & 0x7FFF;
+    x[2] = (val >> 15) & 0x7FFF;
+    x[3] = val >> 30;
+}
 
-    f = t;
-    t += 1 + ((m[0] + 15) >> 4);
-
-    /*
-     * Compute d = 1/e mod m. Since p = 3 mod 4, m is odd.
-     */
-    br_i15_zero(d, m[0]);
-    d[1] = 1;
-    br_i15_zero(f, m[0]);
-    f[1] = e & 0x7FFF;
-    f[2] = (e >> 15) & 0x7FFF;
-    f[3] = e >> 30;
-    r = br_i15_moddiv(d, f, m, br_i15_ninv15(m[1]), t);
-
-    /*
-     * We really want d = 1/e mod p-1, with p = 2m. By the CRT,
-     * the result is either the d we got, or d + m.
-     *
-     * Let's write e*d = 1 + k*m, for some integer k. Integers e
-     * and m are odd. If d is odd, then e*d is odd, which implies
-     * that k must be even; in that case, e*d = 1 + (k/2)*2m, and
-     * thus d is already fine. Conversely, if d is even, then k
-     * is odd, and we must add m to d in order to get the correct
-     * result.
-     */
-    br_i15_add(d, m, (uint32_t)(1 - (d[1] & 1)));
-
-    return r;
+void br_i15_one(uint16_t *x, uint16_t bit_len) {
+    br_i15_u32(x, bit_len, 1);
 }
 
 // from rsa_i15_keygen.c
@@ -129,50 +107,58 @@ bufswap(void *b1, void *b2, size_t len)
     }
 }
 
+size_t br_rsa_i15_compute_privexp_int_u16(uint16_t *d, const br_rsa_private_key *sk, uint32_t e) {
+    uint8_t temp[512 + 10]; // 512 - RSA4096
+    size_t dlen = br_rsa_i15_compute_privexp(temp, sk, e);
+    br_i15_decode(d, temp, dlen);
+    return dlen;
+}
+
 bool br_rsa_deduce_crt(uint8_t *buffer, br_rsa_private_key *sk, uint8_t *exp) {
 
     uint32_t exp32 = br_dec32be(exp);
 
     // size variants:
-    // 1. p or q and 4 bigints
+    // 1. d (2x) p or q  = 4 * 142
     // 2. p and q and 4 bigints
-    uint16_t tmp[2048]; // TODO: add calc here
+    uint16_t tmp[1000]; // TODO: add calc here
     memset(tmp, 0, sizeof(tmp));
 
+    // calc private exponent d
+    uint16_t *d = tmp;
+    if (br_rsa_i15_compute_privexp_int_u16(d, sk, exp32) == 0)
+        return false;
+    size_t dlen = br_i15_size_u16(d);
+
     // get p
-    uint16_t *p = tmp;
+    uint16_t *p = tmp + dlen + 2;
     br_i15_decode(p, sk->p, sk->plen);
     size_t plen = br_i15_size_u16(p);
-    br_i15_rshift(p, 1);
-    uint16_t *dp = tmp + plen;
 
     // calc dp
-    if (!invert_pubexp(dp, p, exp32, dp + 1 + plen))
-        return false;
+    uint16_t *dp = p + plen;
+    br_i15_sub_uint(p, 1, 1);
+    br_i15_reduce(dp, d, p);
+
+    // save dp
     sk->dp = &buffer[0];
     sk->dplen = sk->plen;
     br_i15_encode(sk->dp, sk->dplen, dp);
 
-    //br_i15_print_int("p", p);
-    //br_i15_print_int("dp", dp);
-
     // get q
-    uint16_t *q = tmp;
+    uint16_t *q = p;
     br_i15_decode(q, sk->q, sk->qlen);
     size_t qlen = br_i15_size_u16(q);
-    br_i15_rshift(q, 1);
-    uint16_t *dq = tmp + qlen;
 
     // calc dq
-    if (!invert_pubexp(dq, q, exp32, dq + 1 + qlen))
-        return false;
+    uint16_t *dq = q + qlen;
+    br_i15_sub_uint(q, 1, 1);
+    br_i15_reduce(dq, d, q);
+
+    // calc dq
     sk->dq = &buffer[sk->dplen];
     sk->dqlen = sk->plen;
     br_i15_encode(sk->dq, sk->dqlen, dq);
-
-    //printf("--plen %d qlen %d dplen %d dqlen %d\n", plen, qlen, sk->dplen, sk->dqlen);
-    //br_i15_print_int("q", q);
-    //br_i15_print_int("dq", dq);
 
     // get p and q
     memset(tmp, 0, sizeof(tmp));
@@ -191,12 +177,6 @@ bool br_rsa_deduce_crt(uint8_t *buffer, br_rsa_private_key *sk, uint8_t *exp) {
         bufswap(sk->dp, sk->dq, sk->dplen);
     }
 
-    // make equal size of p and q
-    q[0] = p[0];
-    if (plen > qlen) {
-        q[qlen] = 0;
-    }
-
     // calc iq
     br_i15_zero(iq, p[0]);
     iq[1] = 1;
@@ -205,16 +185,12 @@ bool br_rsa_deduce_crt(uint8_t *buffer, br_rsa_private_key *sk, uint8_t *exp) {
     sk->iqlen = sk->plen;
     br_i15_encode(sk->iq, sk->iqlen, iq);
 
-    printf("--plen %d qlen %d iqlen %d\n", plen, qlen, sk->iqlen);
-    //br_i15_print_int("q", q);
-    //br_i15_print_int("iq", iq);
-
     printf("bitlen %d\n", sk->n_bitlen);
-    printf("p  %02x %02x %02x %02x\n", sk->p[0], sk->p[1], sk->p[2], sk->p[3]);
-    printf("q  %02x %02x %02x %02x\n", sk->q[0], sk->q[1], sk->q[2], sk->q[3]);
-    printf("dp %02x %02x %02x %02x\n", sk->dp[0], sk->dp[1], sk->dp[2], sk->dp[3]);
-    printf("dq %02x %02x %02x %02x\n", sk->dq[0], sk->dq[1], sk->dq[2], sk->dq[3]);
-    printf("iq %02x %02x %02x %02x\n", sk->iq[0], sk->iq[1], sk->iq[2], sk->iq[3]);
+    printf("p  [%d] %02x %02x %02x %02x .. %02x\n", sk->plen, sk->p[0], sk->p[1], sk->p[2], sk->p[3], sk->p[sk->plen - 1]);
+    printf("q  [%d] %02x %02x %02x %02x .. %02x\n", sk->qlen, sk->q[0], sk->q[1], sk->q[2], sk->q[3], sk->q[sk->qlen - 1]);
+    printf("dp [%d] %02x %02x %02x %02x .. %02x\n", sk->dplen, sk->dp[0], sk->dp[1], sk->dp[2], sk->dp[3], sk->dp[sk->dplen - 1]);
+    printf("dq [%d] %02x %02x %02x %02x .. %02x\n", sk->dqlen, sk->dq[0], sk->dq[1], sk->dq[2], sk->dq[3], sk->dq[sk->dqlen - 1]);
+    printf("iq [%d] %02x %02x %02x %02x .. %02x\n", sk->iqlen, sk->iq[0], sk->iq[1], sk->iq[2], sk->iq[3], sk->iq[sk->iqlen - 1]);
 
     return true;
 }
