@@ -152,10 +152,13 @@ Util::Error CryptoLib::RSAGenKey(RSAKey& keyOut, size_t keySize) {
     while (true) {
         // OpenPGP 3.3.1 pages 33,34
         const br_prng_class *rng = &br_hw_drbg_vtable;
+        device_led(COLOR_MAGENTA);
         if (br_rsa_i15_keygen(&rng, &sk, keybufsk, &pk, keybufpk, keySize, 65537) == 0) { // TODO
+            device_led(COLOR_RED);
             ret = Util::Error::CryptoOperationError;
             break;
         }
+        device_led(COLOR_GREEN);
 
         KeyBuffer.clear();
 
