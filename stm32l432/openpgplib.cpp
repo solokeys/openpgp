@@ -30,9 +30,9 @@ void OpenpgpExchange(uint8_t *datain, size_t datainlen, uint8_t *dataout, uint32
 	auto resstr = bstr(apdu_result, 0, sizeof(apdu_result) - 10);
 	auto apdu = bstr(datain, datainlen);
 
-	printf_device("================\na>> "); dump_hex(apdu);
+    printf_device("================\na>> "); dump_hex(apdu, 16);
     fexecutor->Execute(apdu, resstr);
-    printf_device("a<< "); dump_hex(resstr);
+    printf_device("a<< "); dump_hex(resstr, 16);
 
     *outlen = resstr.length();
     memcpy(dataout, apdu_result, *outlen);
