@@ -370,23 +370,20 @@ Util::Error CryptoLib::ECDSAGenKey(ECDSAaid curveID, ECDSAKey& keyOut) {
 
     uint8_t keybuf[BR_EC_KBUF_PUB_MAX_SIZE + 10];
     std::memset(keybuf, 0, sizeof(keybuf));
-    br_ec_private_key sk;
-    br_ec_public_key pk;
+    br_ec_private_key sk = {};
+    br_ec_public_key pk = {};
 
     while (true) {
         const br_prng_class *rng = &br_hw_drbg_vtable;
         const br_ec_impl *impl = nullptr;
         impl = &br_ec_all_m15;
 
-        printf("--curve: %d\n", tlsCurveId);
         device_led(COLOR_MAGENTA);
-        if (br_ec_keygen(&rng, impl, &sk, keybuf, tlsCurveId)){
+        if (br_ec_keygen(&rng, impl, &sk, keybuf, tlsCurveId) == 0){
             device_led(COLOR_RED);
             err = Util::Error::CryptoOperationError;
             break;
         }
-
-        printf("--key OK\n");
 
         AppendKeyPart(KeyBuffer, keyOut.Private, sk.x, sk.xlen);
 
@@ -396,7 +393,6 @@ Util::Error CryptoLib::ECDSAGenKey(ECDSAaid curveID, ECDSAKey& keyOut) {
             break;
         }
         device_led(COLOR_GREEN);
-        printf("--pub conversion OK\n");
 
         // was AppendKeyPartEcpPoint!!!
         AppendKeyPart(KeyBuffer, keyOut.Public, pk.q, pk.qlen);
