@@ -509,7 +509,7 @@ Util::Error CryptoLib::ECDSAVerify(ECDSAKey key, bstr data,
 
 Util::Error CryptoLib::ECDHComputeShared(ECDSAKey key, bstr anotherPublicKey, bstr &sharedSecret) {
 
-    sharedSecret.clear(); // == anotherPublicKey * key.Private
+    sharedSecret.clear();
 
     br_ec_private_key sk = {};
     auto err = ECDSAFillPrivateKey(sk, key);
@@ -521,8 +521,8 @@ Util::Error CryptoLib::ECDHComputeShared(ECDSAKey key, bstr anotherPublicKey, bs
     pk.q = anotherPublicKey.uint8Data();
     pk.qlen = anotherPublicKey.length();
 
+    // sharedSecret = anotherPublicKey * key.Private
     size_t len = ecdh_shared_secret(&br_ec_all_m15, &sk, &pk, sharedSecret.uint8Data());
-    printf("===len %d xlen %d\n", len, sk.xlen);
     if (len == 0)
         return Util::Error::CryptoOperationError;
 
