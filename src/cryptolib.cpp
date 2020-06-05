@@ -153,7 +153,7 @@ Util::Error CryptoLib::RSAGenKey(RSAKey& keyOut, size_t keySize) {
         // OpenPGP 3.3.1 pages 33,34
         const br_prng_class *rng = &br_hw_drbg_vtable;
         device_led(COLOR_MAGENTA);
-        if (br_rsa_i15_keygen(&rng, &sk, keybufsk, &pk, keybufpk, keySize, 65537) == 0) { // TODO
+        if (br_rsa_i15_keygen(&rng, &sk, keybufsk, &pk, keybufpk, keySize, 65537) == 0) {
             device_led(COLOR_RED);
             ret = Util::Error::CryptoOperationError;
             break;
@@ -363,35 +363,54 @@ Util::Error CryptoLib::ECDSAGenKey(ECDSAaid curveID, ECDSAKey& keyOut) {
 	keyOut.clear();
     Util::Error err = Util::Error::InternalError;
 
-    /*if (curveID == ECDSAaid::none)
+    if (curveID == ECDSAaid::none)
 		return  Util::Error::StoredKeyParamsError;
 
-	mbedtls_ecdsa_context ctx;
+    int tlsCurveId = curveIdFromAid(curveID);
 
-	Util::Error err = Util::Error::InternalError;
-	mbedtls_ecp_group_id groupid = MbedtlsCurvefromAid(curveID);
+    uint8_t keybuf[BR_EC_KBUF_PUB_MAX_SIZE + 10];
+    std::memset(keybuf, 0, sizeof(keybuf));
+    br_ec_private_key sk;
+    br_ec_public_key pk;
 
-	while (true) {
-		if (ecdsa_init(&ctx, groupid, NULL, NULL)){
-			break;
-		}
+    while (true) {
+        const br_prng_class *rng = &br_hw_drbg_vtable;
+        const br_ec_impl *impl = nullptr;
+        impl = &br_ec_all_m15;
 
-		if (mbedtls_ecdsa_genkey(&ctx, groupid, &gen_random_device_callback, NULL)){
-			break;
-		}
+        printf("--curve: %d\n", tlsCurveId);
+        device_led(COLOR_MAGENTA);
+        if (br_ec_keygen(&rng, impl, &sk, keybuf, tlsCurveId)){
+            device_led(COLOR_RED);
+            err = Util::Error::CryptoOperationError;
+            break;
+        }
 
-		keyOut.CurveId = curveID;
-	    AppendKeyPart(KeyBuffer, keyOut.Private, &ctx.d);
-	    AppendKeyPartEcpPoint(KeyBuffer, keyOut.Public,  &ctx.grp, &ctx.Q);
-	    keyOut.Print();
+        printf("--key OK\n");
 
-		err =  Util::Error::NoError;
+        AppendKeyPart(KeyBuffer, keyOut.Private, sk.x, sk.xlen);
+
+        if (br_ec_compute_pub(impl, &pk, keybuf, &sk) == 0) {
+            device_led(COLOR_RED);
+            err = Util::Error::CryptoOperationError;
+            break;
+        }
+        device_led(COLOR_GREEN);
+        printf("--pub conversion OK\n");
+
+        // was AppendKeyPartEcpPoint!!!
+        AppendKeyPart(KeyBuffer, keyOut.Public, pk.q, pk.qlen);
+        keyOut.CurveId = curveID;
+
+        keyOut.Print();
+
+        err =  Util::Error::NoError;
 		break;
 	}
 
-    mbedtls_ecdsa_free(&ctx);*/
-	return err;
+    //mbedtls_ecdsa_free(&ctx);
 
+	return err;
 }
 
 Util::Error CryptoLib::ECDSASign(ECDSAKey key, bstr data, bstr& signature) {
