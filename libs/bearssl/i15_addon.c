@@ -211,5 +211,5 @@ size_t ecdh_shared_secret(const br_ec_impl *impl, br_ec_private_key *sk,
         return 0;
 
     memcpy(secret, &point[1], pk->qlen / 2);
-    return pk->qlen / 2;
+    return (pk->qlen - 1) / 2;
 }
