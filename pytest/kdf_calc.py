@@ -20,6 +20,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+import os
 from cffi import FFI
 
 DEF_gcry_kdf_derive="""
@@ -36,7 +37,11 @@ GCRY_MD_SHA256  = 8
 def kdf_calc(pw_string, salt_byte, iterations):
     ffi = FFI()
     ffi.cdef(DEF_gcry_kdf_derive)
-    libgcrypt = ffi.dlopen("libgcrypt.so.20")
+    # libgcrypt.so.20 for windows https://github.com/ShiftMediaProject/libgcrypt/releases
+    if os.name == 'nt':
+        libgcrypt = ffi.dlopen("gcrypt.dll")
+    else:
+        libgcrypt = ffi.dlopen("libgcrypt.so.20")
     if isinstance(pw_string, str):
         pw_byte = pw_string.encode('UTF-8')
     else:
