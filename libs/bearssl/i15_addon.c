@@ -199,3 +199,17 @@ bool br_rsa_deduce_crt(uint8_t *buffer, br_rsa_private_key *sk, uint8_t *exp) {
 
     return true;
 }
+
+size_t ecdh_shared_secret(const br_ec_impl *impl, br_ec_private_key *sk,
+                          br_ec_public_key *pk, uint8_t *secret) {
+
+    uint8_t point[pk->qlen + 5];
+    memcpy(point, pk->q, pk->qlen);
+
+    size_t err = impl->mul(point, pk->qlen, sk->x, sk->xlen, sk->curve);
+    if (err == 0 || point[0] != 0x04)
+        return 0;
+
+    memcpy(secret, &point[1], pk->qlen / 2);
+    return pk->qlen / 2;
+}

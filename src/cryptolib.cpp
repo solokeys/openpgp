@@ -411,11 +411,11 @@ Util::Error ECDSAFillPrivateKey(br_ec_private_key &sk, ECDSAKey &key) {
 
     if (key.Private.length() == 0 ||
         key.CurveId == ECDSAaid::none )
-        return Util::Error::CryptoDataError;
+        return Util::Error::StoredKeyError;
 
     sk.curve = curveIdFromAid(key.CurveId);
     if (sk.curve == tls_ec_none)
-        return Util::Error::CryptoDataError;
+        return Util::Error::StoredKeyError;
 
     sk.x = key.Private.uint8Data();
     sk.xlen = key.Private.length();
@@ -432,10 +432,9 @@ Util::Error CryptoLib::ECDSASign(ECDSAKey key, bstr data, bstr& signature) {
     br_ec_private_key sk = {};
 
     while (true) {
-        if (ECDSAFillPrivateKey(sk, key) != Util::Error::NoError) {
-			ret = Util::Error::CryptoDataError;
-			break;
-		}
+        ret = ECDSAFillPrivateKey(sk, key);
+        if (ret != Util::Error::NoError)
+            break;
 
         size_t len = br_ecdsa_i15_sign_raw(&br_ec_all_m15, &br_sha256_vtable, data.data(), &sk, signature.uint8Data());
         if (len == 0) {
@@ -475,44 +474,32 @@ Util::Error CryptoLib::RSACalcPublicKey(bstr strP, bstr strQ, bstr &strN) {
 }
 
 Util::Error CryptoLib::ECDSACalcPublicKey(ECDSAaid curveID, bstr privateKey, bstr &publicKey) {
-	Util::Error ret = Util::Error::NoError;
-/*
-	mbedtls_ecdsa_context ctx;
-	while (true) {
-		if (ecdsa_init(&ctx, MbedtlsCurvefromAid(curveID), &privateKey, NULL)) {
-			ret = Util::Error::CryptoDataError;
-			break;
-		}
+    publicKey.clear();
 
-		// Q = d * P
-		if (mbedtls_ecp_mul( &ctx.grp, &ctx.Q, &ctx.d, &ctx.grp.G, &gen_random_device_callback, NULL)) {
-			ret = Util::Error::CryptoOperationError;
-			break;
-		}
+    uint8_t keybuf[BR_EC_KBUF_PUB_MAX_SIZE + 10];
+    std::memset(keybuf, 0, sizeof(keybuf));
+    br_ec_private_key sk = {};
+    br_ec_public_key pk = {};
 
-		if (mbedtls_ecp_check_pubkey(&ctx.grp, &ctx.Q)) {
-			ret = Util::Error::CryptoDataError;
-			break;
-		}
+    ECDSAKey key;
+    key.clear();
+    key.CurveId = curveID;
+    key.Private = privateKey;
 
-		size_t point_len = 0;
-		if (mbedtls_ecp_point_write_binary(
-				&ctx.grp,
-				&ctx.Q,
-				MBEDTLS_ECP_PF_UNCOMPRESSED,
-				&point_len,
-				publicKey.uint8Data(),
-				publicKey.free_space()) ) {
-			ret = Util::Error::CryptoDataError;
-			break;
-		}
+    auto err = ECDSAFillPrivateKey(sk, key);
+    if (err != Util::Error::NoError)
+        return err;
 
-		publicKey.set_length(point_len);
-		break;
-	}
+    if (br_ec_compute_pub(&br_ec_all_m15, &pk, keybuf, &sk) == 0)
+        return Util::Error::CryptoOperationError;
 
-    mbedtls_ecdsa_free(&ctx);*/
-	return ret;
+    if (pk.qlen == 0)
+        return Util::Error::CryptoOperationError;
+
+    std::memcpy(publicKey.uint8Data(), pk.q, pk.qlen);
+    publicKey.set_length(pk.qlen);
+
+    return Util::Error::NoError;
 }
 
 Util::Error CryptoLib::ECDSAVerify(ECDSAKey key, bstr data,
@@ -522,89 +509,26 @@ Util::Error CryptoLib::ECDSAVerify(ECDSAKey key, bstr data,
 
 Util::Error CryptoLib::ECDHComputeShared(ECDSAKey key, bstr anotherPublicKey, bstr &sharedSecret) {
 
-	sharedSecret.clear();
-    Util::Error ret = Util::Error::InternalError;
-/*
-	mbedtls_ecdh_context ctx;
-	mbedtls_ecp_point anotherQ;
-	mbedtls_mpi z;
-	Util::Error ret = Util::Error::InternalError;
+    sharedSecret.clear(); // == anotherPublicKey * key.Private
 
-	mbedtls_ecdh_init(&ctx);
+    br_ec_private_key sk = {};
+    auto err = ECDSAFillPrivateKey(sk, key);
+    if (err != Util::Error::NoError)
+        return err;
 
-	mbedtls_ecp_point_init(&anotherQ);
-	mbedtls_mpi_init(&z);
+    br_ec_public_key pk = {};
+    pk.curve = sk.curve;
+    pk.q = anotherPublicKey.uint8Data();
+    pk.qlen = anotherPublicKey.length();
 
-	while (true) {
-		// load keys
-		if (mbedtls_ecp_group_load(&ctx.grp, MbedtlsCurvefromAid(key.CurveId))) {
-			ret = Util::Error::StoredKeyError;
-			break;
-		}
+    size_t len = ecdh_shared_secret(&br_ec_all_m15, &sk, &pk, sharedSecret.uint8Data());
+    printf("===len %d xlen %d\n", len, sk.xlen);
+    if (len == 0)
+        return Util::Error::CryptoOperationError;
 
-		if (mbedtls_mpi_read_binary(&ctx.d, key.Private.uint8Data(), key.Private.length())) {
-			ret = Util::Error::StoredKeyError;
-			break;
-		}
+    sharedSecret.set_length(len);
 
-		if (mbedtls_ecp_point_read_binary(&ctx.grp, &ctx.Q, key.Public.uint8Data(), key.Public.length())) {
-			ret = Util::Error::StoredKeyError;
-			break;
-		}
-
-		if (mbedtls_ecp_point_read_binary(&ctx.grp, &anotherQ, anotherPublicKey.uint8Data(), anotherPublicKey.length())) {
-			ret = Util::Error::StoredKeyError;
-			break;
-		}
-
-		// check all
-		if (mbedtls_ecp_check_pubkey(&ctx.grp, &anotherQ)) {
-			ret = Util::Error::StoredKeyError;
-			break;
-		}
-
-		if (mbedtls_ecp_check_pubkey(&ctx.grp, &ctx.Q)) {
-			ret = Util::Error::StoredKeyError;
-			break;
-		}
-
-		if (mbedtls_ecp_check_privkey(&ctx.grp, &ctx.d)) {
-			ret = Util::Error::StoredKeyError;
-			break;
-		}
-
-		// calc
-		if (mbedtls_ecdh_compute_shared(
-				&ctx.grp,
-				&z,
-				&anotherQ,
-				&ctx.d,
-				&gen_random_device_callback,
-				NULL) ) {
-			ret = Util::Error::CryptoOperationError;
-			break;
-		}
-
-		// save z
-		size_t alg_len = (ctx.grp.nbits + 7) / 8;
-		if (mbedtls_mpi_write_binary(&z, sharedSecret.uint8Data(), alg_len)) {
-			ret = Util::Error::CryptoDataError;
-			break;
-		}
-		sharedSecret.set_length(alg_len);
-
-		ret = Util::Error::NoError;
-		break;
-	}
-	
-	mbedtls_ecp_group_free(&ctx.grp);
-	mbedtls_ecdh_free(&ctx);
-
-
-	mbedtls_mpi_free(&z);
-	mbedtls_ecp_point_free(&anotherQ);
-    */
-	return ret;
+    return Util::Error::NoError;
 }
 
 KeyStorage::KeyStorage(CryptoEngine &_cryptoEngine): cryptoEngine(_cryptoEngine) {
