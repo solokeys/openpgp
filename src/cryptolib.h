@@ -92,14 +92,14 @@ static const uint8_t tls_ec_brainpoolP512r1 = 28;
 static const uint8_t tls_ec_curve25519      = 29;
 
 static const std::array<ECDSAalgParams, 8> ECDSAalgParamsList = {{
-        {none,            ""_bstr,                                     0},
-        {ansix9p256r1,    "\x2A\x86\x48\xCE\x3D\x03\x01\x07"_bstr,     23},
-        {ansix9p384r1,    "\x2B\x81\x04\x00\x22"_bstr,                 24},
-        {ansix9p521r1,    "\x2B\x81\x04\x00\x23"_bstr,                 25},
-        {brainpoolP256r1, "\x2B\x24\x03\x03\x02\x08\x01\x01\x07"_bstr, 26},
-        {brainpoolP384r1, "\x2B\x24\x03\x03\x02\x08\x01\x01\x0B"_bstr, 27},
-        {brainpoolP512r1, "\x2B\x24\x03\x03\x02\x08\x01\x01\x0D"_bstr, 28},
-        {secp256k1,       "\x2B\x81\x04\x00\x0a"_bstr,                 22}
+        {none,            ""_bstr,                                     tls_ec_none},
+        {ansix9p256r1,    "\x2A\x86\x48\xCE\x3D\x03\x01\x07"_bstr,     tls_ec_secp256r1},
+        {ansix9p384r1,    "\x2B\x81\x04\x00\x22"_bstr,                 tls_ec_secp384r1},
+        {ansix9p521r1,    "\x2B\x81\x04\x00\x23"_bstr,                 tls_ec_secp521r1},
+        {brainpoolP256r1, "\x2B\x24\x03\x03\x02\x08\x01\x01\x07"_bstr, tls_ec_brainpoolP256r1},
+        {brainpoolP384r1, "\x2B\x24\x03\x03\x02\x08\x01\x01\x0B"_bstr, tls_ec_brainpoolP384r1},
+        {brainpoolP512r1, "\x2B\x24\x03\x03\x02\x08\x01\x01\x0D"_bstr, tls_ec_brainpoolP512r1},
+        {secp256k1,       "\x2B\x81\x04\x00\x0a"_bstr,                 tls_ec_secp256k1}
 }};
 
 constexpr int curveIdFromAid(const ECDSAaid aid) {
