@@ -38,6 +38,7 @@ enum RSAKeyImportFormat {
 
 // ECDSA OIDs. OpenPGP 3.3.1 pages 90-92.
 // decoding https://docs.microsoft.com/ru-ru/windows/win32/seccertenroll/about-object-identifier
+// curve Id http://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml#tls-parameters-8
 // ansix9p256r1, OID = {1.2.840.10045.3.1.7} = ´2A8648CE3D030107´       MBEDTLS_ECP_DP_SECP256R1  BR_EC_secp256r1       23
 // ansix9p384r1, OID = {1.3.132.0.34} = '2B81040022'                    MBEDTLS_ECP_DP_SECP384R1  BR_EC_secp384r1       24
 // ansix9p521r1, OID = {1.3.132.0.35} = '2B81040023'                    MBEDTLS_ECP_DP_SECP521R1  BR_EC_secp521r1       25
@@ -73,9 +74,12 @@ constexpr static const char* const ECDSAaidStr[8] = {
 struct ECDSAalgParams {
 	ECDSAaid aid;
 	bstr oid;
-    int eccId;
+    int tlsCurveId;
 };
 
+/* Our ID, OID, Standard curve ID. Standard curve ID are equal to the numerical in TLS:
+ *    http://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml#tls-parameters-8
+ */
 static const std::array<ECDSAalgParams, 8> ECDSAalgParamsList = {{
         {none,            ""_bstr,                                     0},
         {ansix9p256r1,    "\x2A\x86\x48\xCE\x3D\x03\x01\x07"_bstr,     23},
@@ -90,7 +94,7 @@ static const std::array<ECDSAalgParams, 8> ECDSAalgParamsList = {{
 constexpr int curveIdFromAid(const ECDSAaid aid) {
 	for(const auto& algp: ECDSAalgParamsList) {
     	if (algp.aid == aid) {
-            return algp.eccId;
+            return algp.tlsCurveId;
     	}
     }
     return 0;
@@ -99,7 +103,7 @@ constexpr int curveIdFromAid(const ECDSAaid aid) {
 constexpr int curveIdFromOID(const bstr oid) {
 	for(const auto& algp: ECDSAalgParamsList) {
     	if (algp.oid == oid) {
-            return algp.eccId;
+            return algp.tlsCurveId;
     	}
     }
     return 0;
