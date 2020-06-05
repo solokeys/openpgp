@@ -12,6 +12,7 @@ from card_const import *
 from constants_for_test import *
 from openpgp_card import *
 import ecdsa_keys
+from ecdsa.util import string_to_number
 from binascii import hexlify
 
 
@@ -37,6 +38,22 @@ def ECDSAcurve(request):
     return request.param.value
 
 
+def ECDSACheckPublicKey(curve_oid, public_key):
+    assert len(public_key) > 2
+    assert public_key[0] == 0x04
+
+    curve = ecdsa_keys.find_curve_oid_hex(curve_oid)
+    assert not (curve is None)
+    assert curve.verifying_key_length + 1 == len(public_key)
+
+    length = (len(public_key) - 1) // 2
+    x = public_key[1:length + 1]
+    y = public_key[length + 1:]
+    assert len(x) == len(y)
+    curve.curve.contains_point(string_to_number(x), string_to_number(y))
+    return True
+
+
 class Test_ECDSA(object):
     def test_setup_ecdsa(self, card, ECDSAcurve):
         assert card.verify(3, FACTORY_PASSPHRASE_PW3)
@@ -49,6 +66,7 @@ class Test_ECDSA(object):
 
     def test_keygen_1(self, card, ECDSAcurve):
         pk = card.cmd_genkey(1)
+        assert ECDSACheckPublicKey(ECDSAcurve, pk[0])
         fpr_date = ecdsa_keys.calc_fpr_ecdsa(pk[0])
         r = card.cmd_put_data(0x00, 0xc7, fpr_date[0])
         if r:
@@ -57,6 +75,7 @@ class Test_ECDSA(object):
 
     def test_keygen_2(self, card, ECDSAcurve):
         pk = card.cmd_genkey(2)
+        assert ECDSACheckPublicKey(ECDSAcurve, pk[0])
         fpr_date = ecdsa_keys.calc_fpr_ecdsa(pk[0])
         r = card.cmd_put_data(0x00, 0xc7, fpr_date[0])
         if r:
@@ -65,6 +84,7 @@ class Test_ECDSA(object):
 
     def test_keygen_3(self, card, ECDSAcurve):
         pk = card.cmd_genkey(3)
+        assert ECDSACheckPublicKey(ECDSAcurve, pk[0])
         fpr_date = ecdsa_keys.calc_fpr_ecdsa(pk[0])
         r = card.cmd_put_data(0x00, 0xc7, fpr_date[0])
         if r:
