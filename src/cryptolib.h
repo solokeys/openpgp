@@ -77,9 +77,20 @@ struct ECDSAalgParams {
     int tlsCurveId;
 };
 
-/* Our ID, OID, Standard curve ID. Standard curve ID are equal to the numerical in TLS:
- *    http://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml#tls-parameters-8
+/*
+ * Our ID, OID, Standard curve ID. Standard curve ID are equal to the numerical in TLS:
+ * http://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml#tls-parameters-8
  */
+static const uint8_t tls_ec_none            = 0;
+static const uint8_t tls_ec_secp256k1       = 22;
+static const uint8_t tls_ec_secp256r1       = 23;
+static const uint8_t tls_ec_secp384r1       = 24;
+static const uint8_t tls_ec_secp521r1       = 25;
+static const uint8_t tls_ec_brainpoolP256r1 = 26;
+static const uint8_t tls_ec_brainpoolP384r1 = 27;
+static const uint8_t tls_ec_brainpoolP512r1 = 28;
+static const uint8_t tls_ec_curve25519      = 29;
+
 static const std::array<ECDSAalgParams, 8> ECDSAalgParamsList = {{
         {none,            ""_bstr,                                     0},
         {ansix9p256r1,    "\x2A\x86\x48\xCE\x3D\x03\x01\x07"_bstr,     23},
