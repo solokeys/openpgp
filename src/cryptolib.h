@@ -17,11 +17,6 @@
 #include "tlv.h"
 
 #include "bearssl.h"
-//#include <mbedtls/config.h>
-///#include <mbedtls/rsa.h>
-//#include <mbedtls/aes.h>
-//#include <mbedtls/havege.h>
-#include <mbedtls/ecdsa.h>
 
 namespace Crypto {
 
@@ -43,14 +38,15 @@ enum RSAKeyImportFormat {
 
 // ECDSA OIDs. OpenPGP 3.3.1 pages 90-92.
 // decoding https://docs.microsoft.com/ru-ru/windows/win32/seccertenroll/about-object-identifier
-// ansix9p256r1, OID = {1.2.840.10045.3.1.7} = ´2A8648CE3D030107´         MBEDTLS_ECP_DP_SECP256R1
-// ansix9p384r1, OID = {1.3.132.0.34} = '2B81040022'                      MBEDTLS_ECP_DP_SECP384R1
-// ansix9p521r1, OID = {1.3.132.0.35} = '2B81040023'                      MBEDTLS_ECP_DP_SECP521R1
-// brainpoolP256r1, OID={1.3.36.3.3.2.8.1.1.7} = ´2B2403030208010107´     MBEDTLS_ECP_DP_BP256R1
-// brainpoolP384r1, OID={1.3.36.3.3.2.8.1.1.11} = ´2B240303020801010B´    MBEDTLS_ECP_DP_BP384R1
-// brainpoolP512r1, OID={1.3.36.3.3.2.8.1.1.13} = ´2B240303020801010D´    MBEDTLS_ECP_DP_BP512R1
-// secp256k1,       OID={1.3.132.0.10}  = '2B8104000a'                    MBEDTLS_ECP_DP_SECP256K1 (http://www.secg.org/sec2-v2.pdf)
+// ansix9p256r1, OID = {1.2.840.10045.3.1.7} = ´2A8648CE3D030107´       MBEDTLS_ECP_DP_SECP256R1  BR_EC_secp256r1       23
+// ansix9p384r1, OID = {1.3.132.0.34} = '2B81040022'                    MBEDTLS_ECP_DP_SECP384R1  BR_EC_secp384r1       24
+// ansix9p521r1, OID = {1.3.132.0.35} = '2B81040023'                    MBEDTLS_ECP_DP_SECP521R1  BR_EC_secp521r1       25
+// brainpoolP256r1, OID={1.3.36.3.3.2.8.1.1.7} = ´2B2403030208010107´   MBEDTLS_ECP_DP_BP256R1    BR_EC_brainpoolP256r1 26
+// brainpoolP384r1, OID={1.3.36.3.3.2.8.1.1.11} = ´2B240303020801010B´  MBEDTLS_ECP_DP_BP384R1    BR_EC_brainpoolP384r1 27
+// brainpoolP512r1, OID={1.3.36.3.3.2.8.1.1.13} = ´2B240303020801010D´  MBEDTLS_ECP_DP_BP512R1    BR_EC_brainpoolP512r1 28
+// secp256k1,       OID={1.3.132.0.10}  = '2B8104000a'                  MBEDTLS_ECP_DP_SECP256K1  BR_EC_secp256k1       22 (http://www.secg.org/sec2-v2.pdf)
 // max OID length 9 bytes
+
 enum ECDSAaid {
 	none,
 	ansix9p256r1,
@@ -77,36 +73,36 @@ constexpr static const char* const ECDSAaidStr[8] = {
 struct ECDSAalgParams {
 	ECDSAaid aid;
 	bstr oid;
-	mbedtls_ecp_group_id mbedtlsGroup;
+    int eccId;
 };
 
 static const std::array<ECDSAalgParams, 8> ECDSAalgParamsList = {{
-		{none,            ""_bstr,                                     MBEDTLS_ECP_DP_NONE},
-		{ansix9p256r1,    "\x2A\x86\x48\xCE\x3D\x03\x01\x07"_bstr,     MBEDTLS_ECP_DP_SECP256R1},
-		{ansix9p384r1,    "\x2B\x81\x04\x00\x22"_bstr,                 MBEDTLS_ECP_DP_SECP384R1},
-		{ansix9p521r1,    "\x2B\x81\x04\x00\x23"_bstr,                 MBEDTLS_ECP_DP_SECP521R1},
-		{brainpoolP256r1, "\x2B\x24\x03\x03\x02\x08\x01\x01\x07"_bstr, MBEDTLS_ECP_DP_BP256R1},
-		{brainpoolP384r1, "\x2B\x24\x03\x03\x02\x08\x01\x01\x0B"_bstr, MBEDTLS_ECP_DP_BP384R1},
-		{brainpoolP512r1, "\x2B\x24\x03\x03\x02\x08\x01\x01\x0D"_bstr, MBEDTLS_ECP_DP_BP512R1},
-		{secp256k1,       "\x2B\x81\x04\x00\x0a"_bstr,                 MBEDTLS_ECP_DP_SECP256K1}
+        {none,            ""_bstr,                                     0},
+        {ansix9p256r1,    "\x2A\x86\x48\xCE\x3D\x03\x01\x07"_bstr,     23},
+        {ansix9p384r1,    "\x2B\x81\x04\x00\x22"_bstr,                 24},
+        {ansix9p521r1,    "\x2B\x81\x04\x00\x23"_bstr,                 25},
+        {brainpoolP256r1, "\x2B\x24\x03\x03\x02\x08\x01\x01\x07"_bstr, 26},
+        {brainpoolP384r1, "\x2B\x24\x03\x03\x02\x08\x01\x01\x0B"_bstr, 27},
+        {brainpoolP512r1, "\x2B\x24\x03\x03\x02\x08\x01\x01\x0D"_bstr, 28},
+        {secp256k1,       "\x2B\x81\x04\x00\x0a"_bstr,                 22}
 }};
 
-constexpr mbedtls_ecp_group_id MbedtlsCurvefromAid(const ECDSAaid aid) {
+constexpr int curveIdFromAid(const ECDSAaid aid) {
 	for(const auto& algp: ECDSAalgParamsList) {
     	if (algp.aid == aid) {
-    		return algp.mbedtlsGroup;
+            return algp.eccId;
     	}
     }
-	return MBEDTLS_ECP_DP_NONE;
+    return 0;
 }
 
-constexpr mbedtls_ecp_group_id MbedtlsCurvefromOID(const bstr oid) {
+constexpr int curveIdFromOID(const bstr oid) {
 	for(const auto& algp: ECDSAalgParamsList) {
     	if (algp.oid == oid) {
-    		return algp.mbedtlsGroup;
+            return algp.eccId;
     	}
     }
-	return MBEDTLS_ECP_DP_NONE;
+    return 0;
 }
 
 constexpr ECDSAaid AIDfromOID(const bstr oid) {
@@ -119,7 +115,7 @@ constexpr ECDSAaid AIDfromOID(const bstr oid) {
 }
 
 // EdDSA: ed25519    1.3.6.1.4.1.11591.15.1  "\x06\x09\x2B\x06\x01\x04\x01\xDA\x47\x0F\x01"
-// ECDH:  curve25519 1.3.6.1.4.1.3029.1.5.1  "\x06\x0A\x2B\x06\x01\x04\x01\x97\x55\x01\x05\x01"  MBEDTLS_ECP_DP_CURVE25519
+// ECDH:  curve25519 1.3.6.1.4.1.3029.1.5.1  "\x06\x0A\x2B\x06\x01\x04\x01\x97\x55\x01\x05\x01"  BR_EC_curve25519  29
 
 enum KeyType {
 	Symmetric,
