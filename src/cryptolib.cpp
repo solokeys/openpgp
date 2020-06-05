@@ -404,78 +404,51 @@ Util::Error CryptoLib::ECDSAGenKey(ECDSAaid curveID, ECDSAKey& keyOut) {
 		break;
 	}
 
-    //mbedtls_ecdsa_free(&ctx);
-
 	return err;
 }
+
+Util::Error ECDSAFillPrivateKey(br_ec_private_key &sk, ECDSAKey &key) {
+
+    if (key.Private.length() == 0 ||
+        key.CurveId == ECDSAaid::none )
+        return Util::Error::CryptoDataError;
+
+    sk.curve = curveIdFromAid(key.CurveId);
+    if (sk.curve == tls_ec_none)
+        return Util::Error::CryptoDataError;
+
+    sk.x = key.Private.uint8Data();
+    sk.xlen = key.Private.length();
+
+    return Util::Error::NoError;
+}
+
 
 Util::Error CryptoLib::ECDSASign(ECDSAKey key, bstr data, bstr& signature) {
 	signature.clear();
 
     Util::Error ret = Util::Error::InternalError;
-/*
-	mbedtls_mpi r, s;
-	mbedtls_ecdsa_context ctx;
 
-	mbedtls_mpi_init(&r);
-	mbedtls_mpi_init(&s);
+    br_ec_private_key sk = {};
 
-
-	Util::Error ret = Util::Error::InternalError;
-
-	while (true) {
-		if (ecdsa_init(&ctx, MbedtlsCurvefromAid(key.CurveId), &key.Private, &key.Public)) {
+    while (true) {
+        if (ECDSAFillPrivateKey(sk, key) != Util::Error::NoError) {
 			ret = Util::Error::CryptoDataError;
 			break;
 		}
 
-		if (mbedtls_ecp_check_privkey(&ctx.grp, &ctx.d)) {
-			ret = Util::Error::CryptoDataError;
-			break;
-		}
+        size_t len = br_ecdsa_i15_sign_raw(&br_ec_all_m15, &br_sha256_vtable, data.data(), &sk, signature.uint8Data());
+        if (len == 0) {
+            ret = Util::Error::CryptoOperationError;
+            break;
+        }
+        signature.set_length(len);
 
-		if (mbedtls_ecdsa_sign(
-				&ctx.grp,
-				&r,
-				&s,
-				&ctx.d,
-				data.uint8Data(),
-				data.length(),
-				&gen_random_device_callback,
-				NULL)) {
-			ret =  Util::Error::CryptoOperationError;
-			break;
-		}
-
-		size_t alg_len = (ctx.grp.nbits + 7) / 8;
-		if (alg_len < mbedtls_mpi_size(&r)) {
-			ret =  Util::Error::CryptoOperationError;
-			break;
-		}
-		if (mbedtls_mpi_write_binary(&r, signature.uint8Data() + signature.length(), alg_len)) {
-			ret = Util::Error::CryptoDataError;
-			break;
-		}
-		signature.set_length(signature.length() + alg_len);
-
-		if (alg_len < mbedtls_mpi_size(&s)) {
-			ret =  Util::Error::CryptoOperationError;
-			break;
-		}
-		if (mbedtls_mpi_write_binary(&s, signature.uint8Data() + signature.length(), alg_len)) {
-			ret = Util::Error::CryptoDataError;
-			break;
-		}
-		signature.set_length(signature.length() + alg_len);
-
-		ret =  Util::Error::NoError;
+        ret = Util::Error::NoError;
 		break;
 	}
 
 
-	mbedtls_ecdsa_free(&ctx);
-	mbedtls_mpi_free(&r);
-    mbedtls_mpi_free(&s);*/
 	return ret;
 }
 
