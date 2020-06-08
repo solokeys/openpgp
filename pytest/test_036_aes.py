@@ -11,13 +11,15 @@ from pytest import *
 
 from card_const import *
 from constants_for_test import *
-from Crypto.Cipher import AES
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from cryptography.hazmat.backends import default_backend
 
 
 @pytest.fixture(params=[AES128key, AES192key, AES256key],
                 ids=["AES128", "AES192", "AES256"], scope="class")
 def fAES(request):
     return request.param
+
 
 class Test_AES(object):
     def test_setup_AES(self, card, fAES):
@@ -37,20 +39,23 @@ class Test_AES(object):
 
         v = card.cmd_pso(0x86, 0x80, AESPlainText)
         assert v[0] == 0x02
-        aes = AES.new(fAES, AES.MODE_CBC, AESiv)
-        assert v[1:] == aes.encrypt(AESPlainText)
+        cipher = Cipher(algorithms.AES(fAES), modes.CBC(AESiv), backend=default_backend())
+        encryptor = cipher.encryptor()
+        assert v[1:] == encryptor.update(AESPlainText) + encryptor.finalize()
 
     def test_AES_decode(self, card, fAES):
-        aes = AES.new(fAES, AES.MODE_CBC, AESiv)
-        v = card.cmd_pso(0x80, 0x86, b"\x02" + aes.encrypt(AESPlainText))
+        cipher = Cipher(algorithms.AES(fAES), modes.CBC(AESiv), backend=default_backend())
+        encryptor = cipher.encryptor()
+        v = card.cmd_pso(0x80, 0x86, b"\x02" + encryptor.update(AESPlainText) + encryptor.finalize())
         assert v == AESPlainText
 
     def test_AES_cbc(self, card, fAES):
         ct = card.cmd_pso(0x86, 0x80, AESPlainTextLong)
         assert ct[0] == 0x02
 
-        aes = AES.new(fAES, AES.MODE_CBC, AESiv)
-        assert ct[1:] == aes.encrypt(AESPlainTextLong)
+        cipher = Cipher(algorithms.AES(fAES), modes.CBC(AESiv), backend=default_backend())
+        encryptor = cipher.encryptor()
+        assert ct[1:] == encryptor.update(AESPlainTextLong) + encryptor.finalize()
 
         v = card.cmd_pso(0x80, 0x86, ct)
         assert v == AESPlainTextLong
