@@ -56,7 +56,17 @@ Util::Error CryptoLib::AESEncrypt(bstr key, bstr dataIn,
 		bstr& dataOut) {
 	dataOut.clear();
 
+    if (key.length() != 16 && key.length() != 24 && key.length() != 32)
+        return Util::Error::StoredKeyError;
 
+    if (!aes_encode_cbc(key.uint8Data(), key.length(), dataIn.uint8Data(), dataOut.uint8Data(), dataIn.length()))
+        return Util::Error::CryptoOperationError;
+
+    size_t len = dataIn.length();
+    if (len % 16 != 0)
+        len = len + 16 - len % 16;
+
+    dataOut.set_length(len);
 
     return Util::Error::NoError;
 }
@@ -64,9 +74,17 @@ Util::Error CryptoLib::AESEncrypt(bstr key, bstr dataIn,
 Util::Error CryptoLib::AESDecrypt(bstr key, bstr dataIn,
 		bstr& dataOut) {
 	dataOut.clear();
-    //uint8_t iv[64] = {0};
 
+    if (key.length() != 16 && key.length() != 24 && key.length() != 32)
+        return Util::Error::StoredKeyError;
 
+    if (dataIn.length() % 16 != 0)
+        return Util::Error::CryptoDataError;
+
+    if (!aes_decode_cbc(key.uint8Data(), key.length(), dataIn.uint8Data(), dataOut.uint8Data(), dataIn.length()))
+        return Util::Error::CryptoOperationError;
+
+    dataOut.set_length(dataIn.length());
 
     return Util::Error::NoError;
 }
