@@ -432,28 +432,27 @@ Util::Error ECDSAFillPrivateKey(br_ec_private_key &sk, ECDSAKey &key) {
 Util::Error CryptoLib::ECDSASign(ECDSAKey key, bstr data, bstr& signature) {
 	signature.clear();
 
-    Util::Error ret = Util::Error::InternalError;
-
     br_ec_private_key sk = {};
 
-    while (true) {
-        ret = ECDSAFillPrivateKey(sk, key);
-        if (ret != Util::Error::NoError)
-            break;
+    if (key.CurveId == secp256k1) {
+        ecdsa_init();
+        size_t len = ecdsa_sign(key.Private.uint8Data(), data.uint8Data(), data.length(),
+                             signature.uint8Data(), curveIdFromAid(key.CurveId));
+        if (len == 0)
+            return Util::Error::CryptoOperationError;
+        signature.set_length(len);
+    } else {
+        Util::Error err = ECDSAFillPrivateKey(sk, key);
+        if (err != Util::Error::NoError)
+            return err;
 
         size_t len = br_ecdsa_i15_sign_raw(&br_ec_all_m15, &br_sha256_vtable, data.data(), &sk, signature.uint8Data());
-        if (len == 0) {
-            ret = Util::Error::CryptoOperationError;
-            break;
-        }
+        if (len == 0)
+            return Util::Error::CryptoOperationError;
         signature.set_length(len);
-
-        ret = Util::Error::NoError;
-		break;
 	}
 
-
-	return ret;
+    return Util::Error::NoError;
 }
 
 Util::Error CryptoLib::RSACalcPublicKey(bstr strP, bstr strQ, bstr &strN) {
@@ -481,28 +480,38 @@ Util::Error CryptoLib::RSACalcPublicKey(bstr strP, bstr strQ, bstr &strN) {
 Util::Error CryptoLib::ECDSACalcPublicKey(ECDSAaid curveID, bstr privateKey, bstr &publicKey) {
     publicKey.clear();
 
-    uint8_t keybuf[BR_EC_KBUF_PUB_MAX_SIZE + 10];
-    std::memset(keybuf, 0, sizeof(keybuf));
-    br_ec_private_key sk = {};
-    br_ec_public_key pk = {};
+    if (curveID == secp256k1) {
+        ecdsa_init();
+        size_t len = ecdsa_calc_public_key(privateKey.uint8Data(), publicKey.uint8Data(), curveIdFromAid(curveID));
+        if (len == 0)
+            return Util::Error::CryptoOperationError;
 
-    ECDSAKey key;
-    key.clear();
-    key.CurveId = curveID;
-    key.Private = privateKey;
+        publicKey.set_length(len);
+    } else {
+        uint8_t keybuf[BR_EC_KBUF_PUB_MAX_SIZE + 10];
+        std::memset(keybuf, 0, sizeof(keybuf));
 
-    auto err = ECDSAFillPrivateKey(sk, key);
-    if (err != Util::Error::NoError)
-        return err;
+        br_ec_private_key sk = {};
+        br_ec_public_key pk = {};
 
-    if (br_ec_compute_pub(&br_ec_all_m15, &pk, keybuf, &sk) == 0)
-        return Util::Error::CryptoOperationError;
+        ECDSAKey key;
+        key.clear();
+        key.CurveId = curveID;
+        key.Private = privateKey;
 
-    if (pk.qlen == 0)
-        return Util::Error::CryptoOperationError;
+        auto err = ECDSAFillPrivateKey(sk, key);
+        if (err != Util::Error::NoError)
+            return err;
 
-    std::memcpy(publicKey.uint8Data(), pk.q, pk.qlen);
-    publicKey.set_length(pk.qlen);
+        if (br_ec_compute_pub(&br_ec_all_m15, &pk, keybuf, &sk) == 0)
+            return Util::Error::CryptoOperationError;
+
+        if (pk.qlen == 0)
+            return Util::Error::CryptoOperationError;
+
+        std::memcpy(publicKey.uint8Data(), pk.q, pk.qlen);
+        publicKey.set_length(pk.qlen);
+    }
 
     return Util::Error::NoError;
 }
@@ -516,22 +525,27 @@ Util::Error CryptoLib::ECDHComputeShared(ECDSAKey key, bstr anotherPublicKey, bs
 
     sharedSecret.clear();
 
-    br_ec_private_key sk = {};
-    auto err = ECDSAFillPrivateKey(sk, key);
-    if (err != Util::Error::NoError)
-        return err;
+    if (key.CurveId == secp256k1) {
+        ecdsa_init();
 
-    br_ec_public_key pk = {};
-    pk.curve = sk.curve;
-    pk.q = anotherPublicKey.uint8Data();
-    pk.qlen = anotherPublicKey.length();
+    } else {
+        br_ec_private_key sk = {};
+        auto err = ECDSAFillPrivateKey(sk, key);
+        if (err != Util::Error::NoError)
+            return err;
 
-    // sharedSecret = anotherPublicKey * key.Private
-    size_t len = ecdh_shared_secret(&br_ec_all_m15, &sk, &pk, sharedSecret.uint8Data());
-    if (len == 0)
-        return Util::Error::CryptoOperationError;
+        br_ec_public_key pk = {};
+        pk.curve = sk.curve;
+        pk.q = anotherPublicKey.uint8Data();
+        pk.qlen = anotherPublicKey.length();
 
-    sharedSecret.set_length(len);
+        // sharedSecret = anotherPublicKey * key.Private
+        size_t len = ecdh_shared_secret(&br_ec_all_m15, &sk, &pk, sharedSecret.uint8Data());
+        if (len == 0)
+            return Util::Error::CryptoOperationError;
+
+        sharedSecret.set_length(len);
+    }
 
     return Util::Error::NoError;
 }
