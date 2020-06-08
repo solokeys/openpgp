@@ -42,4 +42,8 @@ int deletefiles(char* name);
 int gen_random_device_callback(void *parameters, uint8_t *data, size_t size);
 int gen_random_device(uint8_t * data, size_t size);
 
+void ecdsa_init();
+bool ecdsa_keygen(uint8_t *sk, size_t *sklen, uint8_t *pk, size_t *pklen,int curve);
+int ecdsa_sign(uint8_t *sk, uint8_t *data, int len, uint8_t *sig, int curve);
+
 #endif

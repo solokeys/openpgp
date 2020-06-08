@@ -21,6 +21,7 @@
 #include "opgputil.h"
 
 #include "stm32fs.h"
+#include "uECC.h"
 
 static Stm32fs *fs = nullptr;
 
@@ -153,4 +154,53 @@ int gen_random_device_callback(void *parameters, uint8_t *data, size_t size) {
 int gen_random_device(uint8_t * data, size_t size) {
     ctap_generate_rng(data, size);
     return 0;
+}
+
+static const uint8_t tls_ec_secp256k1       = 22;
+static const uint8_t tls_ec_secp256r1       = 23;
+
+static const struct uECC_Curve_t * ecdsa_get_curve(int curve) {
+    switch(curve) {
+    case tls_ec_secp256k1:
+        return uECC_secp256k1();
+    case tls_ec_secp256r1:
+        return uECC_secp256r1();
+    default:
+        return nullptr;
+    }
+}
+
+void ecdsa_init() {
+    uECC_set_rng((uECC_RNG_Function)ctap_generate_rng);
+}
+
+bool ecdsa_keygen(uint8_t *sk, size_t *sklen, uint8_t *pk, size_t *pklen,int curve) {
+    const struct uECC_Curve_t * curvep = ecdsa_get_curve(curve);
+    if (curvep == nullptr)
+        return false;
+
+    if (uECC_make_key(pk + 1, sk, curvep) == 0)
+        return false;
+
+    pk[0] = 0x04; // uncompressed key
+
+    if (sklen != nullptr)
+        *sklen = uECC_curve_private_key_size(curvep);
+    if (pklen != nullptr)
+        *pklen = uECC_curve_public_key_size(curvep) + 1;
+
+    return true;
+}
+
+int ecdsa_sign(uint8_t *sk, uint8_t *data, int len, uint8_t *sig, int curve) {
+
+    const struct uECC_Curve_t * curvep = ecdsa_get_curve(curve);
+    if (curvep == nullptr)
+        return 0;
+
+
+    if (uECC_sign(sk, data, len, sig, curvep) == 0)
+        return 0;
+
+    return uECC_curve_public_key_size(curvep);
 }
