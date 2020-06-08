@@ -197,7 +197,6 @@ size_t ecdsa_sign(uint8_t *sk, uint8_t *data, int len, uint8_t *sig, int curve) 
     if (curvep == nullptr)
         return 0;
 
-
     if (uECC_sign(sk, data, len, sig, curvep) == 0)
         return 0;
 
@@ -215,4 +214,15 @@ size_t ecdsa_calc_public_key(uint8_t *sk, uint8_t *pk, int curve) {
     pk[0] = 0x04; // uncompressed key
 
     return uECC_curve_public_key_size(curvep) + 1;
+}
+
+size_t ecdsa_ecdh_shared_secret(uint8_t *sk, uint8_t *pk, uint8_t *secret, int curve) {
+    const struct uECC_Curve_t * curvep = ecdsa_get_curve(curve);
+    if (curvep == nullptr)
+        return 0;
+
+    if (uECC_shared_secret(pk + 1, sk, secret, curvep) == 0)
+        return 0;
+
+    return uECC_curve_public_key_size(curvep) / 2;
 }

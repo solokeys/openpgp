@@ -46,5 +46,6 @@ void ecdsa_init();
 bool ecdsa_keygen(uint8_t *sk, size_t *sklen, uint8_t *pk, size_t *pklen, int curve);
 size_t ecdsa_sign(uint8_t *sk, uint8_t *data, int len, uint8_t *sig, int curve);
 size_t ecdsa_calc_public_key(uint8_t *sk, uint8_t *pk, int curve);
+size_t ecdsa_ecdh_shared_secret(uint8_t *sk, uint8_t *pk, uint8_t *secret, int curve);
 
 #endif
