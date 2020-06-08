@@ -48,4 +48,7 @@ size_t ecdsa_sign(uint8_t *sk, uint8_t *data, int len, uint8_t *sig, int curve);
 size_t ecdsa_calc_public_key(uint8_t *sk, uint8_t *pk, int curve);
 size_t ecdsa_ecdh_shared_secret(uint8_t *sk, uint8_t *pk, uint8_t *secret, int curve);
 
+bool aes_encode_cbc(uint8_t *key, size_t keylen, uint8_t *data, uint8_t *encdata, size_t datalen);
+bool aes_decode_cbc(uint8_t *key, size_t keylen, uint8_t *encdata, uint8_t *data, size_t datalen);
+
 #endif

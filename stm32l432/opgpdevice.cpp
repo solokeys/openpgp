@@ -22,6 +22,7 @@
 
 #include "stm32fs.h"
 #include "uECC.h"
+#include "bearssl.h"
 
 static Stm32fs *fs = nullptr;
 
@@ -226,3 +227,34 @@ size_t ecdsa_ecdh_shared_secret(uint8_t *sk, uint8_t *pk, uint8_t *secret, int c
 
     return uECC_curve_public_key_size(curvep) / 2;
 }
+
+bool aes_encode_cbc(uint8_t *key, size_t keylen, uint8_t *data, uint8_t *encdata, size_t datalen) {
+    uint8_t iv[16] = {0};
+    size_t vlen = datalen;
+    if (vlen % 16 != 0)
+        vlen = vlen + 16 - vlen % 16;
+
+    uint8_t vdata[vlen];
+    memset(vdata, 0x00, sizeof(vdata));
+    memcpy(vdata, data, datalen);
+
+    br_aes_ct_cbcenc_keys ctx = {};
+    br_aes_ct_cbcenc_init(&ctx, key, keylen);
+    br_aes_ct_cbcenc_run(&ctx, iv, vdata, vlen);
+    memcpy(encdata, vdata, vlen);
+    return true;
+}
+
+bool aes_decode_cbc(uint8_t *key, size_t keylen, uint8_t *encdata, uint8_t *data, size_t datalen) {
+    uint8_t iv[16] = {0};
+    uint8_t vdata[datalen];
+    memcpy(vdata, encdata, datalen);
+
+    br_aes_ct_cbcdec_keys ctx = {};
+    br_aes_ct_cbcdec_init(&ctx, key, keylen);
+    br_aes_ct_cbcdec_run(&ctx, iv, vdata, datalen);
+
+    memcpy(data, vdata, datalen);
+    return true;
+}
+
