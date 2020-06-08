@@ -361,19 +361,32 @@ Util::Error CryptoLib::RSAVerify(bstr publicKey, bstr data, bstr signature) {
 Util::Error CryptoLib::ECDSAGenKey(ECDSAaid curveID, ECDSAKey& keyOut) {
 	ClearKeyBuffer();
 	keyOut.clear();
-    Util::Error err = Util::Error::InternalError;
 
     if (curveID == ECDSAaid::none)
 		return  Util::Error::StoredKeyParamsError;
 
     int tlsCurveId = curveIdFromAid(curveID);
 
-    uint8_t keybuf[BR_EC_KBUF_PUB_MAX_SIZE + 10];
+    uint8_t keybuf[BR_EC_KBUF_PUB_MAX_SIZE * 2 + 10];
     std::memset(keybuf, 0, sizeof(keybuf));
-    br_ec_private_key sk = {};
-    br_ec_public_key pk = {};
 
-    while (true) {
+    if (curveID == secp256k1) {
+        ecdsa_init();
+        size_t sklen = 0;
+        size_t pklen = 0;
+        device_led(COLOR_MAGENTA);
+        if (!ecdsa_keygen(keybuf, &sklen, keybuf + BR_EC_KBUF_PUB_MAX_SIZE, &pklen, tlsCurveId)) {
+            device_led(COLOR_RED);
+            return Util::Error::CryptoOperationError;
+        }
+        AppendKeyPart(KeyBuffer, keyOut.Private, keybuf, sklen);
+        AppendKeyPart(KeyBuffer, keyOut.Public, keybuf + BR_EC_KBUF_PUB_MAX_SIZE, pklen);
+
+        device_led(COLOR_GREEN);
+    } else {
+        br_ec_private_key sk = {};
+        br_ec_public_key pk = {};
+
         const br_prng_class *rng = &br_hw_drbg_vtable;
         const br_ec_impl *impl = nullptr;
         impl = &br_ec_all_m15;
@@ -381,30 +394,22 @@ Util::Error CryptoLib::ECDSAGenKey(ECDSAaid curveID, ECDSAKey& keyOut) {
         device_led(COLOR_MAGENTA);
         if (br_ec_keygen(&rng, impl, &sk, keybuf, tlsCurveId) == 0){
             device_led(COLOR_RED);
-            err = Util::Error::CryptoOperationError;
-            break;
+            return Util::Error::CryptoOperationError;
         }
-
         AppendKeyPart(KeyBuffer, keyOut.Private, sk.x, sk.xlen);
 
         if (br_ec_compute_pub(impl, &pk, keybuf, &sk) == 0) {
             device_led(COLOR_RED);
-            err = Util::Error::CryptoOperationError;
-            break;
+            return Util::Error::CryptoOperationError;
         }
-        device_led(COLOR_GREEN);
-
-        // was AppendKeyPartEcpPoint!!!
         AppendKeyPart(KeyBuffer, keyOut.Public, pk.q, pk.qlen);
         keyOut.CurveId = curveID;
 
-        keyOut.Print();
-
-        err =  Util::Error::NoError;
-		break;
+        device_led(COLOR_GREEN);
 	}
+    keyOut.Print();
 
-	return err;
+    return Util::Error::NoError;
 }
 
 Util::Error ECDSAFillPrivateKey(br_ec_private_key &sk, ECDSAKey &key) {
