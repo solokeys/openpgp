@@ -174,7 +174,7 @@ void ecdsa_init() {
     uECC_set_rng((uECC_RNG_Function)ctap_generate_rng);
 }
 
-bool ecdsa_keygen(uint8_t *sk, size_t *sklen, uint8_t *pk, size_t *pklen,int curve) {
+bool ecdsa_keygen(uint8_t *sk, size_t *sklen, uint8_t *pk, size_t *pklen, int curve) {
     const struct uECC_Curve_t * curvep = ecdsa_get_curve(curve);
     if (curvep == nullptr)
         return false;
@@ -192,8 +192,7 @@ bool ecdsa_keygen(uint8_t *sk, size_t *sklen, uint8_t *pk, size_t *pklen,int cur
     return true;
 }
 
-int ecdsa_sign(uint8_t *sk, uint8_t *data, int len, uint8_t *sig, int curve) {
-
+size_t ecdsa_sign(uint8_t *sk, uint8_t *data, int len, uint8_t *sig, int curve) {
     const struct uECC_Curve_t * curvep = ecdsa_get_curve(curve);
     if (curvep == nullptr)
         return 0;
@@ -203,4 +202,17 @@ int ecdsa_sign(uint8_t *sk, uint8_t *data, int len, uint8_t *sig, int curve) {
         return 0;
 
     return uECC_curve_public_key_size(curvep);
+}
+
+size_t ecdsa_calc_public_key(uint8_t *sk, uint8_t *pk, int curve) {
+    const struct uECC_Curve_t * curvep = ecdsa_get_curve(curve);
+    if (curvep == nullptr)
+        return 0;
+
+    if (uECC_compute_public_key(sk, pk + 1, curvep) == 0)
+        return 0;
+
+    pk[0] = 0x04; // uncompressed key
+
+    return uECC_curve_public_key_size(curvep) + 1;
 }
