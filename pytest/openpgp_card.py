@@ -5,6 +5,9 @@ Copyright (C) 2011, 2012, 2013, 2015, 2016, 2018, 2019
               Free Software Initiative of Japan
 Author: NIIBE Yutaka <gniibe@fsij.org>
 
+Copyright (C) 2020  SoloKeys
+Author: Oleg Moiseenko (merlokk)
+
 This file is a part of Gnuk, a GnuPG USB Token implementation.
 
 Gnuk is free software: you can redistribute it and/or modify it
@@ -184,7 +187,7 @@ class OpenPGP_Card(object):
     def cmd_get_response(self, expected_len):
         result = b""
         while True:
-            cmd_data = iso7816_compose(0xc0, 0x00, 0x00, b'') + pack('>B', expected_len)
+            cmd_data = iso7816_compose(0xc0, 0x00, 0x00, b'', le=expected_len)
             response = self.__reader.send_cmd(cmd_data)
             result += response[:-2]
             sw = response[-2:]
@@ -419,14 +422,16 @@ class OpenPGP_Card(object):
         if sw[0] != 0x90 and sw[1] != 0x00:
             raise ValueError("%02x%02x" % (sw[0], sw[1]))
 
-    def cmd_get_challenge(self):
-        cmd_data = iso7816_compose(0x84, 0x00, 0x00, '')
-        sw = self.__reader.send_cmd(cmd_data)
-        if len(sw) != 2:
-            raise ValueError(sw)
-        if sw[0] != 0x61:
-            raise ValueError("%02x%02x" % (sw[0], sw[1]))
-        return self.cmd_get_response(sw[1])
+    def cmd_get_challenge(self, size):
+        cmd_data = iso7816_compose(0x84, 0x00, 0x00, '', le=size)
+        response = self.__reader.send_cmd(cmd_data)
+        result = response[:-2]
+        if len(response) < 2:
+            raise ValueError(response)
+        sw = response[-2:]
+        if sw[0] == 0x61:
+            result += self.cmd_get_response(sw[1])
+        return result
 
     def cmd_external_authenticate(self, keyno, signed):
         cmd_data = iso7816_compose(0x82, 0x00, keyno, signed[0:128], cls=0x10)

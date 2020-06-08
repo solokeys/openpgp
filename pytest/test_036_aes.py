@@ -1,7 +1,7 @@
 """
 test_036_aes.py - test working with AES encrypt/decrypt and keys
 
-Copyright (C) 2019  SoloKeys
+Copyright (C) 2019, 2020  SoloKeys
 Author: Oleg Moiseenko (merlokk)
 
 """
