@@ -527,7 +527,14 @@ Util::Error CryptoLib::ECDHComputeShared(ECDSAKey key, bstr anotherPublicKey, bs
 
     if (key.CurveId == secp256k1) {
         ecdsa_init();
+        size_t len = ecdsa_ecdh_shared_secret(key.Private.uint8Data(),
+                                              anotherPublicKey.uint8Data(),
+                                              sharedSecret.uint8Data(),
+                                              curveIdFromAid(key.CurveId));
+        if (len == 0)
+            return Util::Error::CryptoOperationError;
 
+        sharedSecret.set_length(len);
     } else {
         br_ec_private_key sk = {};
         auto err = ECDSAFillPrivateKey(sk, key);
