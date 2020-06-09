@@ -125,5 +125,5 @@ Test some critical parts of code
   - ED25519 (EdDSA), CURVE25519(ECDH)
   - Secure messaging????
 6. fix:
-  - ansix9p384r1, ansix9p521r1 curves
+  - ~~ansix9p384r1, ansix9p521r1 curves~~
 
