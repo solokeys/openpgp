@@ -77,6 +77,21 @@ class Test_EdDSA(object):
         # return error cryptography.exceptions.InvalidSignature
         public_key.verify(sig, digest)
 
+    def test_verify_pw1_82(self, card):
+        assert card.verify(2, FACTORY_PASSPHRASE_PW1)
+
+    def test_signature_authkey(self, card):
+        msg = b"Sign me please to authenticate"
+        digest = ecdsa_keys.compute_digestinfo_ecdsa(msg)
+
+        pk = card.cmd_get_public_key(3)
+        pk_info = get_pk_info(pk)
+        sig = card.cmd_internal_authenticate(digest)
+
+        public_key = ed25519.Ed25519PublicKey.from_public_bytes(pk_info[0])
+        # return error cryptography.exceptions.InvalidSignature
+        public_key.verify(sig, digest)
+
     def yubikeyfail_test_verify_reset(self, card):
         assert card.cmd_verify_reset(1)
         assert card.cmd_verify_reset(2)
