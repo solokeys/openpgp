@@ -43,6 +43,7 @@ class CryptoAlgType(Enum):
     RSA = 0x01
     ECDH = 0x12
     ECDSA = 0x13
+    EdDSA = 0x16
 
 
 @unique
@@ -63,6 +64,8 @@ class ECDSACurves(Enum):
     brainpoolP384r1 = b"\x2B\x24\x03\x03\x02\x08\x01\x01\x0B"
     brainpoolP512r1 = b"\x2B\x24\x03\x03\x02\x08\x01\x01\x0D"
     secp256k1 = b"\x2B\x81\x04\x00\x0a"
+    ed25519 = b"\x2B\x06\x01\x04\x01\xDA\x47\x0F\x01"
+    curve25519 = b"\x2B\x06\x01\x04\x01\x97\x55\x01\x05\x01"
 
 
 def iso7816_compose(ins, p1, p2, data, cls=0x00, le=None):
@@ -182,6 +185,10 @@ class OpenPGP_Card(object):
 
     def set_ecdsa_algorithm_attributes(self, alg, curve_oid):
         data = pack('>B', CryptoAlgType.ECDSA.value) + curve_oid
+        return self.cmd_put_data(0x00, alg, data)
+
+    def set_eddsa_algorithm_attributes(self, alg, curve_oid):
+        data = pack('>B', CryptoAlgType.EdDSA.value) + curve_oid
         return self.cmd_put_data(0x00, alg, data)
 
     def cmd_get_response(self, expected_len):
