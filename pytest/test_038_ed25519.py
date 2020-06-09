@@ -92,6 +92,40 @@ class Test_EdDSA(object):
         # return error cryptography.exceptions.InvalidSignature
         public_key.verify(sig, digest)
 
+    def test_import_key_1(self, card):
+        t = ecdsa_keys.build_privkey_template_eddsa(1)
+        r = card.cmd_put_data_odd(0x3f, 0xff, t)
+        assert r
+
+    def test_signature_sigkey_uploaded(self, card):
+        msg = b"Sign me please"
+        digest = ecdsa_keys.compute_digestinfo_ecdsa(msg)
+
+        pk = card.cmd_get_public_key(1)
+        pk_info = get_pk_info(pk)
+        sig = card.cmd_pso(0x9e, 0x9a, digest)
+
+        public_key = ed25519.Ed25519PublicKey.from_public_bytes(pk_info[0])
+        # return error cryptography.exceptions.InvalidSignature
+        public_key.verify(sig, digest)
+
+    def test_import_key_3(self, card):
+        t = ecdsa_keys.build_privkey_template_eddsa(3)
+        r = card.cmd_put_data_odd(0x3f, 0xff, t)
+        assert r
+
+    def test_signature_authkey_uploaded(self, card):
+        msg = b"Sign me please to authenticate"
+        digest = ecdsa_keys.compute_digestinfo_ecdsa(msg)
+
+        pk = card.cmd_get_public_key(3)
+        pk_info = get_pk_info(pk)
+        sig = card.cmd_internal_authenticate(digest)
+
+        public_key = ed25519.Ed25519PublicKey.from_public_bytes(pk_info[0])
+        # return error cryptography.exceptions.InvalidSignature
+        public_key.verify(sig, digest)
+
     def yubikeyfail_test_verify_reset(self, card):
         assert card.cmd_verify_reset(1)
         assert card.cmd_verify_reset(2)

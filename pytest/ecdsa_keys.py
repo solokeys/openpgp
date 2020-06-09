@@ -15,6 +15,7 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives import serialization
 
 
 # Brainpool P-256-r1
@@ -94,9 +95,7 @@ def generate_key_ecdsa(ecdsa_curve):
     return PublicKey, PrivateKey
 
 
-def generate_key_eddsa(eddsa_curve):
-    curve = find_curve_oid_hex(eddsa_curve)
-    assert not(curve is None)
+def generate_key_eddsa():
     PrivateKey = Ed25519PrivateKey.generate()
     PublicKey = PrivateKey.public_key()
     return PublicKey, PrivateKey
@@ -112,6 +111,25 @@ def build_privkey_template_ecdsa(openpgp_keyno, ecdsa_curve):
 
     PublicKey, PrivateKey = generate_key_ecdsa(ecdsa_curve)
     return create_ecdsa_4D_key(keyspec, PrivateKey.to_string(), b"\x04" + PublicKey.to_string())
+
+
+def build_privkey_template_eddsa(openpgp_keyno):
+    if openpgp_keyno == 1:
+        keyspec = 0xb6
+    elif openpgp_keyno == 2:
+        keyspec = 0xb8
+    else:
+        keyspec = 0xa4
+
+    PublicKey, PrivateKey = generate_key_eddsa()
+    return create_ecdsa_4D_key(keyspec,
+              PrivateKey.private_bytes(
+                  serialization.Encoding.Raw,
+                  serialization.PrivateFormat.Raw,
+                  serialization.NoEncryption()),
+              b"\x04" + PublicKey.public_bytes(
+                                serialization.Encoding.Raw,
+                                serialization.PublicFormat.Raw))
 
 
 def compute_digestinfo_ecdsa(msg):
