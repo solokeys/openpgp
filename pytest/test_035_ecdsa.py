@@ -131,7 +131,7 @@ class Test_ECDSA(object):
         r = ecdsa_keys.verify_signature_ecdsa(pk_info[0], digest, sig, ECDSAcurve)
         assert r
 
-    def test_rsa_import_key_1(self, card, ECDSAcurve):
+    def test_ecdsa_import_key_1(self, card, ECDSAcurve):
         t = ecdsa_keys.build_privkey_template_ecdsa(1, ECDSAcurve)
         r = card.cmd_put_data_odd(0x3f, 0xff, t)
         assert r
@@ -145,7 +145,25 @@ class Test_ECDSA(object):
         r = ecdsa_keys.verify_signature_ecdsa(pk_info[0], digest, sig, ECDSAcurve)
         assert r
 
-    def test_rsa_import_key_3(self, card, ECDSAcurve):
+    def test_ecdsa_import_key_2(self, card, ECDSAcurve):
+        t = ecdsa_keys.build_privkey_template_ecdsa(2, ECDSAcurve)
+        r = card.cmd_put_data_odd(0x3f, 0xff, t)
+        assert r
+
+    def test_authkey_ecdh_uploaded(self, card, ECDSAcurve):
+        myPublicKey, myPrivateKey = ecdsa_keys.generate_key_ecdsa(ECDSAcurve)
+        myPublicKeyTLV = ecdh_public_key_encode(b"\x04" + myPublicKey.to_string())
+
+        pk = card.cmd_get_public_key(2)
+        pk_info = get_pk_info(pk)
+
+        mySharedSecret = ecdsa_keys.ecdh(ECDSAcurve, myPrivateKey.to_string(), pk_info[0])
+
+        sharedSecret = card.cmd_pso(0x80, 0x86, myPublicKeyTLV)
+
+        assert sharedSecret == mySharedSecret
+
+    def test_ecdsa_import_key_3(self, card, ECDSAcurve):
         t = ecdsa_keys.build_privkey_template_ecdsa(3, ECDSAcurve)
         r = card.cmd_put_data_odd(0x3f, 0xff, t)
         assert r
