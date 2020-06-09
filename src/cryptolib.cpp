@@ -601,11 +601,13 @@ Util::Error LoadKeyParameters(AppID_t appID, KeyID_t keyID, OpenPGP::AlgoritmAtt
 ECDSAaid KeyStorage::GetECDSACurveID(AppID_t appID, KeyID_t keyID) {
 	OpenPGP::AlgoritmAttr keyParams;
 	auto err = LoadKeyParameters(appID, keyID, keyParams);
-	if (err != Util::Error::NoError)
+
+    if (err != Util::Error::NoError)
 		return ECDSAaid::none;
 
 	if (keyParams.AlgorithmID != AlgoritmID::ECDSAforCDSandIntAuth &&
-		keyParams.AlgorithmID != AlgoritmID::ECDHforDEC)
+        keyParams.AlgorithmID != AlgoritmID::ECDHforDEC &&
+        keyParams.AlgorithmID != AlgoritmID::EDDSA)
 		return ECDSAaid::none;
 
 	return AIDfromOID(keyParams.ECDSAa.OID);

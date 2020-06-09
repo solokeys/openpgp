@@ -178,7 +178,8 @@ Util::Error AlgoritmAttr::Decode(KeyID_t key_id) {
 		return Util::Error::NoError;
 	}
 
-	if (AlgorithmID == Crypto::AlgoritmID::ECDSAforCDSandIntAuth) {
+    if (AlgorithmID == Crypto::AlgoritmID::ECDSAforCDSandIntAuth ||
+        AlgorithmID == Crypto::AlgoritmID::EDDSA) {
 		bool keyFormatLen = 0;
 		ECDSAa.KeyFormat = 0x00; // by default - standard (private key only)
 		// high bit can't be used in the last OID byte. In the OID it needs to mark 2-byte value

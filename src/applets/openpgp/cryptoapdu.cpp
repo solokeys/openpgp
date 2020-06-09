@@ -196,7 +196,8 @@ Util::Error APDUGenerateAsymmetricKeyPair::Process(uint8_t cla,
 			return Util::Error::NoError;
 		}
 
-		if (alg.AlgorithmID == Crypto::AlgoritmID::ECDSAforCDSandIntAuth) {
+        if (alg.AlgorithmID == Crypto::AlgoritmID::ECDSAforCDSandIntAuth ||
+            alg.AlgorithmID == Crypto::AlgoritmID::EDDSA) {
 			printf_device("ECDSA\n");
 			Crypto::ECDSAKey ecdsa_key;
 			err = cryptolib.ECDSAGenKey(key_storage.GetECDSACurveID(File::AppletID::OpenPGP, file_id), ecdsa_key);
