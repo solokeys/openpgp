@@ -24,8 +24,9 @@ namespace Crypto {
 enum AlgoritmID {
 	None                  = 0x00,
 	RSA                   = 0x01,
-	ECDSAforCDSandIntAuth = 0x13,
-	ECDHforDEC            = 0x12
+    ECDHforDEC            = 0x12,  // ECDSA + Curve25519
+    ECDSAforCDSandIntAuth = 0x13,
+    EDDSA                 = 0x16,  // Ed25519
 };
 
 // OpenPGP 3.3.1 page 31.
@@ -46,21 +47,25 @@ enum RSAKeyImportFormat {
 // brainpoolP384r1, OID={1.3.36.3.3.2.8.1.1.11} = ´2B240303020801010B´  MBEDTLS_ECP_DP_BP384R1    BR_EC_brainpoolP384r1 27
 // brainpoolP512r1, OID={1.3.36.3.3.2.8.1.1.13} = ´2B240303020801010D´  MBEDTLS_ECP_DP_BP512R1    BR_EC_brainpoolP512r1 28
 // secp256k1,       OID={1.3.132.0.10}  = '2B8104000a'                  MBEDTLS_ECP_DP_SECP256K1  BR_EC_secp256k1       22 (http://www.secg.org/sec2-v2.pdf)
+// EdDSA: ed25519    1.3.6.1.4.1.11591.15.1  "\x06\x09\x2B\x06\x01\x04\x01\xDA\x47\x0F\x01"
+// ECDH:  curve25519 1.3.6.1.4.1.3029.1.5.1  "\x06\x0A\x2B\x06\x01\x04\x01\x97\x55\x01\x05\x01"   BR_EC_curve25519      29
 // max OID length 9 bytes
 
 enum ECDSAaid {
 	none,
-	ansix9p256r1,
-	ansix9p384r1,
-	ansix9p521r1,
+    ansix9p256r1,    // NIST P256
+    ansix9p384r1,    // NIST P384
+    ansix9p521r1,    // NIST P521
 	brainpoolP256r1,
 	brainpoolP384r1,
 	brainpoolP512r1,
-	secp256k1,
+    secp256k1,       // bitcoin
+    ed25519,         // sign
+    curve25519,      // ecdh
 };
 
 
-constexpr static const char* const ECDSAaidStr[8] = {
+constexpr static const char* const ECDSAaidStr[10] = {
 	"none",
 	"ansix9p256r1",
 	"ansix9p384r1",
@@ -69,6 +74,8 @@ constexpr static const char* const ECDSAaidStr[8] = {
 	"brainpoolP384r1",
 	"brainpoolP512r1",
 	"secp256k1",
+    "ed25519",
+    "curve25519",
 };
 
 struct ECDSAalgParams {
@@ -91,15 +98,17 @@ static const uint8_t tls_ec_brainpoolP384r1 = 27;
 static const uint8_t tls_ec_brainpoolP512r1 = 28;
 static const uint8_t tls_ec_curve25519      = 29;
 
-static const std::array<ECDSAalgParams, 8> ECDSAalgParamsList = {{
-        {none,            ""_bstr,                                     tls_ec_none},
-        {ansix9p256r1,    "\x2A\x86\x48\xCE\x3D\x03\x01\x07"_bstr,     tls_ec_secp256r1},
-        {ansix9p384r1,    "\x2B\x81\x04\x00\x22"_bstr,                 tls_ec_secp384r1},
-        {ansix9p521r1,    "\x2B\x81\x04\x00\x23"_bstr,                 tls_ec_secp521r1},
-        {brainpoolP256r1, "\x2B\x24\x03\x03\x02\x08\x01\x01\x07"_bstr, tls_ec_brainpoolP256r1},
-        {brainpoolP384r1, "\x2B\x24\x03\x03\x02\x08\x01\x01\x0B"_bstr, tls_ec_brainpoolP384r1},
-        {brainpoolP512r1, "\x2B\x24\x03\x03\x02\x08\x01\x01\x0D"_bstr, tls_ec_brainpoolP512r1},
-        {secp256k1,       "\x2B\x81\x04\x00\x0a"_bstr,                 tls_ec_secp256k1}
+static const std::array<ECDSAalgParams, 10> ECDSAalgParamsList = {{
+    {none,            ""_bstr,                                         tls_ec_none},
+    {ansix9p256r1,    "\x2A\x86\x48\xCE\x3D\x03\x01\x07"_bstr,         tls_ec_secp256r1},
+    {ansix9p384r1,    "\x2B\x81\x04\x00\x22"_bstr,                     tls_ec_secp384r1},
+    {ansix9p521r1,    "\x2B\x81\x04\x00\x23"_bstr,                     tls_ec_secp521r1},
+    {brainpoolP256r1, "\x2B\x24\x03\x03\x02\x08\x01\x01\x07"_bstr,     tls_ec_brainpoolP256r1},
+    {brainpoolP384r1, "\x2B\x24\x03\x03\x02\x08\x01\x01\x0B"_bstr,     tls_ec_brainpoolP384r1},
+    {brainpoolP512r1, "\x2B\x24\x03\x03\x02\x08\x01\x01\x0D"_bstr,     tls_ec_brainpoolP512r1},
+    {secp256k1,       "\x2B\x81\x04\x00\x0a"_bstr,                     tls_ec_secp256k1},
+    {ed25519,         "\x2B\x06\x01\x04\x01\xda\x47\x0f\x01"_bstr,     tls_ec_curve25519},  // EdDSA  Ed25519
+    {curve25519,      "\x2B\x06\x01\x04\x01\x97\x55\x01\x05\x01"_bstr, tls_ec_curve25519}   // ECDH   Curve25519
 }};
 
 constexpr int curveIdFromAid(const ECDSAaid aid) {
@@ -128,9 +137,6 @@ constexpr ECDSAaid AIDfromOID(const bstr oid) {
     }
 	return ECDSAaid::none;
 }
-
-// EdDSA: ed25519    1.3.6.1.4.1.11591.15.1  "\x06\x09\x2B\x06\x01\x04\x01\xDA\x47\x0F\x01"
-// ECDH:  curve25519 1.3.6.1.4.1.3029.1.5.1  "\x06\x0A\x2B\x06\x01\x04\x01\x97\x55\x01\x05\x01"  BR_EC_curve25519  29
 
 enum KeyType {
 	Symmetric,
@@ -209,9 +215,7 @@ class CryptoLib {
 private:
 	CryptoEngine &cryptoEngine;
 
-    //Util::Error RSAFillPrivateKey(mbedtls_rsa_context *context, RSAKey key);
     Util::Error AppendKeyPart(bstr &buffer, bstr &keypart, uint8_t *mpi, size_t mpi_len);
-    //Util::Error AppendKeyPartEcpPoint(bstr &buffer, bstr &keypart,  mbedtls_ecp_group *grp, mbedtls_ecp_point  *point);
 public:
 	CryptoLib(CryptoEngine &_cryptoEngine);
     
