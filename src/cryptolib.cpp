@@ -369,9 +369,10 @@ Util::Error CryptoLib::ECDSAGenKey(ECDSAaid curveID, ECDSAKey& keyOut) {
             device_led(COLOR_RED);
             return Util::Error::CryptoOperationError;
         }
+
         AppendKeyPart(KeyBuffer, keyOut.Private, sk.x, sk.xlen);
 
-        if (br_ec_compute_pub(impl, &pk, keybuf, &sk) == 0) {
+        if (br_ec_compute_pub(impl, &pk, keybuf + sk.xlen + 2, &sk) == 0) {
             device_led(COLOR_RED);
             return Util::Error::CryptoOperationError;
         }
