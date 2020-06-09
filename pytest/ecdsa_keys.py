@@ -11,6 +11,10 @@ from struct import pack
 from hashlib import sha1, sha256
 from util import *
 import ecdsa
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+from cryptography.hazmat.primitives.asymmetric import ec
+from cryptography.hazmat.primitives import hashes
 
 
 # Brainpool P-256-r1
@@ -71,6 +75,7 @@ def find_curve_oid_hex(oid_curve_hex):
             return c
     return None
 
+
 def calc_fpr_ecdsa(n):
     timestamp = int(time())
     timestamp_data = pack('>I', timestamp)
@@ -80,12 +85,22 @@ def calc_fpr_ecdsa(n):
     fpr = sha1(m).digest()
     return fpr, timestamp_data
 
+
 def generate_key_ecdsa(ecdsa_curve):
     curve = find_curve_oid_hex(ecdsa_curve)
     assert not(curve is None)
     PrivateKey = ecdsa.SigningKey.generate(curve, hashfunc=sha256)
     PublicKey = PrivateKey.get_verifying_key()
     return PublicKey, PrivateKey
+
+
+def generate_key_eddsa(eddsa_curve):
+    curve = find_curve_oid_hex(eddsa_curve)
+    assert not(curve is None)
+    PrivateKey = Ed25519PrivateKey.generate()
+    PublicKey = PrivateKey.public_key()
+    return PublicKey, PrivateKey
+
 
 def build_privkey_template_ecdsa(openpgp_keyno, ecdsa_curve):
     if openpgp_keyno == 1:
@@ -98,15 +113,19 @@ def build_privkey_template_ecdsa(openpgp_keyno, ecdsa_curve):
     PublicKey, PrivateKey = generate_key_ecdsa(ecdsa_curve)
     return create_ecdsa_4D_key(keyspec, PrivateKey.to_string(), b"\x04" + PublicKey.to_string())
 
+
 def compute_digestinfo_ecdsa(msg):
-    digest = sha256(msg).digest()
-    return digest
+    digest = hashes.Hash(hashes.SHA256(), backend=default_backend())
+    digest.update(msg)
+    return digest.finalize()
+
 
 def verify_signature_ecdsa(pk_info, digest, sig, ecdsa_curve):
     curve = find_curve_oid_hex(ecdsa_curve)
     assert not(curve is None)
     vk = ecdsa.VerifyingKey.from_string(pk_info[1:], curve=curve, hashfunc=sha256)
     return vk.verify_digest(sig, digest)
+
 
 def ecdh(ecdsa_curve, PrivateKey, PublicKey):
     curve = find_curve_oid_hex(ecdsa_curve)
