@@ -12,7 +12,8 @@ from hashlib import sha1, sha256
 from util import *
 import ecdsa
 from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey, Ed25519PublicKey
+from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey, X25519PublicKey
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives import serialization
@@ -100,6 +101,11 @@ def generate_key_eddsa():
     PublicKey = PrivateKey.public_key()
     return PublicKey, PrivateKey
 
+def generate_key_eddsa_ecdh():
+    PrivateKey = X25519PrivateKey.generate()
+    PublicKey = PrivateKey.public_key()
+    return PublicKey, PrivateKey
+
 
 def build_privkey_template_ecdsa(openpgp_keyno, ecdsa_curve):
     if openpgp_keyno == 1:
@@ -113,6 +119,31 @@ def build_privkey_template_ecdsa(openpgp_keyno, ecdsa_curve):
     return create_ecdsa_4D_key(keyspec, PrivateKey.to_string(), b"\x04" + PublicKey.to_string())
 
 
+def ecc_to_string(key):
+    if isinstance(key, Ed25519PrivateKey):
+        return key.private_bytes(
+                  serialization.Encoding.Raw,
+                  serialization.PrivateFormat.Raw,
+                  serialization.NoEncryption())
+
+    if isinstance(key, Ed25519PublicKey):
+        return key.public_bytes(
+            serialization.Encoding.Raw,
+            serialization.PublicFormat.Raw)
+
+    if isinstance(key, X25519PrivateKey):
+        return key.private_bytes(
+                  serialization.Encoding.Raw,
+                  serialization.PrivateFormat.Raw,
+                  serialization.NoEncryption())
+
+    if isinstance(key, X25519PublicKey):
+        return key.public_bytes(
+            serialization.Encoding.Raw,
+            serialization.PublicFormat.Raw)
+
+    return None
+
 def build_privkey_template_eddsa(openpgp_keyno):
     if openpgp_keyno == 1:
         keyspec = 0xb6
@@ -122,14 +153,8 @@ def build_privkey_template_eddsa(openpgp_keyno):
         keyspec = 0xa4
 
     PublicKey, PrivateKey = generate_key_eddsa()
-    return create_ecdsa_4D_key(keyspec,
-              PrivateKey.private_bytes(
-                  serialization.Encoding.Raw,
-                  serialization.PrivateFormat.Raw,
-                  serialization.NoEncryption()),
-              b"\x04" + PublicKey.public_bytes(
-                                serialization.Encoding.Raw,
-                                serialization.PublicFormat.Raw))
+    return create_ecdsa_4D_key(keyspec, ecc_to_string(PrivateKey),
+              b"\x04" + ecc_to_string(PublicKey))
 
 
 def compute_digestinfo_ecdsa(msg):

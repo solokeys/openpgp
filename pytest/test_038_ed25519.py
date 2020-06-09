@@ -15,7 +15,7 @@ import ecdsa_keys
 from ecdsa.util import string_to_number
 from binascii import hexlify
 from cryptography.hazmat.primitives.asymmetric import ed25519
-
+from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PublicKey
 
 def Ed25519CheckPublicKey(public_key):
     assert len(public_key) == 32
@@ -80,6 +80,20 @@ class Test_EdDSA(object):
     def test_verify_pw1_82(self, card):
         assert card.verify(2, FACTORY_PASSPHRASE_PW1)
 
+    def test_ecdh(self, card):
+        myPublicKey, myPrivateKey = ecdsa_keys.generate_key_eddsa_ecdh()
+        myPublicKeyTLV = ecdh_public_key_encode(ecdsa_keys.ecc_to_string(myPublicKey))
+
+        pk = card.cmd_get_public_key(2)
+        pk_info = get_pk_info(pk)
+        sharedSecret = card.cmd_pso(0x80, 0x86, myPublicKeyTLV)
+
+        peer_pk = X25519PublicKey.from_public_bytes(pk_info[0])
+        mySharedSecret = myPrivateKey.exchange(peer_pk)
+
+        assert sharedSecret == mySharedSecret
+
+
     def test_signature_authkey(self, card):
         msg = b"Sign me please to authenticate"
         digest = ecdsa_keys.compute_digestinfo_ecdsa(msg)
@@ -108,6 +122,24 @@ class Test_EdDSA(object):
         public_key = ed25519.Ed25519PublicKey.from_public_bytes(pk_info[0])
         # return error cryptography.exceptions.InvalidSignature
         public_key.verify(sig, digest)
+
+    def test_import_key_2(self, card):
+        t = ecdsa_keys.build_privkey_template_eddsa(2)
+        r = card.cmd_put_data_odd(0x3f, 0xff, t)
+        assert r
+
+    def test_ecdh_uploaded(self, card):
+        myPublicKey, myPrivateKey = ecdsa_keys.generate_key_eddsa_ecdh()
+        myPublicKeyTLV = ecdh_public_key_encode(ecdsa_keys.ecc_to_string(myPublicKey))
+
+        pk = card.cmd_get_public_key(2)
+        pk_info = get_pk_info(pk)
+        sharedSecret = card.cmd_pso(0x80, 0x86, myPublicKeyTLV)
+
+        peer_pk = X25519PublicKey.from_public_bytes(pk_info[0])
+        mySharedSecret = myPrivateKey.exchange(peer_pk)
+
+        assert sharedSecret == mySharedSecret
 
     def test_import_key_3(self, card):
         t = ecdsa_keys.build_privkey_template_eddsa(3)
