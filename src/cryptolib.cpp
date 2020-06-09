@@ -331,6 +331,8 @@ Util::Error CryptoLib::RSAVerify(bstr publicKey, bstr data, bstr signature) {
 	return Util::Error::InternalError;
 }
 
+static const br_ec_impl *br_current_impl = &br_ec_all_m15;
+
 Util::Error CryptoLib::ECDSAGenKey(ECDSAaid curveID, ECDSAKey& keyOut) {
 	ClearKeyBuffer();
 	keyOut.clear();
@@ -361,18 +363,16 @@ Util::Error CryptoLib::ECDSAGenKey(ECDSAaid curveID, ECDSAKey& keyOut) {
         br_ec_public_key pk = {};
 
         const br_prng_class *rng = &br_hw_drbg_vtable;
-        const br_ec_impl *impl = nullptr;
-        impl = &br_ec_all_m15;
 
         device_led(COLOR_MAGENTA);
-        if (br_ec_keygen(&rng, impl, &sk, keybuf, tlsCurveId) == 0){
+        if (br_ec_keygen(&rng, br_current_impl, &sk, keybuf, tlsCurveId) == 0){
             device_led(COLOR_RED);
             return Util::Error::CryptoOperationError;
         }
 
         AppendKeyPart(KeyBuffer, keyOut.Private, sk.x, sk.xlen);
 
-        if (br_ec_compute_pub(impl, &pk, keybuf + sk.xlen + 2, &sk) == 0) {
+        if (br_ec_compute_pub(br_current_impl, &pk, keybuf + sk.xlen + 2, &sk) == 0) {
             device_led(COLOR_RED);
             return Util::Error::CryptoOperationError;
         }
@@ -420,7 +420,7 @@ Util::Error CryptoLib::ECDSASign(ECDSAKey key, bstr data, bstr& signature) {
         if (err != Util::Error::NoError)
             return err;
 
-        size_t len = br_ecdsa_i15_sign_raw(&br_ec_all_m15, &br_sha256_vtable, data.data(), &sk, signature.uint8Data());
+        size_t len = br_ecdsa_i15_sign_raw(br_current_impl, &br_sha256_vtable, data.data(), &sk, signature.uint8Data());
         if (len == 0)
             return Util::Error::CryptoOperationError;
         signature.set_length(len);
@@ -477,7 +477,7 @@ Util::Error CryptoLib::ECDSACalcPublicKey(ECDSAaid curveID, bstr privateKey, bst
         if (err != Util::Error::NoError)
             return err;
 
-        if (br_ec_compute_pub(&br_ec_all_m15, &pk, keybuf, &sk) == 0)
+        if (br_ec_compute_pub(br_current_impl, &pk, keybuf, &sk) == 0)
             return Util::Error::CryptoOperationError;
 
         if (pk.qlen == 0)
@@ -521,7 +521,7 @@ Util::Error CryptoLib::ECDHComputeShared(ECDSAKey key, bstr anotherPublicKey, bs
         pk.qlen = anotherPublicKey.length();
 
         // sharedSecret = anotherPublicKey * key.Private
-        size_t len = ecdh_shared_secret(&br_ec_all_m15, &sk, &pk, sharedSecret.uint8Data());
+        size_t len = ecdh_shared_secret(br_current_impl, &sk, &pk, sharedSecret.uint8Data());
         if (len == 0)
             return Util::Error::CryptoOperationError;
 

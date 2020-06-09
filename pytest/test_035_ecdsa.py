@@ -100,9 +100,6 @@ class Test_ECDSA(object):
         pk_info = get_pk_info(pk)
         digest = ecdsa_keys.compute_digestinfo_ecdsa(msg)
         sig = card.cmd_pso(0x9e, 0x9a, digest)
-        print("key", pk_info[0].hex())
-        print("digest", digest.hex())
-        print("sig", sig.hex())
         r = ecdsa_keys.verify_signature_ecdsa(pk_info[0], digest, sig, ECDSAcurve)
         assert r
 
