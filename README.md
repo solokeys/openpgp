@@ -114,22 +114,16 @@ Test some critical parts of code
 # TODO
 
 1. Change name from `Applet` to `Application`
-2. ~~test via virtual USB in linux~~
-3. Add tests for:
-  - ~~init card at the begining of tests~~
+2. RSA generation waiting for USB stack (now - timeout)
+3. brainpool ecdsa curves
+4. Add tests for:
   - access rights to commands and DO
   - refactor some tests and change some "magic" values in them
-  - ~~test RSA4096 generation and increase interface timeouts~~
-4. Add tests and functionality for:
+  - refactor ECDSA tests for using cryptography package
+5. Add tests and functionality for:
   - ~~ECDSA~~
-  - ~~reset card~~
-  - ~~user DO (0101-0104) and check access rights~~
-  - ~~add user DO length check~~
-  - ~~add checking algorithm attributes. ECDSA curves and deny access ECDSA for decipher.~~
-  - ~~PSO:ENCIPHER and DECIPHER with AES~~
-  - ~~check AES key length~~
-  - ~~ECDH for standard curves~~
+  - ED25519 (EdDSA), CURVE25519(ECDH)
   - Secure messaging????
-  - ALGO_ED25519 (EdDSA), ALGO_CURVE25519(ECDH)???
-
+6. fix:
+  - ansix9p384r1, ansix9p521r1 curves
 
