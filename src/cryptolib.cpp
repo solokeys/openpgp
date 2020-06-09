@@ -98,24 +98,6 @@ Util::Error CryptoLib::AppendKeyPart(bstr &buffer, bstr &keypart, uint8_t *mpi, 
     }
 	return Util::Error::NoError;
 }
-/*
-Util::Error CryptoLib::AppendKeyPartEcpPoint(bstr &buffer, bstr &keypart,  mbedtls_ecp_group *grp, mbedtls_ecp_point  *point) {
-    size_t mpi_len = 0;
-    if (mbedtls_ecp_point_write_binary(
-			grp,
-			point,
-			MBEDTLS_ECP_PF_UNCOMPRESSED,
-			&mpi_len,
-			buffer.uint8Data() + buffer.length(),
-			buffer.free_space()) )
-		return Util::Error::CryptoDataError;
-
-	keypart = bstr(buffer.uint8Data() + buffer.length(), mpi_len);
-	buffer.set_length(buffer.length() + mpi_len);
-
-	return Util::Error::NoError;
-}
-*/
 
 size_t RSAKeyLenFromPQ(size_t PQlen) {
     return PQlen * 2 * 8;
@@ -349,33 +331,6 @@ Util::Error CryptoLib::RSAVerify(bstr publicKey, bstr data, bstr signature) {
 	return Util::Error::InternalError;
 }
 
-/*static int ecdsa_init(mbedtls_ecdsa_context *ctx, mbedtls_ecp_group_id curveID, bstr *key_d, bstr *key_xy) {
-	if (!ctx)
-		return 1;
-
-	int res;
-
-	mbedtls_ecdsa_init(ctx);
-	res = mbedtls_ecp_group_load(&ctx->grp, curveID);
-
-	if (res)
-		return res;
-
-	if (key_d && key_d->length() > 0) {
-		res = mbedtls_mpi_read_binary(&ctx->d, key_d->uint8Data(), key_d->length());
-		if (res)
-			return res;
-	}
-
-	if (key_xy && key_xy->length() > 0) {
-		res = mbedtls_ecp_point_read_binary(&ctx->grp, &ctx->Q, key_xy->uint8Data(), key_xy->length());
-		if (res)
-			return res;
-	}
-
-	return 0;
-};
-*/
 Util::Error CryptoLib::ECDSAGenKey(ECDSAaid curveID, ECDSAKey& keyOut) {
 	ClearKeyBuffer();
 	keyOut.clear();
