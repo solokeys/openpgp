@@ -19,7 +19,7 @@ from binascii import hexlify
 @pytest.fixture(
     params=[
         ECDSACurves.ansix9p256r1,
-        # ECDSACurves.ansix9p384r1,
+        ECDSACurves.ansix9p384r1,
         # ECDSACurves.ansix9p521r1,
         # ECDSACurves.brainpoolP256r1,
         # ECDSACurves.brainpoolP384r1,
@@ -27,7 +27,7 @@ from binascii import hexlify
         ECDSACurves.secp256k1],
     ids=[
         "ansix9p256r1",
-        # "ansix9p384r1",
+        "ansix9p384r1",
         # "ansix9p521r1",
         # "brainpoolP256r1",
         # "brainpoolP384r1",
@@ -77,18 +77,18 @@ class Test_ECDSA(object):
         pk = card.cmd_genkey(2)
         assert ECDSACheckPublicKey(ECDSAcurve, pk[0])
         fpr_date = ecdsa_keys.calc_fpr_ecdsa(pk[0])
-        r = card.cmd_put_data(0x00, 0xc7, fpr_date[0])
+        r = card.cmd_put_data(0x00, 0xc8, fpr_date[0])
         if r:
-            r = card.cmd_put_data(0x00, 0xce, fpr_date[1])
+            r = card.cmd_put_data(0x00, 0xcf, fpr_date[1])
         assert r
 
     def test_keygen_3(self, card, ECDSAcurve):
         pk = card.cmd_genkey(3)
         assert ECDSACheckPublicKey(ECDSAcurve, pk[0])
         fpr_date = ecdsa_keys.calc_fpr_ecdsa(pk[0])
-        r = card.cmd_put_data(0x00, 0xc7, fpr_date[0])
+        r = card.cmd_put_data(0x00, 0xc9, fpr_date[0])
         if r:
-            r = card.cmd_put_data(0x00, 0xce, fpr_date[1])
+            r = card.cmd_put_data(0x00, 0xd0, fpr_date[1])
         assert r
 
     def test_verify_pw1(self, card, ECDSAcurve):
@@ -100,6 +100,9 @@ class Test_ECDSA(object):
         pk_info = get_pk_info(pk)
         digest = ecdsa_keys.compute_digestinfo_ecdsa(msg)
         sig = card.cmd_pso(0x9e, 0x9a, digest)
+        print("key", pk_info[0].hex())
+        print("digest", digest.hex())
+        print("sig", sig.hex())
         r = ecdsa_keys.verify_signature_ecdsa(pk_info[0], digest, sig, ECDSAcurve)
         assert r
 
@@ -156,7 +159,7 @@ class Test_ECDSA(object):
         r = ecdsa_keys.verify_signature_ecdsa(pk_info[0], digest, sig, ECDSAcurve)
         assert r
 
-    def ppptest_verify_reset(self, card, ECDSAcurve):
+    def yubikeyfail_test_verify_reset(self, card, ECDSAcurve):
         assert card.cmd_verify_reset(1)
         assert card.cmd_verify_reset(2)
         assert card.cmd_verify_reset(3)
