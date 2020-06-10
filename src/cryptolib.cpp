@@ -560,7 +560,7 @@ Util::Error LoadKeyParameters(AppID_t appID, KeyID_t keyID, OpenPGP::AlgoritmAtt
 	return keyParams.Load(filesystem, keyID);
 }
 
-ECCaid KeyStorage::GetECDSACurveID(AppID_t appID, KeyID_t keyID) {
+ECCaid KeyStorage::GetECCCurveID(AppID_t appID, KeyID_t keyID) {
 	OpenPGP::AlgoritmAttr keyParams;
 	auto err = LoadKeyParameters(appID, keyID, keyParams);
 
@@ -578,7 +578,7 @@ ECCaid KeyStorage::GetECDSACurveID(AppID_t appID, KeyID_t keyID) {
 	return AIDfromOID(keyParams.ECDSAa.OID);
 }
 
-Util::Error KeyStorage::GetECDSAKey(AppID_t appID, KeyID_t keyID, ECCKey& key) {
+Util::Error KeyStorage::GetECCKey(AppID_t appID, KeyID_t keyID, ECCKey& key) {
 
 	Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
 	File::FileSystem &filesystem = solo.GetFileSystem();
@@ -601,7 +601,7 @@ Util::Error KeyStorage::GetECDSAKey(AppID_t appID, KeyID_t keyID, ECCKey& key) {
 	if (fileID == 0x00)
 		return Util::Error::StoredKeyParamsError;
 
-	key.CurveId = GetECDSACurveID(appID, fileID);
+    key.CurveId = GetECCCurveID(appID, fileID);
     if (key.CurveId == ECCaid::none)
 		return Util::Error::StoredKeyParamsError;
 
@@ -707,7 +707,7 @@ Util::Error KeyStorage::PutRSAFullKey(AppID_t appID, KeyID_t keyID, RSAKey key) 
 	return Util::Error::NoError;
 }
 
-Util::Error KeyStorage::PutECDSAFullKey(AppID_t appID, KeyID_t keyID, ECCKey key) {
+Util::Error KeyStorage::PutECCFullKey(AppID_t appID, KeyID_t keyID, ECCKey key) {
 
 	Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
 	File::FileSystem &filesystem = solo.GetFileSystem();
@@ -817,7 +817,7 @@ Util::Error KeyStorage::GetPublicKey(AppID_t appID, KeyID_t keyID, uint8_t Algor
 		}
 	} else {
         ECCKey ecdsa_key;
-		auto err = GetECDSAKey(appID, keyID, ecdsa_key);
+        auto err = GetECCKey(appID, keyID, ecdsa_key);
 		if (err != Util::Error::NoError)
 			return err;
 
@@ -990,11 +990,11 @@ Util::Error CryptoEngine::RSAVerify(AppID_t appID, KeyID_t keyID,
 	return Util::Error::InternalError;
 }
 
-Util::Error CryptoEngine::ECDSASign(AppID_t appID, KeyID_t keyID,
+Util::Error CryptoEngine::ECCSign(AppID_t appID, KeyID_t keyID,
 		bstr data, bstr& signature) {
 
     ECCKey key;
-	auto err = keyStorage.GetECDSAKey(appID, keyID, key);
+    auto err = keyStorage.GetECCKey(appID, keyID, key);
 	if (err != Util::Error::NoError)
 		return err;
 
@@ -1004,14 +1004,14 @@ Util::Error CryptoEngine::ECDSASign(AppID_t appID, KeyID_t keyID,
     return cryptoLib.ECCSign(key, data, signature);
 }
 
-Util::Error CryptoEngine::ECDSAVerify(AppID_t appID, KeyID_t keyID,
+Util::Error CryptoEngine::ECCVerify(AppID_t appID, KeyID_t keyID,
 		bstr data, bstr signature) {
 	return Util::Error::InternalError;
 }
 
 Util::Error CryptoEngine::ECDHComputeShared(AppID_t appID, KeyID_t keyID, bstr anotherPublicKey, bstr &sharedSecret) {
     ECCKey key;
-	auto err = keyStorage.GetECDSAKey(appID, keyID, key);
+    auto err = keyStorage.GetECCKey(appID, keyID, key);
 	if (err != Util::Error::NoError)
 		return err;
 

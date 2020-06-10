@@ -252,11 +252,11 @@ public:
 	Util::Error GetPublicKey7F49(AppID_t appID, KeyID_t keyID, uint8_t AlgoritmID, bstr &tlvKey);
 
 	Util::Error GetRSAKey(AppID_t appID, KeyID_t keyID, RSAKey &key);
-    ECCaid GetECDSACurveID(AppID_t appID, KeyID_t keyID);
-    Util::Error GetECDSAKey(AppID_t appID, KeyID_t keyID, ECCKey &key);
+    ECCaid GetECCCurveID(AppID_t appID, KeyID_t keyID);
+    Util::Error GetECCKey(AppID_t appID, KeyID_t keyID, ECCKey &key);
 	Util::Error GetAESKey(AppID_t appID, KeyID_t keyID, bstr &key);
 	Util::Error PutRSAFullKey(AppID_t appID, KeyID_t keyID, RSAKey key);
-    Util::Error PutECDSAFullKey(AppID_t appID, KeyID_t keyID, ECCKey key);
+    Util::Error PutECCFullKey(AppID_t appID, KeyID_t keyID, ECCKey key);
 
 	Util::Error SetKey(AppID_t appID, KeyID_t keyID, KeyType keyType, bstr key);
 	Util::Error SetKeyExtHeader(AppID_t appID, bstr keyData);
@@ -274,8 +274,8 @@ public:
 	Util::Error RSADecipher(AppID_t appID, KeyID_t keyID, bstr data, bstr &dataOut);
 	Util::Error RSAVerify(AppID_t appID, KeyID_t keyID, bstr data, bstr signature);
 
-	Util::Error ECDSASign(AppID_t appID, KeyID_t keyID, bstr data, bstr &signature);
-	Util::Error ECDSAVerify(AppID_t appID, KeyID_t keyID, bstr data, bstr signature);
+    Util::Error ECCSign(AppID_t appID, KeyID_t keyID, bstr data, bstr &signature);
+    Util::Error ECCVerify(AppID_t appID, KeyID_t keyID, bstr data, bstr signature);
 	Util::Error ECDHComputeShared(AppID_t appID, KeyID_t keyID, bstr anotherPublicKey, bstr &sharedSecret);
 
 	CryptoLib &getCryptoLib() {

@@ -101,7 +101,7 @@ Util::Error APDUInternalAuthenticate::Process(uint8_t cla, uint8_t ins,
 	if (alg.AlgorithmID == Crypto::AlgoritmID::RSA)
         err = crypto_e.RSASign(File::AppID::OpenPGP, OpenPGPKeyType::Authentication, data, dataOut);
 	else
-        err = crypto_e.ECDSASign(File::AppID::OpenPGP, OpenPGPKeyType::Authentication, data, dataOut);
+        err = crypto_e.ECCSign(File::AppID::OpenPGP, OpenPGPKeyType::Authentication, data, dataOut);
 
 	return err;
 }
@@ -200,11 +200,11 @@ Util::Error APDUGenerateAsymmetricKeyPair::Process(uint8_t cla,
             alg.AlgorithmID == Crypto::AlgoritmID::EDDSA) {
 			printf_device("ECDSA\n");
 			Crypto::ECCKey ecdsa_key;
-            err = cryptolib.ECCGenKey(key_storage.GetECDSACurveID(File::AppID::OpenPGP, file_id), ecdsa_key);
+            err = cryptolib.ECCGenKey(key_storage.GetECCCurveID(File::AppID::OpenPGP, file_id), ecdsa_key);
 			if (err != Util::Error::NoError)
 				return err;
 
-            err = key_storage.PutECDSAFullKey(File::AppID::OpenPGP, key_type, ecdsa_key);
+            err = key_storage.PutECCFullKey(File::AppID::OpenPGP, key_type, ecdsa_key);
 			if (err != Util::Error::NoError)
 				return err;
 
@@ -285,7 +285,7 @@ Util::Error APDUPSO::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 		if (alg.AlgorithmID == Crypto::AlgoritmID::RSA)
             err = crypto_e.RSASign(File::AppID::OpenPGP, OpenPGPKeyType::DigitalSignature, data, dataOut);
 		else
-            err = crypto_e.ECDSASign(File::AppID::OpenPGP, OpenPGPKeyType::DigitalSignature, data, dataOut);
+            err = crypto_e.ECCSign(File::AppID::OpenPGP, OpenPGPKeyType::DigitalSignature, data, dataOut);
 
 		if (!pwstatus.PW1ValidSeveralCDS)
 			security.ClearAuth(OpenPGP::Password::PSOCDS);
