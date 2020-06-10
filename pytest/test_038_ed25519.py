@@ -65,7 +65,7 @@ class Test_EdDSA(object):
     def test_verify_pw1(self, card):
         assert card.verify(1, FACTORY_PASSPHRASE_PW1)
 
-    def ppptest_signature_sigkey(self, card):
+    def test_signature_sigkey(self, card):
         msg = b"Sign me please"
         digest = ecdsa_keys.compute_digestinfo_ecdsa(msg)
 
@@ -94,7 +94,7 @@ class Test_EdDSA(object):
         assert sharedSecret == mySharedSecret
 
 
-    def ppptest_signature_authkey(self, card):
+    def test_signature_authkey(self, card):
         msg = b"Sign me please to authenticate"
         digest = ecdsa_keys.compute_digestinfo_ecdsa(msg)
 
@@ -111,7 +111,24 @@ class Test_EdDSA(object):
         r = card.cmd_put_data_odd(0x3f, 0xff, t)
         assert r
 
-    def ppptest_signature_sigkey_uploaded(self, card):
+    def test_signature_sigkey_uploaded(self, card):
+        msg = b"Sign me please"
+        digest = ecdsa_keys.compute_digestinfo_ecdsa(msg)
+
+        pk = card.cmd_get_public_key(1)
+        pk_info = get_pk_info(pk)
+        sig = card.cmd_pso(0x9e, 0x9a, digest)
+
+        public_key = ed25519.Ed25519PublicKey.from_public_bytes(pk_info[0])
+        # return error cryptography.exceptions.InvalidSignature
+        public_key.verify(sig, digest)
+
+    def test_import_key_1_wo0x04(self, card):
+        t = ecdsa_keys.build_privkey_template_eddsa(1, True)
+        r = card.cmd_put_data_odd(0x3f, 0xff, t)
+        assert r
+
+    def test_signature_sigkey_uploaded_wo0x04(self, card):
         msg = b"Sign me please"
         digest = ecdsa_keys.compute_digestinfo_ecdsa(msg)
 
@@ -146,7 +163,7 @@ class Test_EdDSA(object):
         r = card.cmd_put_data_odd(0x3f, 0xff, t)
         assert r
 
-    def ppptest_signature_authkey_uploaded(self, card):
+    def test_signature_authkey_uploaded(self, card):
         msg = b"Sign me please to authenticate"
         digest = ecdsa_keys.compute_digestinfo_ecdsa(msg)
 
