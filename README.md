@@ -111,6 +111,14 @@ Test some critical parts of code
 
 `make test`
 
+# Ed25519 to Curve25519 conversion
+
+https://moderncrypto.org/mail-archive/curves/2014/000205.html
+
+https://moderncrypto.org/mail-archive/curves/2014/000293.html
+
+https://crypto.stackexchange.com/questions/13077/can-curve25519-keys-be-used-with-ed25519-keys
+
 # TODO
 
 1. Change name from `Applet` to `Application`
