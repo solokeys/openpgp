@@ -13,7 +13,7 @@
 
 #include "cryptolib.h"
 #include "apduexecutor.h"
-#include "applets/appletstorage.h"
+#include "applets/applicationstorage.h"
 #include "applets/openpgp/openpgpfactory.h"
 #include "filesystem.h"
 

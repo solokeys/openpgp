@@ -13,7 +13,7 @@
 #include "applets/apduconst.h"
 #include "solofactory.h"
 #include "applets/openpgp/openpgpfactory.h"
-#include "applets/openpgpapplet.h"
+#include "applets/openpgpapplication.h"
 #include "openpgpconst.h"
 #include "openpgpstruct.h"
 #include "filesystem.h"
