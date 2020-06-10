@@ -51,7 +51,7 @@ enum RSAKeyImportFormat {
 // ECDH:  curve25519 1.3.6.1.4.1.3029.1.5.1  "\x06\x0A\x2B\x06\x01\x04\x01\x97\x55\x01\x05\x01"   BR_EC_curve25519      29
 // max OID length 9 bytes
 
-enum ECDSAaid {
+enum ECCaid {
 	none,
     ansix9p256r1,    // NIST P256
     ansix9p384r1,    // NIST P384
@@ -65,7 +65,7 @@ enum ECDSAaid {
 };
 
 
-constexpr static const char* const ECDSAaidStr[10] = {
+constexpr static const char* const ECCaidStr[10] = {
 	"none",
 	"ansix9p256r1",
 	"ansix9p384r1",
@@ -78,8 +78,8 @@ constexpr static const char* const ECDSAaidStr[10] = {
     "curve25519",
 };
 
-struct ECDSAalgParams {
-	ECDSAaid aid;
+struct ECCalgParams {
+    ECCaid aid;
 	bstr oid;
     int tlsCurveId;
 };
@@ -98,7 +98,7 @@ static const uint8_t tls_ec_brainpoolP384r1 = 27;
 static const uint8_t tls_ec_brainpoolP512r1 = 28;
 static const uint8_t tls_ec_curve25519      = 29;
 
-static const std::array<ECDSAalgParams, 10> ECDSAalgParamsList = {{
+static const std::array<ECCalgParams, 10> ECDSAalgParamsList = {{
     {none,            ""_bstr,                                         tls_ec_none},
     {ansix9p256r1,    "\x2A\x86\x48\xCE\x3D\x03\x01\x07"_bstr,         tls_ec_secp256r1},
     {ansix9p384r1,    "\x2B\x81\x04\x00\x22"_bstr,                     tls_ec_secp384r1},
@@ -111,7 +111,7 @@ static const std::array<ECDSAalgParams, 10> ECDSAalgParamsList = {{
     {curve25519,      "\x2B\x06\x01\x04\x01\x97\x55\x01\x05\x01"_bstr, tls_ec_curve25519}   // ECDH   Curve25519
 }};
 
-constexpr int curveIdFromAid(const ECDSAaid aid) {
+constexpr int curveIdFromAid(const ECCaid aid) {
 	for(const auto& algp: ECDSAalgParamsList) {
     	if (algp.aid == aid) {
             return algp.tlsCurveId;
@@ -129,13 +129,13 @@ constexpr int curveIdFromOID(const bstr oid) {
     return 0;
 }
 
-constexpr ECDSAaid AIDfromOID(const bstr oid) {
+constexpr ECCaid AIDfromOID(const bstr oid) {
 	for(const auto& algp: ECDSAalgParamsList) {
     	if (algp.oid == oid) {
     		return algp.aid;
     	}
     }
-	return ECDSAaid::none;
+    return ECCaid::none;
 }
 
 enum KeyType {
@@ -156,7 +156,7 @@ enum KeyPartsRSA {
 	N              = 0x97  // optional for standard and crt. Modulus.
 };
 
-enum KeyPartsECDSA {
+enum KeyPartsECC {
 	PrivateKey     = 0x92, // mandatory
 	PublicKey      = 0x99  // optional
 };
@@ -192,18 +192,18 @@ struct RSAKey {
 	}
 };
 
-struct ECDSAKey {
-	ECDSAaid CurveId;
+struct ECCKey {
+    ECCaid CurveId;
 	bstr Private;
 	bstr Public;
 
 	void clear(){
-		CurveId = ECDSAaid::none;
+        CurveId = ECCaid::none;
 		Private.set_length(0);
 		Public.set_length(0);
 	}
 	constexpr void Print() {
-		printf_device("Curve %s\n", ECDSAaidStr[CurveId]);
+        printf_device("Curve %s\n", ECCaidStr[CurveId]);
 		printf_device("Public  [%lu] ", Public.length());  dump_hex(Public,  48);
 		printf_device("Private [%lu] ", Private.length()); dump_hex(Private, 48);
 	}
@@ -232,11 +232,11 @@ public:
 	Util::Error RSADecipher(RSAKey key, bstr data, bstr &dataOut);
 	Util::Error RSAVerify(bstr publicKey, bstr data, bstr signature);
 
-	Util::Error ECDSAGenKey(ECDSAaid curveID, ECDSAKey &keyOut);
-	Util::Error ECDSACalcPublicKey(ECDSAaid curveID, bstr privateKey, bstr &publicKey);
-	Util::Error ECDSASign(ECDSAKey key, bstr data, bstr &signature);
-	Util::Error ECDSAVerify(ECDSAKey key, bstr data, bstr signature);
-	Util::Error ECDHComputeShared(ECDSAKey key, bstr anotherPublicKey, bstr &sharedSecret);
+    Util::Error ECCGenKey(ECCaid curveID, ECCKey &keyOut);
+    Util::Error ECCCalcPublicKey(ECCaid curveID, bstr privateKey, bstr &publicKey);
+    Util::Error ECCSign(ECCKey key, bstr data, bstr &signature);
+    Util::Error ECCVerify(ECCKey key, bstr data, bstr signature);
+    Util::Error ECDHComputeShared(ECCKey key, bstr anotherPublicKey, bstr &sharedSecret);
 };
 
 class KeyStorage {
@@ -252,11 +252,11 @@ public:
 	Util::Error GetPublicKey7F49(AppID_t appID, KeyID_t keyID, uint8_t AlgoritmID, bstr &tlvKey);
 
 	Util::Error GetRSAKey(AppID_t appID, KeyID_t keyID, RSAKey &key);
-	ECDSAaid GetECDSACurveID(AppID_t appID, KeyID_t keyID);
-	Util::Error GetECDSAKey(AppID_t appID, KeyID_t keyID, ECDSAKey &key);
+    ECCaid GetECDSACurveID(AppID_t appID, KeyID_t keyID);
+    Util::Error GetECDSAKey(AppID_t appID, KeyID_t keyID, ECCKey &key);
 	Util::Error GetAESKey(AppID_t appID, KeyID_t keyID, bstr &key);
 	Util::Error PutRSAFullKey(AppID_t appID, KeyID_t keyID, RSAKey key);
-	Util::Error PutECDSAFullKey(AppID_t appID, KeyID_t keyID, ECDSAKey key);
+    Util::Error PutECDSAFullKey(AppID_t appID, KeyID_t keyID, ECCKey key);
 
 	Util::Error SetKey(AppID_t appID, KeyID_t keyID, KeyType keyType, bstr key);
 	Util::Error SetKeyExtHeader(AppID_t appID, bstr keyData);

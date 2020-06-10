@@ -333,11 +333,11 @@ Util::Error CryptoLib::RSAVerify(bstr publicKey, bstr data, bstr signature) {
 
 static const br_ec_impl *br_current_impl = &br_ec_all_m15;
 
-Util::Error CryptoLib::ECDSAGenKey(ECDSAaid curveID, ECDSAKey& keyOut) {
+Util::Error CryptoLib::ECCGenKey(ECCaid curveID, ECCKey& keyOut) {
 	ClearKeyBuffer();
 	keyOut.clear();
 
-    if (curveID == ECDSAaid::none)
+    if (curveID == ECCaid::none)
 		return  Util::Error::StoredKeyParamsError;
 
     int tlsCurveId = curveIdFromAid(curveID);
@@ -386,10 +386,10 @@ Util::Error CryptoLib::ECDSAGenKey(ECDSAaid curveID, ECDSAKey& keyOut) {
     return Util::Error::NoError;
 }
 
-Util::Error ECDSAFillPrivateKey(br_ec_private_key &sk, ECDSAKey &key) {
+Util::Error ECDSAFillPrivateKey(br_ec_private_key &sk, ECCKey &key) {
 
     if (key.Private.length() == 0 ||
-        key.CurveId == ECDSAaid::none )
+        key.CurveId == ECCaid::none )
         return Util::Error::StoredKeyError;
 
     sk.curve = curveIdFromAid(key.CurveId);
@@ -403,7 +403,7 @@ Util::Error ECDSAFillPrivateKey(br_ec_private_key &sk, ECDSAKey &key) {
 }
 
 
-Util::Error CryptoLib::ECDSASign(ECDSAKey key, bstr data, bstr& signature) {
+Util::Error CryptoLib::ECCSign(ECCKey key, bstr data, bstr& signature) {
 	signature.clear();
 
     br_ec_private_key sk = {};
@@ -451,7 +451,7 @@ Util::Error CryptoLib::RSACalcPublicKey(bstr strP, bstr strQ, bstr &strN) {
 	return ret;
 }
 
-Util::Error CryptoLib::ECDSACalcPublicKey(ECDSAaid curveID, bstr privateKey, bstr &publicKey) {
+Util::Error CryptoLib::ECCCalcPublicKey(ECCaid curveID, bstr privateKey, bstr &publicKey) {
     publicKey.clear();
 
     if (curveID == secp256k1) {
@@ -468,7 +468,7 @@ Util::Error CryptoLib::ECDSACalcPublicKey(ECDSAaid curveID, bstr privateKey, bst
         br_ec_private_key sk = {};
         br_ec_public_key pk = {};
 
-        ECDSAKey key;
+        ECCKey key;
         key.clear();
         key.CurveId = curveID;
         key.Private = privateKey;
@@ -490,12 +490,12 @@ Util::Error CryptoLib::ECDSACalcPublicKey(ECDSAaid curveID, bstr privateKey, bst
     return Util::Error::NoError;
 }
 
-Util::Error CryptoLib::ECDSAVerify(ECDSAKey key, bstr data,
+Util::Error CryptoLib::ECCVerify(ECCKey key, bstr data,
 		bstr signature) {
 	return Util::Error::InternalError;
 }
 
-Util::Error CryptoLib::ECDHComputeShared(ECDSAKey key, bstr anotherPublicKey, bstr &sharedSecret) {
+Util::Error CryptoLib::ECDHComputeShared(ECCKey key, bstr anotherPublicKey, bstr &sharedSecret) {
 
     sharedSecret.clear();
 
@@ -521,7 +521,7 @@ Util::Error CryptoLib::ECDHComputeShared(ECDSAKey key, bstr anotherPublicKey, bs
         pk.qlen = anotherPublicKey.length();
 
         // check 0x04 before curve25519 public key
-        if (key.CurveId == ECDSAaid::curve25519 && pk.qlen == 33 && pk.q[0] == 0x04) {
+        if (key.CurveId == ECCaid::curve25519 && pk.qlen == 33 && pk.q[0] == 0x04) {
             pk.q++;
             pk.qlen--;
         }
@@ -560,22 +560,22 @@ Util::Error LoadKeyParameters(AppID_t appID, KeyID_t keyID, OpenPGP::AlgoritmAtt
 	return keyParams.Load(filesystem, keyID);
 }
 
-ECDSAaid KeyStorage::GetECDSACurveID(AppID_t appID, KeyID_t keyID) {
+ECCaid KeyStorage::GetECDSACurveID(AppID_t appID, KeyID_t keyID) {
 	OpenPGP::AlgoritmAttr keyParams;
 	auto err = LoadKeyParameters(appID, keyID, keyParams);
 
     if (err != Util::Error::NoError)
-		return ECDSAaid::none;
+        return ECCaid::none;
 
 	if (keyParams.AlgorithmID != AlgoritmID::ECDSAforCDSandIntAuth &&
         keyParams.AlgorithmID != AlgoritmID::ECDHforDEC &&
         keyParams.AlgorithmID != AlgoritmID::EDDSA)
-		return ECDSAaid::none;
+        return ECCaid::none;
 
 	return AIDfromOID(keyParams.ECDSAa.OID);
 }
 
-Util::Error KeyStorage::GetECDSAKey(AppID_t appID, KeyID_t keyID, ECDSAKey& key) {
+Util::Error KeyStorage::GetECDSAKey(AppID_t appID, KeyID_t keyID, ECCKey& key) {
 
 	Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
 	File::FileSystem &filesystem = solo.GetFileSystem();
@@ -599,23 +599,23 @@ Util::Error KeyStorage::GetECDSAKey(AppID_t appID, KeyID_t keyID, ECDSAKey& key)
 		return Util::Error::StoredKeyParamsError;
 
 	key.CurveId = GetECDSACurveID(appID, fileID);
-	if (key.CurveId == ECDSAaid::none)
+    if (key.CurveId == ECCaid::none)
 		return Util::Error::StoredKeyParamsError;
 
-	GetKeyPart(prvStr, KeyPartsECDSA::PublicKey, key.Public);
-	GetKeyPart(prvStr, KeyPartsECDSA::PrivateKey, key.Private);
+    GetKeyPart(prvStr, KeyPartsECC::PublicKey, key.Public);
+    GetKeyPart(prvStr, KeyPartsECC::PrivateKey, key.Private);
 
 	if (key.Public.length() == 0 && key.Private.length() > 0) {
 		printf_device("Generate public key from private.\n");
 		key.Public = bstr(prvStr.uint8Data() + prvStr.length(), 0, prvStr.free_space());
-		auto err = cryptolib.ECDSACalcPublicKey(key.CurveId, key.Private, key.Public);
+        auto err = cryptolib.ECCCalcPublicKey(key.CurveId, key.Private, key.Public);
 		if (err != Util::Error::NoError)
 			return err;
 		prvStr.set_length(prvStr.length() + key.Public.length());
 	}
 
     // check 0x04 before curve25519 public key and return key without it
-    if (key.CurveId == ECDSAaid::curve25519 && key.Public.length() == 33 && key.Public[0] == 0x04) {
+    if (key.CurveId == ECCaid::curve25519 && key.Public.length() == 33 && key.Public[0] == 0x04) {
         key.Public.moveTail(1, -1);
     }
 
@@ -704,7 +704,7 @@ Util::Error KeyStorage::PutRSAFullKey(AppID_t appID, KeyID_t keyID, RSAKey key) 
 	return Util::Error::NoError;
 }
 
-Util::Error KeyStorage::PutECDSAFullKey(AppID_t appID, KeyID_t keyID, ECDSAKey key) {
+Util::Error KeyStorage::PutECDSAFullKey(AppID_t appID, KeyID_t keyID, ECCKey key) {
 
 	Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
 	File::FileSystem &filesystem = solo.GetFileSystem();
@@ -722,8 +722,8 @@ Util::Error KeyStorage::PutECDSAFullKey(AppID_t appID, KeyID_t keyID, ECDSAKey k
 	DOL dol;
 	dol.Init(sdol);
 
-	dol.AddNextWithData(KeyPartsECDSA::PublicKey, key.Public.length());
-	dol.AddNextWithData(KeyPartsECDSA::PrivateKey, key.Private.length());
+    dol.AddNextWithData(KeyPartsECC::PublicKey, key.Public.length());
+    dol.AddNextWithData(KeyPartsECC::PrivateKey, key.Private.length());
 
 	// insert dol
 	sdol = dol.GetData();
@@ -813,7 +813,7 @@ Util::Error KeyStorage::GetPublicKey(AppID_t appID, KeyID_t keyID, uint8_t Algor
 			pubKey = rsa_key.N;
 		}
 	} else {
-		ECDSAKey ecdsa_key;
+        ECCKey ecdsa_key;
 		auto err = GetECDSAKey(appID, keyID, ecdsa_key);
 		if (err != Util::Error::NoError)
 			return err;
@@ -990,7 +990,7 @@ Util::Error CryptoEngine::RSAVerify(AppID_t appID, KeyID_t keyID,
 Util::Error CryptoEngine::ECDSASign(AppID_t appID, KeyID_t keyID,
 		bstr data, bstr& signature) {
 
-	ECDSAKey key;
+    ECCKey key;
 	auto err = keyStorage.GetECDSAKey(appID, keyID, key);
 	if (err != Util::Error::NoError)
 		return err;
@@ -998,7 +998,7 @@ Util::Error CryptoEngine::ECDSASign(AppID_t appID, KeyID_t keyID,
 	printf_device("------------ key ------------\n");
 	key.Print();
 
-	return cryptoLib.ECDSASign(key, data, signature);
+    return cryptoLib.ECCSign(key, data, signature);
 }
 
 Util::Error CryptoEngine::ECDSAVerify(AppID_t appID, KeyID_t keyID,
@@ -1007,7 +1007,7 @@ Util::Error CryptoEngine::ECDSAVerify(AppID_t appID, KeyID_t keyID,
 }
 
 Util::Error CryptoEngine::ECDHComputeShared(AppID_t appID, KeyID_t keyID, bstr anotherPublicKey, bstr &sharedSecret) {
-	ECDSAKey key;
+    ECCKey key;
 	auto err = keyStorage.GetECDSAKey(appID, keyID, key);
 	if (err != Util::Error::NoError)
 		return err;
