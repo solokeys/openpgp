@@ -7,13 +7,13 @@
   copied, modified, or distributed except according to those terms.
  */
 
-#include <applets/openpgp/security.h>
+#include <applications/openpgp/security.h>
 #include "opgpdevice.h"
 #include "userapdu.h"
-#include "applets/apduconst.h"
+#include "applications/apduconst.h"
 #include "solofactory.h"
-#include "applets/openpgp/openpgpfactory.h"
-#include "applets/openpgpapplication.h"
+#include "applications/openpgp/openpgpfactory.h"
+#include "applications/openpgpapplication.h"
 #include "openpgpconst.h"
 #include "openpgpstruct.h"
 #include "filesystem.h"

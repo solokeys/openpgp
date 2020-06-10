@@ -11,7 +11,7 @@
 #include <array>
 #include "opgpdevice.h"
 #include "tlv.h"
-#include "applets/openpgp/openpgpconst.h"
+#include "applications/openpgp/openpgpconst.h"
 
 namespace File {
 

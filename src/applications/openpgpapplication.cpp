@@ -7,7 +7,7 @@
   copied, modified, or distributed except according to those terms.
  */
 
-#include <applets/openpgp/security.h>
+#include <applications/openpgp/security.h>
 #include "opgpdevice.h"
 #include "openpgpapplication.h"
 #include "apduconst.h"

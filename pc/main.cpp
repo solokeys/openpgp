@@ -15,7 +15,7 @@
 
 #include "solofactory.h"
 #include "opgputil.h"
-#include "applets/apduconst.h"
+#include "applications/apduconst.h"
 #include "ccid.h"
 
 #define USBIP_MODE

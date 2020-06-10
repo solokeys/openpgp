@@ -13,8 +13,8 @@
 
 #include "cryptolib.h"
 #include "apduexecutor.h"
-#include "applets/applicationstorage.h"
-#include "applets/openpgp/openpgpfactory.h"
+#include "applications/applicationstorage.h"
+#include "applications/openpgp/openpgpfactory.h"
 #include "filesystem.h"
 
 namespace Factory {

@@ -9,8 +9,8 @@
 
 #include "apduexecutor.h"
 #include "opgpdevice.h"
-#include "applets/apduconst.h"
-#include "applets/application.h"
+#include "applications/apduconst.h"
+#include "applications/application.h"
 #include "solofactory.h"
 
 namespace Application {

@@ -13,7 +13,7 @@
 
 #include <string_view>
 #include "errors.h"
-#include "applets/apducommand.h"
+#include "applications/apducommand.h"
 
 namespace OpenPGP {
 

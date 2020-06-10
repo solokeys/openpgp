@@ -17,7 +17,7 @@
 #include "tlv.h"
 #include "solofactory.h"
 #include "filesystem.h"
-#include "applets/openpgp/openpgpconst.h"
+#include "applications/openpgp/openpgpconst.h"
 
 #include "i15_addon.h"
 

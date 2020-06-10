@@ -7,11 +7,11 @@
  copied, modified, or distributed except according to those terms.
  */
 
-#include <applets/openpgp/security.h>
+#include <applications/openpgp/security.h>
 #include <array>
 
 #include "errors.h"
-#include "applets/apduconst.h"
+#include "applications/apduconst.h"
 #include "solofactory.h"
 
 namespace OpenPGP {

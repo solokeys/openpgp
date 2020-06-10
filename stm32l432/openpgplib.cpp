@@ -10,7 +10,7 @@
 #include "openpgplib.h"
 #include "opgpdevice.h"
 #include "solofactory.h"
-#include "applets/apduconst.h"
+#include "applications/apduconst.h"
 
 #include "device.h"
 

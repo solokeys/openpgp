@@ -14,8 +14,8 @@
 #include <cstdlib>
 #include "opgputil.h"
 #include "errors.h"
-#include "applets/applicationstorage.h"
-#include "applets/apduconst.h"
+#include "applications/applicationstorage.h"
+#include "applications/apduconst.h"
 
 namespace Application {
 

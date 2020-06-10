@@ -9,13 +9,13 @@
 
 #include "secureapdu.h"
 
-#include <applets/openpgp/security.h>
-#include "applets/apduconst.h"
+#include <applications/openpgp/security.h>
+#include "applications/apduconst.h"
 #include "solofactory.h"
-#include "applets/openpgp/openpgpfactory.h"
-#include "applets/openpgpapplication.h"
-#include "applets/openpgp/openpgpconst.h"
-#include "applets/openpgp/openpgpstruct.h"
+#include "applications/openpgp/openpgpfactory.h"
+#include "applications/openpgpapplication.h"
+#include "applications/openpgp/openpgpconst.h"
+#include "applications/openpgp/openpgpstruct.h"
 #include "opgpdevice.h"
 
 namespace OpenPGP {

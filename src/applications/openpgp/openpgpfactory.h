@@ -10,10 +10,10 @@
 #ifndef SRC_OPENPGP_OPENPGPFACTORY_H_
 #define SRC_OPENPGP_OPENPGPFACTORY_H_
 
-#include <applets/openpgp/security.h>
+#include <applications/openpgp/security.h>
 #include <array>
 
-#include "applets/apducommand.h"
+#include "applications/apducommand.h"
 #include "resetprovider.h"
 #include "userapdu.h"
 #include "cryptoapdu.h"

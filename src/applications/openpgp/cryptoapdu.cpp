@@ -7,16 +7,16 @@
   copied, modified, or distributed except according to those terms.
  */
 
-#include <applets/openpgp/security.h>
+#include <applications/openpgp/security.h>
 #include "cryptoapdu.h"
 #include "tlv.h"
 #include "opgpdevice.h"
-#include "applets/apduconst.h"
+#include "applications/apduconst.h"
 #include "solofactory.h"
-#include "applets/openpgp/openpgpfactory.h"
-#include "applets/openpgpapplication.h"
-#include "applets/openpgp/openpgpconst.h"
-#include "applets/openpgp/openpgpstruct.h"
+#include "applications/openpgp/openpgpfactory.h"
+#include "applications/openpgpapplication.h"
+#include "applications/openpgp/openpgpconst.h"
+#include "applications/openpgp/openpgpstruct.h"
 
 namespace OpenPGP {
 

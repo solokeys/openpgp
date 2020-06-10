@@ -7,7 +7,7 @@
  copied, modified, or distributed except according to those terms.
  */
 
-#include <applets/openpgp/openpgpfactory.h>
+#include <applications/openpgp/openpgpfactory.h>
 #include "solofactory.h"
 
 namespace OpenPGP {

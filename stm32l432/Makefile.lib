@@ -8,7 +8,7 @@ OBJ_DIR := ./obj
 SRC_DIRS := ./pc \
 			./src \
 			./src/applets \
-            ./src/applets/openpgp \
+            ./src/applications/openpgp \
             ./libs/stm32fs
 SRC_FILES := $(sort $(foreach var, $(SRC_DIRS), $(wildcard $(var)/*.cpp)))
 OBJ_FILES := $(patsubst %.cpp, $(OBJ_DIR)/%.o, $(notdir $(SRC_FILES)))
