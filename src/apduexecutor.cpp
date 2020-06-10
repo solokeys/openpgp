@@ -13,7 +13,7 @@
 #include "applets/applet.h"
 #include "solofactory.h"
 
-namespace Applet {
+namespace Application {
     
 PUT_TO_SRAM2 static uint8_t apduBuffer[1130] = {0};
 PUT_TO_SRAM2 static uint8_t resultBuffer[1130] = {0};
@@ -80,7 +80,7 @@ Util::Error APDUExecutor::Execute(bstr apdu, bstr& result) {
 	}
 
 	Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
-	AppletStorage &appletStorage = solo.GetAppletStorage();
+	ApplicationStorage &appletStorage = solo.GetApplicationStorage();
 
 	APDUStruct decapdu;
 	auto errd = decapdu.decode(apdu);
@@ -103,12 +103,12 @@ Util::Error APDUExecutor::Execute(bstr apdu, bstr& result) {
 		sapdu.clear();
 		sresult.clear();
 
-		auto err = appletStorage.SelectApplet(decapdu.data, result);
+		auto err = appletStorage.SelectApplication(decapdu.data, result);
     	SetResultError(result, err);
 		return err;
 	}
 
-    Applet *applet = appletStorage.GetSelectedApplet();
+    Application *applet = appletStorage.GetSelectedApplication();
     if (applet != nullptr) {
 
     	// output chaining (ins == 0xc0) data

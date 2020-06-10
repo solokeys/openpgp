@@ -12,7 +12,7 @@
 namespace Factory {
 
 using namespace Crypto;
-using namespace Applet;
+using namespace Application;
 using namespace OpenPGP;
 using namespace File;
 
@@ -26,13 +26,13 @@ SoloFactory::SoloFactory() {
 
 Util::Error SoloFactory::Init() {
     static PUT_TO_SRAM2 OpenPGPFactory sopenPGPFactory;
-    static PUT_TO_SRAM2 AppletStorage sappletStorage;
+    static PUT_TO_SRAM2 ApplicationStorage sappletStorage;
     static PUT_TO_SRAM2 APDUExecutor sapduExecutor;
     static PUT_TO_SRAM2 CryptoEngine scryptoEngine;
     static PUT_TO_SRAM2 FileSystem sfileSystem;
 
     openPGPFactory = &sopenPGPFactory;
-    appletStorage = &sappletStorage;
+    applicationStorage = &sappletStorage;
     apduExecutor = &sapduExecutor;
     cryptoEngine = &scryptoEngine;
     fileSystem = &sfileSystem;
@@ -44,8 +44,8 @@ APDUExecutor& Factory::SoloFactory::GetAPDUExecutor() {
     return *apduExecutor;
 }
 
-AppletStorage& SoloFactory::GetAppletStorage() {
-    return *appletStorage;
+ApplicationStorage& SoloFactory::GetApplicationStorage() {
+    return *applicationStorage;
 }
 
 CryptoEngine& SoloFactory::GetCryptoEngine() {

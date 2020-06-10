@@ -22,7 +22,7 @@ namespace OpenPGP {
 
 Util::Error APDUGetChallenge::Check(uint8_t cla, uint8_t ins,
 		uint8_t p1, uint8_t p2) {
-	if (ins != Applet::APDUcommands::GetChallenge)
+	if (ins != Application::APDUcommands::GetChallenge)
 		return Util::Error::WrongCommand;
 
 	if (cla != 0x00)
@@ -64,7 +64,7 @@ std::string_view APDUGetChallenge::GetName() {
 Util::Error APDUInternalAuthenticate::Check(uint8_t cla, uint8_t ins,
 		uint8_t p1, uint8_t p2) {
 
-	if (ins != Applet::APDUcommands::InternalAuthenticate)
+	if (ins != Application::APDUcommands::InternalAuthenticate)
 		return Util::Error::WrongCommand;
 
 	if (cla != 0x00)
@@ -114,7 +114,7 @@ std::string_view APDUInternalAuthenticate::GetName() {
 Util::Error APDUGenerateAsymmetricKeyPair::Check(uint8_t cla,
 		uint8_t ins, uint8_t p1, uint8_t p2) {
 
-	if (ins != Applet::APDUcommands::GenerateAsymmKeyPair)
+	if (ins != Application::APDUcommands::GenerateAsymmKeyPair)
 		return Util::Error::WrongCommand;
 
 	if (cla != 0x00 && cla != 0x0c)
@@ -239,7 +239,7 @@ std::string_view APDUGenerateAsymmetricKeyPair::GetName() {
 
 Util::Error APDUPSO::Check(uint8_t cla, uint8_t ins, uint8_t p1,
 		uint8_t p2) {
-	if (ins != Applet::APDUcommands::PSO)
+	if (ins != Application::APDUcommands::PSO)
 		return Util::Error::WrongCommand;
 
 	if (cla != 0x00)

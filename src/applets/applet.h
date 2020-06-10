@@ -18,9 +18,9 @@
 #include "filesystem.h"
 #include "apduconst.h"
 
-namespace Applet {
+namespace Application {
 
-class Applet {
+class Application {
 protected:
 	bool selected;
 	const bstr aid = "\x00"_bstr;
@@ -28,7 +28,7 @@ protected:
 	// TODO: applet config load/save
 
 public:
-	virtual ~Applet();
+	virtual ~Application();
 
 	virtual Util::Error Init();
 

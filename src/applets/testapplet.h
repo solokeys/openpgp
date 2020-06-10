@@ -12,9 +12,9 @@
 
 #include "applet.h"
 
-namespace Applet {
+namespace Application {
 
-	class TestApplet: public Applet {
+	class TestApplication: public Application {
 	private:
 		const bstr aid = "\xfa\xfa\xfa\xfa"_bstr;
 	public:

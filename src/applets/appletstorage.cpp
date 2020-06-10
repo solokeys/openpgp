@@ -9,10 +9,10 @@
 
 #include "appletstorage.h"
 
-namespace Applet {
+namespace Application {
 
-Util::Error AppletStorage::SelectApplet(bstr aid, bstr &result) {
-	Applet *sapp = nullptr;
+Util::Error ApplicationStorage::SelectApplication(bstr aid, bstr &result) {
+	Application *sapp = nullptr;
     for(const auto& app: applets) {
     	if (*app->GetAID() == aid) {
     		sapp = app;
@@ -31,11 +31,11 @@ Util::Error AppletStorage::SelectApplet(bstr aid, bstr &result) {
         err != Util::Error::ApplicationTerminated)
     	return err;
 
-    selectedApplet = sapp;
+    selectedApplication = sapp;
 	return err;
 }
 
-Applet* AppletStorage::GetSelectedApplet() {
+Application* ApplicationStorage::GetSelectedApplication() {
     for(const auto& app: applets) {
     	if (app->Selected())
     		return app;
@@ -44,8 +44,8 @@ Applet* AppletStorage::GetSelectedApplet() {
 	return nullptr;
 }
 
-OpenPGPApplet& AppletStorage::GetOpenPGPApplet() {
-	return openPGPApplet;
+OpenPGPApplication& ApplicationStorage::GetOpenPGPApplication() {
+	return openPGPApplication;
 }
 
 }

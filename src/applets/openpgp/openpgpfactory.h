@@ -42,7 +42,7 @@ namespace OpenPGP {
 		APDUManageSecurityEnvironment apduManageSecurityEnvironment;
 		APDUSoloReboot apduSoloReboot;
 
-		std::array<Applet::APDUCommand*, 13> commands = {
+		std::array<Application::APDUCommand*, 13> commands = {
 			&apduVerify,
 			&apduChangeReferenceData,
 			&apduResetRetryCounter,
@@ -63,7 +63,7 @@ namespace OpenPGP {
 		ResetProvider resetProvider;
 		Security security;
 	public:
-		Applet::APDUCommand *GetAPDUCommand(uint8_t cla, uint8_t ins, uint8_t p1, uint8_t p2);
+		Application::APDUCommand *GetAPDUCommand(uint8_t cla, uint8_t ins, uint8_t p1, uint8_t p2);
 
 		Security &GetSecurity();
 		ResetProvider &GetResetProvider();

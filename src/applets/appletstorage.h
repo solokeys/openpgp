@@ -19,22 +19,22 @@
 #include "openpgpapplet.h"
 #include "testapplet.h"
 
-namespace Applet {
+namespace Application {
 
-class AppletStorage {
+class ApplicationStorage {
 private:
-	OpenPGPApplet openPGPApplet;
-	TestApplet testApplet;
+    OpenPGPApplication openPGPApplication;
+    TestApplication testApplication;
 
-	std::array<Applet*, 2> applets = {&openPGPApplet, &testApplet};
+    std::array<Application*, 2> applets = {&openPGPApplication, &testApplication};
 
-	Applet *selectedApplet = nullptr;
+    Application *selectedApplication = nullptr;
 
 public:
-	Util::Error SelectApplet(bstr aid, bstr &result);
-	Applet *GetSelectedApplet();
+    Util::Error SelectApplication(bstr aid, bstr &result);
+    Application *GetSelectedApplication();
 
-	OpenPGPApplet &GetOpenPGPApplet();
+    OpenPGPApplication &GetOpenPGPApplication();
 };
 
 }

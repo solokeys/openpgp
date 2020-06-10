@@ -9,39 +9,39 @@
 
 #include "applet.h"
 
-namespace Applet {
+namespace Application {
 
-Applet::~Applet() {
+Application::~Application() {
 }
 
-Util::Error Applet::Init() {
+Util::Error Application::Init() {
 	selected = false;
 
 	return Util::Error::NoError;
 }
 
-Util::Error Applet::Select(bstr &result) {
+Util::Error Application::Select(bstr &result) {
 	result.clear();
 	selected = true;
 
 	return Util::Error::NoError;
 }
 
-Util::Error Applet::DeSelect() {
+Util::Error Application::DeSelect() {
 	selected = false;
 
 	return Util::Error::NoError;
 }
 
-bool Applet::Selected() {
+bool Application::Selected() {
 	return selected;
 }
 
-const bstr* Applet::GetAID() {
+const bstr* Application::GetAID() {
 	return &aid;
 }
 
-Util::Error Applet::APDUExchange(APDUStruct &apdu, bstr &result) {
+Util::Error Application::APDUExchange(APDUStruct &apdu, bstr &result) {
 	result.clear();
 
 	if (!selected)

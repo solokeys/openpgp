@@ -17,21 +17,21 @@
 
 namespace OpenPGP {
 
-	class APDUActivateFile : public Applet::APDUCommand {
+	class APDUActivateFile : public Application::APDUCommand {
 	public:
 		virtual Util::Error Check(uint8_t cla, uint8_t ins, uint8_t p1, uint8_t p2);
 		virtual Util::Error Process(uint8_t cla, uint8_t ins, uint8_t p1, uint8_t p2, bstr data, uint8_t le, bstr &dataOut);
 		virtual std::string_view GetName();
 	};
 
-	class APDUTerminateDF : public Applet::APDUCommand {
+	class APDUTerminateDF : public Application::APDUCommand {
 	public:
 		virtual Util::Error Check(uint8_t cla, uint8_t ins, uint8_t p1, uint8_t p2);
 		virtual Util::Error Process(uint8_t cla, uint8_t ins, uint8_t p1, uint8_t p2, bstr data, uint8_t le, bstr &dataOut);
 		virtual std::string_view GetName();
 	};
 
-	class APDUManageSecurityEnvironment : public Applet::APDUCommand {
+	class APDUManageSecurityEnvironment : public Application::APDUCommand {
 	public:
 		virtual Util::Error Check(uint8_t cla, uint8_t ins, uint8_t p1, uint8_t p2);
 		virtual Util::Error Process(uint8_t cla, uint8_t ins, uint8_t p1, uint8_t p2, bstr data, uint8_t le, bstr &dataOut);
@@ -39,7 +39,7 @@ namespace OpenPGP {
 	};
 
 
-	class APDUSoloReboot : public Applet::APDUCommand {
+	class APDUSoloReboot : public Application::APDUCommand {
 	public:
 		virtual Util::Error Check(uint8_t cla, uint8_t ins, uint8_t p1, uint8_t p2);
 		virtual Util::Error Process(uint8_t cla, uint8_t ins, uint8_t p1, uint8_t p2, bstr data, uint8_t le, bstr &dataOut);

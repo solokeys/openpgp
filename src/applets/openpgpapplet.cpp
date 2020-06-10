@@ -13,9 +13,9 @@
 #include "apduconst.h"
 #include "solofactory.h"
 
-namespace Applet {
+namespace Application {
 
-OpenPGPApplet::OpenPGPApplet() : Applet() {
+OpenPGPApplication::OpenPGPApplication() : Application() {
 	Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
 	OpenPGP::OpenPGPFactory &opgp_factory = solo.GetOpenPGPFactory();
 	OpenPGP::Security &security = opgp_factory.GetSecurity();
@@ -23,8 +23,8 @@ OpenPGPApplet::OpenPGPApplet() : Applet() {
 	security.Init();
 }
 
-Util::Error OpenPGPApplet::Select(bstr &result) {
-	auto err = Applet::Select(result);
+Util::Error OpenPGPApplication::Select(bstr &result) {
+	auto err = Application::Select(result);
 
 	Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
 	OpenPGP::OpenPGPFactory &opgp_factory = solo.GetOpenPGPFactory();
@@ -44,11 +44,11 @@ Util::Error OpenPGPApplet::Select(bstr &result) {
 	return err;
 }
 
-const bstr* OpenPGPApplet::GetAID() {
+const bstr* OpenPGPApplication::GetAID() {
 	return &aid;
 }
 
-Util::Error OpenPGPApplet::APDUExchange(APDUStruct &apdu, bstr &result) {
+Util::Error OpenPGPApplication::APDUExchange(APDUStruct &apdu, bstr &result) {
 	result.clear();
 
 	if (!selected)

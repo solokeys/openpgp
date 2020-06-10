@@ -9,11 +9,11 @@
 
 #include "testapplet.h"
 
-const bstr* Applet::TestApplet::GetAID() {
+const bstr* Application::TestApplication::GetAID() {
 	return &aid;
 }
 
-Util::Error Applet::TestApplet::APDUExchange(APDUStruct &apdu, bstr &result) {
+Util::Error Application::TestApplication::APDUExchange(APDUStruct &apdu, bstr &result) {
 	result.set(apdu.data);
 	return Util::Error::NoError;
 }

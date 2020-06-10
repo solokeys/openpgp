@@ -15,9 +15,9 @@
 #include "openpgp/openpgpconst.h"
 #include "openpgp/openpgpstruct.h"
 
-namespace Applet {
+namespace Application {
 
-class OpenPGPApplet: public Applet {
+class OpenPGPApplication: public Application {
 	// TODO: applet state. INIT/WORK. save/load to file
 	OpenPGP::AppletState state;
 	OpenPGP::AppletConfig config;
@@ -27,7 +27,7 @@ private:
 	// OpenPGP AID
 	const bstr aid = "\xd2\x76\x00\x01\x24\x01"_bstr;
 public:
-	OpenPGPApplet();
+	OpenPGPApplication();
 
 	virtual const bstr *GetAID();
 

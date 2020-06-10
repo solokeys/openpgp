@@ -17,7 +17,7 @@
 #include "opgputil.h"
 #include "errors.h"
 
-namespace Applet {
+namespace Application {
 
 	class APDUCommand {
 	private:

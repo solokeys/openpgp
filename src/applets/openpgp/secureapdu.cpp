@@ -22,7 +22,7 @@ namespace OpenPGP {
 
 Util::Error APDUActivateFile::Check(uint8_t cla, uint8_t ins,
 		uint8_t p1, uint8_t p2) {
-	if (ins != Applet::APDUcommands::ActivateFile)
+	if (ins != Application::APDUcommands::ActivateFile)
 		return Util::Error::WrongCommand;
 
 	if (cla != 0x00 && cla != 0x0c)
@@ -73,7 +73,7 @@ std::string_view APDUActivateFile::GetName() {
 
 Util::Error APDUTerminateDF::Check(uint8_t cla, uint8_t ins,
 		uint8_t p1, uint8_t p2) {
-	if (ins != Applet::APDUcommands::TerminateDF)
+	if (ins != Application::APDUcommands::TerminateDF)
 		return Util::Error::WrongCommand;
 
 	if (cla != 0x00 && cla != 0x0c)
@@ -116,7 +116,7 @@ std::string_view APDUTerminateDF::GetName() {
 
 Util::Error APDUManageSecurityEnvironment::Check(uint8_t cla,
 		uint8_t ins, uint8_t p1, uint8_t p2) {
-	if (ins != Applet::APDUcommands::ManageSecurityEnv)
+	if (ins != Application::APDUcommands::ManageSecurityEnv)
 		return Util::Error::WrongCommand;
 
 	if (cla != 0x00)
@@ -148,7 +148,7 @@ std::string_view APDUManageSecurityEnvironment::GetName() {
 
 Util::Error APDUSoloReboot::Check(uint8_t cla, uint8_t ins, uint8_t p1,
 		uint8_t p2) {
-	if (ins != Applet::APDUcommands::SoloReboot)
+	if (ins != Application::APDUcommands::SoloReboot)
 		return Util::Error::WrongCommand;
 
 	if (cla != 0x00)

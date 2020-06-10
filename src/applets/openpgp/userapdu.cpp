@@ -21,7 +21,7 @@
 namespace OpenPGP {
 
 Util::Error APDUVerify::Check(uint8_t cla, uint8_t ins, uint8_t p1, uint8_t p2) {
-	if (ins != Applet::APDUcommands::Verify)
+    if (ins != Application::APDUcommands::Verify)
 		return Util::Error::WrongCommand;
 
 	if (cla != 0x00 && cla != 0x0c)
@@ -80,7 +80,7 @@ std::string_view APDUVerify::GetName() {
 }
 
 Util::Error APDUChangeReferenceData::Check(uint8_t cla, uint8_t ins, uint8_t p1, uint8_t p2) {
-	if (ins != Applet::APDUcommands::ChangeReferenceData)
+    if (ins != Application::APDUcommands::ChangeReferenceData)
 		return Util::Error::WrongCommand;
 
 	if (cla != 0x00 && cla != 0x0c)
@@ -127,7 +127,7 @@ std::string_view APDUChangeReferenceData::GetName() {
 }
 
 Util::Error APDUResetRetryCounter::Check(uint8_t cla, uint8_t ins, uint8_t p1, uint8_t p2) {
-	if (ins != Applet::APDUcommands::ResetRetryCounter)
+    if (ins != Application::APDUcommands::ResetRetryCounter)
 		return Util::Error::WrongCommand;
 
 	if (cla != 0x00 && cla != 0x0c)
@@ -190,7 +190,7 @@ std::string_view APDUResetRetryCounter::GetName() {
 
 // Open PGP application v 3.3.1 page 49
 Util::Error APDUGetData::Check(uint8_t cla, uint8_t ins, uint8_t p1, uint8_t p2) {
-	if (ins != Applet::APDUcommands::GetData && ins != Applet::APDUcommands::GetData2)
+    if (ins != Application::APDUcommands::GetData && ins != Application::APDUcommands::GetData2)
 		return Util::Error::WrongCommand;
 
 	if (cla != 0x00 && cla != 0x0c)
@@ -223,10 +223,10 @@ std::string_view APDUGetData::GetName() {
 }
 
 Util::Error APDUPutData::Check(uint8_t cla, uint8_t ins, uint8_t p1, uint8_t p2) {
-	if (ins != Applet::APDUcommands::PutData && ins != Applet::APDUcommands::PutData2)
+    if (ins != Application::APDUcommands::PutData && ins != Application::APDUcommands::PutData2)
 		return Util::Error::WrongCommand;
 
-	if (ins == Applet::APDUcommands::PutData2 && (p1 != 0x3f || p2 != 0xff))
+    if (ins == Application::APDUcommands::PutData2 && (p1 != 0x3f || p2 != 0xff))
 		return Util::Error::WrongCommand;
 
 	if (cla != 0x00 && cla != 0x0c && cla != 0x10)
@@ -250,7 +250,7 @@ Util::Error APDUPutData::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 	if (err_check != Util::Error::NoError)
 		return err_check;
 
-	if (ins == Applet::APDUcommands::PutData) {
+    if (ins == Application::APDUcommands::PutData) {
 		uint16_t object_id = (p1 << 8) + p2;
 		printf_device("write object id = 0x%04x\n", object_id);
 

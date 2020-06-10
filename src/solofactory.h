@@ -20,14 +20,14 @@
 namespace Factory {
 
 	using namespace Crypto;
-	using namespace Applet;
+    using namespace Application;
 	using namespace OpenPGP;
 	using namespace File;
 
 	class SoloFactory {
     private:
         OpenPGPFactory *openPGPFactory;
-        AppletStorage *appletStorage;
+        ApplicationStorage *applicationStorage;
         APDUExecutor *apduExecutor;
         CryptoEngine *cryptoEngine;
         FileSystem *fileSystem;
@@ -38,7 +38,7 @@ namespace Factory {
 
 		APDUExecutor &GetAPDUExecutor();
 
-		AppletStorage &GetAppletStorage();
+        ApplicationStorage &GetApplicationStorage();
 
 		CryptoEngine &GetCryptoEngine();
 		CryptoLib &GetCryptoLib();

@@ -20,7 +20,7 @@
 
 #define USBIP_MODE
 
-Applet::APDUExecutor *fexecutor;
+Application::APDUExecutor *fexecutor;
 void exchangeFunc(uint8_t *datain, size_t datainlen, uint8_t *dataout, size_t *outlen) {
 	*outlen = 0;
 
@@ -52,7 +52,7 @@ int main(int argc, char * argv[])
 
     Factory::SoloFactory &factory = Factory::SoloFactory::GetSoloFactory();
     factory.Init();  // init solokey
-    Applet::APDUExecutor executor = factory.GetAPDUExecutor();
+    Application::APDUExecutor executor = factory.GetAPDUExecutor();
     fexecutor = &executor;
 
     printf("OpenPGP factory ok.\n");

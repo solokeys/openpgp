@@ -10,7 +10,7 @@
 #include "apducommand.h"
 #include "errors.h"
 
-namespace Applet {
+namespace Application {
 
 APDUCommand::~APDUCommand() {
 }

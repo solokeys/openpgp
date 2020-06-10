@@ -17,7 +17,7 @@
 #include "applets/appletstorage.h"
 #include "applets/apduconst.h"
 
-namespace Applet {
+namespace Application {
 
 class APDUExecutor {
 private:

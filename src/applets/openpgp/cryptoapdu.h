@@ -17,21 +17,21 @@
 
 namespace OpenPGP {
 
-	class APDUGetChallenge : public Applet::APDUCommand {
+	class APDUGetChallenge : public Application::APDUCommand {
 	public:
 		virtual Util::Error Check(uint8_t cla, uint8_t ins, uint8_t p1, uint8_t p2);
 		virtual Util::Error Process(uint8_t cla, uint8_t ins, uint8_t p1, uint8_t p2, bstr data, uint8_t le, bstr &dataOut);
 		virtual std::string_view GetName();
 	};
 
-	class APDUInternalAuthenticate : public Applet::APDUCommand {
+	class APDUInternalAuthenticate : public Application::APDUCommand {
 	public:
 		virtual Util::Error Check(uint8_t cla, uint8_t ins, uint8_t p1, uint8_t p2);
 		virtual Util::Error Process(uint8_t cla, uint8_t ins, uint8_t p1, uint8_t p2, bstr data, uint8_t le, bstr &dataOut);
 		virtual std::string_view GetName();
 	};
 
-	class APDUGenerateAsymmetricKeyPair : public Applet::APDUCommand {
+	class APDUGenerateAsymmetricKeyPair : public Application::APDUCommand {
 	public:
 		virtual Util::Error Check(uint8_t cla, uint8_t ins, uint8_t p1, uint8_t p2);
 		virtual Util::Error Process(uint8_t cla, uint8_t ins, uint8_t p1, uint8_t p2, bstr data, uint8_t le, bstr &dataOut);
@@ -39,7 +39,7 @@ namespace OpenPGP {
 	};
 
 	// decipher, encipher, compute digital signature
-	class APDUPSO : public Applet::APDUCommand {
+	class APDUPSO : public Application::APDUCommand {
 	public:
 		virtual Util::Error Check(uint8_t cla, uint8_t ins, uint8_t p1, uint8_t p2);
 		virtual Util::Error Process(uint8_t cla, uint8_t ins, uint8_t p1, uint8_t p2, bstr data, uint8_t le, bstr &dataOut);

@@ -19,7 +19,7 @@ PUT_TO_SRAM2 static uint8_t apdu_result[4096] = {0};
 
 bool DoReset = false;
 
-Applet::APDUExecutor *fexecutor = nullptr;
+Application::APDUExecutor *fexecutor = nullptr;
 OpenPGP::Security *fsecurity = nullptr;
 void OpenpgpExchange(uint8_t *datain, size_t datainlen, uint8_t *dataout, uint32_t *outlen) {
 	*outlen = 0;
@@ -52,7 +52,7 @@ void OpenpgpInit() {
     Factory::SoloFactory &factory = Factory::SoloFactory::GetSoloFactory();
     factory.Init();
 
-    Applet::APDUExecutor executor = factory.GetAPDUExecutor();
+    Application::APDUExecutor executor = factory.GetAPDUExecutor();
     fexecutor = &executor;
 
     OpenPGP::OpenPGPFactory &opgp_factory = factory.GetOpenPGPFactory();

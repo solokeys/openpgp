@@ -18,7 +18,7 @@
 #include "errors.h"
 #include "opgpdevice.h"
 
-namespace Applet {
+namespace Application {
 
 	enum APDUResponse {
 		SelectInTerminationState 	= 0x6285,

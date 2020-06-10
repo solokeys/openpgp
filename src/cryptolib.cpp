@@ -564,13 +564,16 @@ ECCaid KeyStorage::GetECDSACurveID(AppID_t appID, KeyID_t keyID) {
 	OpenPGP::AlgoritmAttr keyParams;
 	auto err = LoadKeyParameters(appID, keyID, keyParams);
 
-    if (err != Util::Error::NoError)
+    if (err != Util::Error::NoError) {
         return ECCaid::none;
+    }
 
-	if (keyParams.AlgorithmID != AlgoritmID::ECDSAforCDSandIntAuth &&
+    if (keyParams.AlgorithmID != AlgoritmID::ECDSAforCDSandIntAuth &&
         keyParams.AlgorithmID != AlgoritmID::ECDHforDEC &&
         keyParams.AlgorithmID != AlgoritmID::EDDSA)
+    {
         return ECCaid::none;
+    }
 
 	return AIDfromOID(keyParams.ECDSAa.OID);
 }

@@ -148,9 +148,9 @@ Util::Error Security::CommandAccessCheck(
 		uint8_t cla, uint8_t ins, uint8_t p1, uint8_t p2) {
 
 	// check init and terminated card states
-	if (ins != Applet::APDUcommands::ActivateFile &&
-		ins != Applet::APDUcommands::TerminateDF &&
-		ins != Applet::APDUcommands::SoloReboot ) {
+	if (ins != Application::APDUcommands::ActivateFile &&
+		ins != Application::APDUcommands::TerminateDF &&
+		ins != Application::APDUcommands::SoloReboot ) {
 
 		// check init state
 		LifeCycleState lcstate = LifeCycleState::Init;
@@ -168,23 +168,23 @@ Util::Error Security::CommandAccessCheck(
 
 
 	// DataObjectAccessCheck
-	if (ins == Applet::APDUcommands::GetData ||
-		ins == Applet::APDUcommands::GetData2 ||
-		ins == Applet::APDUcommands::PutData ||
-		ins == Applet::APDUcommands::PutData2
+	if (ins == Application::APDUcommands::GetData ||
+		ins == Application::APDUcommands::GetData2 ||
+		ins == Application::APDUcommands::PutData ||
+		ins == Application::APDUcommands::PutData2
 		) {
 
 		uint16_t object_id = (p1 << 8) + p2;
 
 		auto err = DataObjectAccessCheck(
 				object_id,
-				ins == Applet::APDUcommands::PutData || ins == Applet::APDUcommands::PutData2);
+				ins == Application::APDUcommands::PutData || ins == Application::APDUcommands::PutData2);
 		if (err != Util::Error::NoError)
 			return err;
 	}
 
 	// Perform Security Operation
-	if (ins == Applet::APDUcommands::PSO)
+	if (ins == Application::APDUcommands::PSO)
 		switch (p1) {
 		// signature
 		case 0x9e:
@@ -211,7 +211,7 @@ Util::Error Security::CommandAccessCheck(
 		};
 
 	// Internal authenticate
-	if (ins == Applet::APDUcommands::InternalAuthenticate) {
+	if (ins == Application::APDUcommands::InternalAuthenticate) {
 		if (GetAuth(Password::PW1)) {
 			return Util::Error::NoError;
 		} else {
@@ -220,7 +220,7 @@ Util::Error Security::CommandAccessCheck(
 	}
 
 	// Generate asymmetric key pair
-	if (ins == Applet::APDUcommands::GenerateAsymmKeyPair)
+	if (ins == Application::APDUcommands::GenerateAsymmKeyPair)
 		switch (p1) {
 		// 0x80 - Generation of key pair
 		case 0x80:
