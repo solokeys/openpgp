@@ -119,6 +119,8 @@ https://moderncrypto.org/mail-archive/curves/2014/000293.html
 
 https://crypto.stackexchange.com/questions/13077/can-curve25519-keys-be-used-with-ed25519-keys
 
+https://docs.rs/exonum/0.9.3/exonum/crypto/x25519/fn.into_x25519_keypair.html
+
 # TODO
 
 1. Change name from `Applet` to `Application`
