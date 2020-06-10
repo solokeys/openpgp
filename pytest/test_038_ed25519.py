@@ -65,7 +65,7 @@ class Test_EdDSA(object):
     def test_verify_pw1(self, card):
         assert card.verify(1, FACTORY_PASSPHRASE_PW1)
 
-    def test_signature_sigkey(self, card):
+    def ppptest_signature_sigkey(self, card):
         msg = b"Sign me please"
         digest = ecdsa_keys.compute_digestinfo_ecdsa(msg)
 
@@ -94,7 +94,7 @@ class Test_EdDSA(object):
         assert sharedSecret == mySharedSecret
 
 
-    def test_signature_authkey(self, card):
+    def ppptest_signature_authkey(self, card):
         msg = b"Sign me please to authenticate"
         digest = ecdsa_keys.compute_digestinfo_ecdsa(msg)
 
@@ -111,7 +111,7 @@ class Test_EdDSA(object):
         r = card.cmd_put_data_odd(0x3f, 0xff, t)
         assert r
 
-    def test_signature_sigkey_uploaded(self, card):
+    def ppptest_signature_sigkey_uploaded(self, card):
         msg = b"Sign me please"
         digest = ecdsa_keys.compute_digestinfo_ecdsa(msg)
 
@@ -146,7 +146,7 @@ class Test_EdDSA(object):
         r = card.cmd_put_data_odd(0x3f, 0xff, t)
         assert r
 
-    def test_signature_authkey_uploaded(self, card):
+    def ppptest_signature_authkey_uploaded(self, card):
         msg = b"Sign me please to authenticate"
         digest = ecdsa_keys.compute_digestinfo_ecdsa(msg)
 

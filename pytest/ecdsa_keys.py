@@ -152,7 +152,10 @@ def build_privkey_template_eddsa(openpgp_keyno):
     else:
         keyspec = 0xa4
 
-    PublicKey, PrivateKey = generate_key_eddsa()
+    if openpgp_keyno == 2:
+        PublicKey, PrivateKey = generate_key_eddsa_ecdh()
+    else:
+        PublicKey, PrivateKey = generate_key_eddsa()
     return create_ecdsa_4D_key(keyspec, ecc_to_string(PrivateKey),
               b"\x04" + ecc_to_string(PublicKey))
 
