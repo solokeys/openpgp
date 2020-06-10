@@ -97,6 +97,7 @@ static const uint8_t tls_ec_brainpoolP256r1 = 26;
 static const uint8_t tls_ec_brainpoolP384r1 = 27;
 static const uint8_t tls_ec_brainpoolP512r1 = 28;
 static const uint8_t tls_ec_curve25519      = 29;
+static const uint8_t tls_ec_ed25519         = 100; // undefined from tls
 
 static const std::array<ECCalgParams, 10> ECDSAalgParamsList = {{
     {none,            ""_bstr,                                         tls_ec_none},
@@ -107,7 +108,7 @@ static const std::array<ECCalgParams, 10> ECDSAalgParamsList = {{
     {brainpoolP384r1, "\x2B\x24\x03\x03\x02\x08\x01\x01\x0B"_bstr,     tls_ec_brainpoolP384r1},
     {brainpoolP512r1, "\x2B\x24\x03\x03\x02\x08\x01\x01\x0D"_bstr,     tls_ec_brainpoolP512r1},
     {secp256k1,       "\x2B\x81\x04\x00\x0a"_bstr,                     tls_ec_secp256k1},
-    {ed25519,         "\x2B\x06\x01\x04\x01\xda\x47\x0f\x01"_bstr,     tls_ec_curve25519},  // EdDSA  Ed25519
+    {ed25519,         "\x2B\x06\x01\x04\x01\xda\x47\x0f\x01"_bstr,     tls_ec_ed25519},     // EdDSA  Ed25519
     {curve25519,      "\x2B\x06\x01\x04\x01\x97\x55\x01\x05\x01"_bstr, tls_ec_curve25519}   // ECDH   Curve25519
 }};
 

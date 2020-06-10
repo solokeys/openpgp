@@ -20,6 +20,7 @@
 #include "applications/openpgp/openpgpconst.h"
 
 #include "i15_addon.h"
+#include "salty.h"
 
 namespace Crypto {
 
@@ -345,6 +346,7 @@ Util::Error CryptoLib::ECCGenKey(ECCaid curveID, ECCKey& keyOut) {
     uint8_t keybuf[BR_EC_KBUF_PUB_MAX_SIZE * 2 + 10];
     std::memset(keybuf, 0, sizeof(keybuf));
 
+    // uECC
     if (curveID == secp256k1 || curveID == ansix9p256r1) {
         ecdsa_init();
         size_t sklen = 0;
@@ -358,31 +360,51 @@ Util::Error CryptoLib::ECCGenKey(ECCaid curveID, ECCKey& keyOut) {
         AppendKeyPart(KeyBuffer, keyOut.Public, keybuf + BR_EC_KBUF_PUB_MAX_SIZE, pklen);
 
         device_led(COLOR_GREEN);
-    } else {
-        br_ec_private_key sk = {};
-        br_ec_public_key pk = {};
+        keyOut.Print();
+        return Util::Error::NoError;
+    }
 
-        const br_prng_class *rng = &br_hw_drbg_vtable;
-
+    // salty
+    if (curveID == ed25519) {
         device_led(COLOR_MAGENTA);
-        if (br_ec_keygen(&rng, br_current_impl, &sk, keybuf, tlsCurveId) == 0){
-            device_led(COLOR_RED);
-            return Util::Error::CryptoOperationError;
-        }
 
-        AppendKeyPart(KeyBuffer, keyOut.Private, sk.x, sk.xlen);
+        size_t sklen = salty_SECRETKEY_SEED_LENGTH;
+        gen_random_device(keybuf, sklen);
+        AppendKeyPart(KeyBuffer, keyOut.Private, keybuf, sklen);
 
-        if (br_ec_compute_pub(br_current_impl, &pk, keybuf + sk.xlen + 2, &sk) == 0) {
-            device_led(COLOR_RED);
-            return Util::Error::CryptoOperationError;
-        }
-        AppendKeyPart(KeyBuffer, keyOut.Public, pk.q, pk.qlen);
-        keyOut.CurveId = curveID;
+        salty_public_key(
+            reinterpret_cast<uint8_t (*)[32]>(keybuf),
+            reinterpret_cast<uint8_t (*)[32]>(keybuf + sklen));
+        AppendKeyPart(KeyBuffer, keyOut.Public, keybuf + sklen, salty_PUBLICKEY_SERIALIZED_LENGTH);
 
         device_led(COLOR_GREEN);
-	}
-    keyOut.Print();
+        keyOut.Print();
+        return Util::Error::NoError;
+    }
 
+    // the other ECC curves works via bearssl
+    br_ec_private_key sk = {};
+    br_ec_public_key pk = {};
+
+    const br_prng_class *rng = &br_hw_drbg_vtable;
+
+    device_led(COLOR_MAGENTA);
+    if (br_ec_keygen(&rng, br_current_impl, &sk, keybuf, tlsCurveId) == 0){
+        device_led(COLOR_RED);
+        return Util::Error::CryptoOperationError;
+    }
+
+    AppendKeyPart(KeyBuffer, keyOut.Private, sk.x, sk.xlen);
+
+    if (br_ec_compute_pub(br_current_impl, &pk, keybuf + sk.xlen + 2, &sk) == 0) {
+        device_led(COLOR_RED);
+        return Util::Error::CryptoOperationError;
+    }
+    AppendKeyPart(KeyBuffer, keyOut.Public, pk.q, pk.qlen);
+    keyOut.CurveId = curveID;
+
+    device_led(COLOR_GREEN);
+    keyOut.Print();
     return Util::Error::NoError;
 }
 
@@ -401,7 +423,6 @@ Util::Error ECDSAFillPrivateKey(br_ec_private_key &sk, ECCKey &key) {
 
     return Util::Error::NoError;
 }
-
 
 Util::Error CryptoLib::ECCSign(ECCKey key, bstr data, bstr& signature) {
 	signature.clear();
