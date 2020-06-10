@@ -132,7 +132,7 @@ https://docs.rs/exonum/0.9.3/exonum/crypto/x25519/fn.into_x25519_keypair.html
   - refactor ECDSA tests for using cryptography package
 5. Add tests and functionality for:
   - ~~ECDSA~~
-  - ED25519 (EdDSA), ~~CURVE25519(ECDH)~~
+  - ~~ED25519 (EdDSA), CURVE25519(ECDH)~~
   - Secure messaging????
 6. fix:
   - ~~ansix9p384r1, ansix9p521r1 curves~~
