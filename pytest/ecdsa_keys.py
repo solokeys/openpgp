@@ -144,7 +144,8 @@ def ecc_to_string(key):
 
     return None
 
-def build_privkey_template_eddsa(openpgp_keyno):
+
+def build_privkey_template_eddsa(openpgp_keyno, wo0x04=False):
     if openpgp_keyno == 1:
         keyspec = 0xb6
     elif openpgp_keyno == 2:
@@ -157,7 +158,7 @@ def build_privkey_template_eddsa(openpgp_keyno):
     else:
         PublicKey, PrivateKey = generate_key_eddsa()
     return create_ecdsa_4D_key(keyspec, ecc_to_string(PrivateKey),
-              b"\x04" + ecc_to_string(PublicKey))
+                               (b"" if wo0x04 else b"\x04") + ecc_to_string(PublicKey))
 
 
 def compute_digestinfo_ecdsa(msg):
