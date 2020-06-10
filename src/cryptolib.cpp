@@ -520,6 +520,12 @@ Util::Error CryptoLib::ECDHComputeShared(ECDSAKey key, bstr anotherPublicKey, bs
         pk.q = anotherPublicKey.uint8Data();
         pk.qlen = anotherPublicKey.length();
 
+        // check 0x04 before curve25519 public key
+        if (key.CurveId == ECDSAaid::curve25519 && pk.qlen == 33 && pk.q[0] == 0x04) {
+            pk.q++;
+            pk.qlen--;
+        }
+
         // sharedSecret = anotherPublicKey * key.Private
         size_t len = ecdh_shared_secret(br_current_impl, &sk, &pk, sharedSecret.uint8Data());
         if (len == 0)
@@ -607,6 +613,11 @@ Util::Error KeyStorage::GetECDSAKey(AppID_t appID, KeyID_t keyID, ECDSAKey& key)
 			return err;
 		prvStr.set_length(prvStr.length() + key.Public.length());
 	}
+
+    // check 0x04 before curve25519 public key and return key without it
+    if (key.CurveId == ECDSAaid::curve25519 && key.Public.length() == 33 && key.Public[0] == 0x04) {
+        key.Public.moveTail(1, -1);
+    }
 
 	return Util::Error::NoError;
 }
