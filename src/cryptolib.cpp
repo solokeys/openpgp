@@ -436,16 +436,32 @@ Util::Error CryptoLib::ECCSign(ECCKey key, bstr data, bstr& signature) {
         if (len == 0)
             return Util::Error::CryptoOperationError;
         signature.set_length(len);
-    } else {
-        Util::Error err = ECDSAFillPrivateKey(sk, key);
-        if (err != Util::Error::NoError)
-            return err;
+        return Util::Error::NoError;
+    }
 
-        size_t len = br_ecdsa_i15_sign_raw(br_current_impl, &br_sha256_vtable, data.data(), &sk, signature.uint8Data());
-        if (len == 0)
-            return Util::Error::CryptoOperationError;
-        signature.set_length(len);
-	}
+    // salty
+    if (key.CurveId == ed25519) {
+        if (key.Private.length() != salty_SECRETKEY_SEED_LENGTH)
+            return Util::Error::StoredKeyError;
+
+        salty_sign(
+            reinterpret_cast<uint8_t (*)[salty_SECRETKEY_SEED_LENGTH]>(key.Private.uint8Data()),
+            data.uint8Data(),
+            data.length(),
+            reinterpret_cast<uint8_t (*)[salty_SIGNATURE_SERIALIZED_LENGTH]>(signature.uint8Data()));
+
+        signature.set_length(salty_SIGNATURE_SERIALIZED_LENGTH);
+        return Util::Error::NoError;
+    }
+
+    Util::Error err = ECDSAFillPrivateKey(sk, key);
+    if (err != Util::Error::NoError)
+        return err;
+
+    size_t len = br_ecdsa_i15_sign_raw(br_current_impl, &br_sha256_vtable, data.data(), &sk, signature.uint8Data());
+    if (len == 0)
+        return Util::Error::CryptoOperationError;
+    signature.set_length(len);
 
     return Util::Error::NoError;
 }
@@ -542,7 +558,7 @@ Util::Error CryptoLib::ECDHComputeShared(ECCKey key, bstr anotherPublicKey, bstr
         pk.qlen = anotherPublicKey.length();
 
         // check 0x04 before curve25519 public key
-        if (key.CurveId == ECCaid::curve25519 && pk.qlen == 33 && pk.q[0] == 0x04) {
+        if ((key.CurveId == ECCaid::curve25519 || key.CurveId == ECCaid::ed25519) && pk.qlen == 33 && pk.q[0] == 0x04) {
             pk.q++;
             pk.qlen--;
         }
@@ -639,7 +655,7 @@ Util::Error KeyStorage::GetECCKey(AppID_t appID, KeyID_t keyID, ECCKey& key) {
 	}
 
     // check 0x04 before curve25519 public key and return key without it
-    if (key.CurveId == ECCaid::curve25519 && key.Public.length() == 33 && key.Public[0] == 0x04) {
+    if ((key.CurveId == ECCaid::curve25519  || key.CurveId == ECCaid::ed25519) && key.Public.length() == 33 && key.Public[0] == 0x04) {
         key.Public.moveTail(1, -1);
     }
 
