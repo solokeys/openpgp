@@ -116,14 +116,15 @@ Test some critical parts of code
 1. Change name from `Applet` to `Application`
 2. RSA generation waiting for USB stack (now - timeout)
 3. brainpool ecdsa curves
-4. Add tests for:
+4. Ed25519 to Curve25519 conversion and vice versa
+5. Add tests for:
   - access rights to commands and DO
   - refactor some tests and change some "magic" values in them
   - refactor ECDSA tests for using cryptography package
-5. Add tests and functionality for:
+6. Add tests and functionality for:
   - ~~ECDSA~~
   - ED25519 (EdDSA), CURVE25519(ECDH)
   - Secure messaging????
-6. fix:
+7. fix:
   - ~~ansix9p384r1, ansix9p521r1 curves~~
 
