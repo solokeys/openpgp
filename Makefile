@@ -7,7 +7,7 @@ rwildcard=$(wildcard $1$2) $(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2))
 OBJ_DIR := ./obj
 SRC_DIRS := ./pc \
 			./src \
-			./src/applets \
+            ./src/applications \
             ./src/applications/openpgp \
             ./libs/stm32fs
 SRC_FILES := $(sort $(foreach var, $(SRC_DIRS), $(wildcard $(var)/*.cpp)))

@@ -8,8 +8,8 @@
  */
 
 
-#ifndef SRC_APPLETS_OPENPGP_USERAPDU_H_
-#define SRC_APPLETS_OPENPGP_USERAPDU_H_
+#ifndef SRC_USERAPDU_H_
+#define SRC_USERAPDU_H_
 
 #include <string_view>
 #include "errors.h"
@@ -54,4 +54,4 @@ namespace OpenPGP {
 
 }
 
-#endif /* SRC_APPLETS_OPENPGP_USERAPDU_H_ */
+#endif /* SRC_USERAPDU_H_ */

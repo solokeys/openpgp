@@ -7,8 +7,8 @@
   copied, modified, or distributed except according to those terms.
  */
 
-#ifndef SRC_APPLETS_OPENPGPAPPLICATION_H_
-#define SRC_APPLETS_OPENPGPAPPLICATION_H_
+#ifndef SRC_OPENPGPAPPLICATION_H_
+#define SRC_OPENPGPAPPLICATION_H_
 
 #include "application.h"
 #include "openpgp/openpgpfactory.h"
@@ -18,9 +18,9 @@
 namespace Application {
 
 class OpenPGPApplication: public Application {
-	// TODO: applet state. INIT/WORK. save/load to file
-	OpenPGP::AppletState state;
-	OpenPGP::AppletConfig config;
+    // TODO: application state. INIT/WORK. save/load to file
+    OpenPGP::ApplicationState state;
+	OpenPGP::ApplicationConfig config;
 	OpenPGP::PWStatusBytes pwstatus;
 
 private:
@@ -38,4 +38,4 @@ public:
 } // namespace Application
 
 
-#endif /* SRC_APPLETS_OPENPGPAPPLICATION_H_ */
+#endif /* SRC_OPENPGPAPPLICATION_H_ */

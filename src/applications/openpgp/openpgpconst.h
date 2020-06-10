@@ -7,8 +7,8 @@
   copied, modified, or distributed except according to those terms.
  */
 
-#ifndef SRC_APPLETS_OPENPGP_OPENPGPCONST_H_
-#define SRC_APPLETS_OPENPGP_OPENPGPCONST_H_
+#ifndef SRC_OPENPGPCONST_H_
+#define SRC_OPENPGPCONST_H_
 
 #include <cstdint>
 #include "opgputil.h"
@@ -81,4 +81,4 @@ enum LifeCycleState {
 
 } // namespace OpenPGP
 
-#endif /* SRC_APPLETS_OPENPGP_OPENPGPCONST_H_ */
+#endif /* SRC_OPENPGPCONST_H_ */

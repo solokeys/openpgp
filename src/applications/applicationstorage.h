@@ -26,7 +26,7 @@ private:
     OpenPGPApplication openPGPApplication;
     TestApplication testApplication;
 
-    std::array<Application*, 2> applets = {&openPGPApplication, &testApplication};
+    std::array<Application*, 2> applications = {&openPGPApplication, &testApplication};
 
     Application *selectedApplication = nullptr;
 

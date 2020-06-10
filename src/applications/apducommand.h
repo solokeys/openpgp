@@ -8,8 +8,8 @@
  */
 
 
-#ifndef SRC_APPLETS_APDUCOMMAND_H_
-#define SRC_APPLETS_APDUCOMMAND_H_
+#ifndef SRC_APDUCOMMAND_H_
+#define SRC_APDUCOMMAND_H_
 
 #include <cstdint>
 #include <string_view>
@@ -31,4 +31,4 @@ namespace Application {
 
 }
 
-#endif /* SRC_APPLETS_APDUCOMMAND_H_ */
+#endif /* SRC_APDUCOMMAND_H_ */

@@ -13,7 +13,7 @@ namespace Application {
 
 Util::Error ApplicationStorage::SelectApplication(bstr aid, bstr &result) {
 	Application *sapp = nullptr;
-    for(const auto& app: applets) {
+    for(const auto& app: applications) {
     	if (*app->GetAID() == aid) {
     		sapp = app;
     		break;
@@ -21,9 +21,9 @@ Util::Error ApplicationStorage::SelectApplication(bstr aid, bstr &result) {
     }
 
     if (sapp == nullptr)
-    	return Util::Error::AppletNotFound;
+    	return Util::Error::ApplicationNotFound;
 
-    for(const auto& app: applets)
+    for(const auto& app: applications)
     	app->DeSelect();
 
     auto err = sapp->Select(result);
@@ -36,7 +36,7 @@ Util::Error ApplicationStorage::SelectApplication(bstr aid, bstr &result) {
 }
 
 Application* ApplicationStorage::GetSelectedApplication() {
-    for(const auto& app: applets) {
+    for(const auto& app: applications) {
     	if (app->Selected())
     		return app;
     }

@@ -12,19 +12,19 @@
 
 namespace OpenPGP {
 
-Util::Error AppletConfig::Load(File::FileSystem &fs) {
+Util::Error ApplicationConfig::Load(File::FileSystem &fs) {
 	bstr data(reinterpret_cast<uint8_t *>(this), 1, 1);
-	auto err = fs.ReadFile(File::AppletID::OpenPGP, File::SecureFileID::State, File::Secure, data);
+	auto err = fs.ReadFile(File::AppID::OpenPGP, File::SecureFileID::State, File::Secure, data);
 	if (err != Util::Error::NoError)
 		return err;
 
 	return Util::Error::NoError;
 }
 
-Util::Error AppletConfig::Save(File::FileSystem &fs) {
+Util::Error ApplicationConfig::Save(File::FileSystem &fs) {
 	bstr data(reinterpret_cast<uint8_t *>(this), 1, 1);
 
-	auto err = fs.WriteFile(File::AppletID::OpenPGP, File::SecureFileID::State, File::Secure, data);
+	auto err = fs.WriteFile(File::AppID::OpenPGP, File::SecureFileID::State, File::Secure, data);
 	if (err != Util::Error::NoError)
 		return err;
 	return Util::Error::NoError;
@@ -32,7 +32,7 @@ Util::Error AppletConfig::Save(File::FileSystem &fs) {
 
 Util::Error PWStatusBytes::Load(File::FileSystem &fs) {
 	bstr data(reinterpret_cast<uint8_t *>(this), 7, 7);
-	auto err = fs.ReadFile(File::AppletID::OpenPGP, 0xc4, File::FileType::File, data);
+	auto err = fs.ReadFile(File::AppID::OpenPGP, 0xc4, File::FileType::File, data);
 	if (err != Util::Error::NoError)
 		return err;
 	if (data.length() != 7)
@@ -43,7 +43,7 @@ Util::Error PWStatusBytes::Load(File::FileSystem &fs) {
 }
 Util::Error PWStatusBytes::Save(File::FileSystem &fs) {
 	bstr data(reinterpret_cast<uint8_t *>(this), 7, 7);
-	return fs.WriteFile(File::AppletID::OpenPGP, 0xc4, File::FileType::File, data, true);
+	return fs.WriteFile(File::AppID::OpenPGP, 0xc4, File::FileType::File, data, true);
 }
 
 uint8_t PWStatusBytes::GetMinLength(Password passwdId) {
@@ -206,7 +206,7 @@ Util::Error AlgoritmAttr::Decode(KeyID_t key_id) {
 }
 
 Util::Error AlgoritmAttr::Load(File::FileSystem& fs, KeyID_t file_id) {
-	auto err = fs.ReadFile(File::AppletID::OpenPGP, file_id, File::FileType::File, data);
+	auto err = fs.ReadFile(File::AppID::OpenPGP, file_id, File::FileType::File, data);
 	if (err != Util::Error::NoError)
 		return err;
 
@@ -214,7 +214,7 @@ Util::Error AlgoritmAttr::Load(File::FileSystem& fs, KeyID_t file_id) {
 }
 
 Util::Error DSCounter::Load(File::FileSystem& fs) {
-	auto err = fs.ReadFile(File::AppletID::OpenPGP, 0x7a, File::File, dsdata);
+	auto err = fs.ReadFile(File::AppID::OpenPGP, 0x7a, File::File, dsdata);
 	if (err != Util::Error::NoError)
 		return err;
 
@@ -232,11 +232,11 @@ Util::Error DSCounter::Load(File::FileSystem& fs) {
 
 Util::Error DSCounter::Save(File::FileSystem& fs) {
 	dsdata.set_uint_be(2, dsdata[1], Counter);
-	return fs.WriteFile(File::AppletID::OpenPGP, 0x7a, File::File, dsdata);
+	return fs.WriteFile(File::AppID::OpenPGP, 0x7a, File::File, dsdata);
 }
 
 Util::Error DSCounter::DeleteFile(File::FileSystem& fs) {
-	return fs.DeleteFile(File::AppletID::OpenPGP, 0x7a, File::File);
+	return fs.DeleteFile(File::AppID::OpenPGP, 0x7a, File::File);
 }
 
 void KDFDO::Clear() {
@@ -285,7 +285,7 @@ Util::Error KDFDO::Load(File::FileSystem& fs) {
 
 	Clear();
 
-	auto err = fs.ReadFile(File::AppletID::OpenPGP, 0xf9, File::File, kdfdata);
+	auto err = fs.ReadFile(File::AppID::OpenPGP, 0xf9, File::File, kdfdata);
 	if (err != Util::Error::NoError)
 		return err;
 
@@ -338,13 +338,13 @@ Util::Error KDFDO::Load(File::FileSystem& fs) {
 
 Util::Error KDFDO::SaveInitPasswordsToPWFiles(File::FileSystem& fs) {
 	if (InitialPW1.length() > 0) {
-		auto err = fs.WriteFile(File::AppletID::OpenPGP, File::SecureFileID::PW1, File::Secure, InitialPW1);
+		auto err = fs.WriteFile(File::AppID::OpenPGP, File::SecureFileID::PW1, File::Secure, InitialPW1);
 		if (err != Util::Error::NoError)
 			return err;
 	}
 
 	if (InitialPW3.length() > 0) {
-		auto err = fs.WriteFile(File::AppletID::OpenPGP, File::SecureFileID::PW3, File::Secure, InitialPW3);
+		auto err = fs.WriteFile(File::AppID::OpenPGP, File::SecureFileID::PW3, File::Secure, InitialPW3);
 		if (err != Util::Error::NoError)
 			return err;
 	}

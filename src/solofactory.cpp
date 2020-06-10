@@ -26,13 +26,13 @@ SoloFactory::SoloFactory() {
 
 Util::Error SoloFactory::Init() {
     static PUT_TO_SRAM2 OpenPGPFactory sopenPGPFactory;
-    static PUT_TO_SRAM2 ApplicationStorage sappletStorage;
+    static PUT_TO_SRAM2 ApplicationStorage sapplicationStorage;
     static PUT_TO_SRAM2 APDUExecutor sapduExecutor;
     static PUT_TO_SRAM2 CryptoEngine scryptoEngine;
     static PUT_TO_SRAM2 FileSystem sfileSystem;
 
     openPGPFactory = &sopenPGPFactory;
-    applicationStorage = &sappletStorage;
+    applicationStorage = &sapplicationStorage;
     apduExecutor = &sapduExecutor;
     cryptoEngine = &scryptoEngine;
     fileSystem = &sfileSystem;

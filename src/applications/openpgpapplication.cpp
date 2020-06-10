@@ -52,7 +52,7 @@ Util::Error OpenPGPApplication::APDUExchange(APDUStruct &apdu, bstr &result) {
 	result.clear();
 
 	if (!selected)
-		return Util::Error::AppletNotSelected;
+		return Util::Error::ApplicationNotSelected;
 
 	Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
 	OpenPGP::OpenPGPFactory &opgp_factory = solo.GetOpenPGPFactory();

@@ -37,7 +37,7 @@ enum SecureFileID {
 	AES              = 0xd5,
 };
 
-enum AppletID {
+enum AppID {
 	All     = 0,
 	Test    = 1,
 	OpenPGP = 2,

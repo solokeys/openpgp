@@ -18,7 +18,7 @@
 
 namespace OpenPGP {
 
-struct AppletState {
+struct ApplicationState {
 	bool pw1Authenticated = false;
 	bool cdsAuthenticated = false;
 	bool pw3Authenticated = false;
@@ -36,7 +36,7 @@ struct AppletState {
 	}
 };
 
-struct AppletConfig {
+struct ApplicationConfig {
 	LifeCycleState state;
 
 	Util::Error Load(File::FileSystem &fs);

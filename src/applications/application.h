@@ -25,7 +25,7 @@ protected:
 	bool selected;
 	const bstr aid = "\x00"_bstr;
 
-	// TODO: applet config load/save
+    // TODO: application config load/save
 
 public:
 	virtual ~Application();

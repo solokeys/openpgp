@@ -32,4 +32,4 @@ std::string_view APDUCommand::GetName() {
 	return "base class"sv;
 }
 
-} // namespace Applet
+} // namespace Application

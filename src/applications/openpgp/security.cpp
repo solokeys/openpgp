@@ -123,9 +123,9 @@ Util::Error Security::DataObjectAccessCheck(
     	Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
     	Crypto::KeyStorage &key_storage = solo.GetKeyStorage();
 
-    	if (key_storage.KeyExists(File::AppletID::OpenPGP, OpenPGPKeyType::DigitalSignature) ||
-    		key_storage.KeyExists(File::AppletID::OpenPGP, OpenPGPKeyType::Confidentiality) ||
-			key_storage.KeyExists(File::AppletID::OpenPGP, OpenPGPKeyType::Authentication)
+    	if (key_storage.KeyExists(File::AppID::OpenPGP, OpenPGPKeyType::DigitalSignature) ||
+    		key_storage.KeyExists(File::AppID::OpenPGP, OpenPGPKeyType::Confidentiality) ||
+			key_storage.KeyExists(File::AppID::OpenPGP, OpenPGPKeyType::Authentication)
     		)
         	return Util::Error::AccessDenied;
     }
@@ -249,7 +249,7 @@ bool Security::DataObjectInSecureArea(uint16_t dataObjectID) {
 
 
 void Security::ClearAllAuth() {
-	appletState.Clear();
+	applicationState.Clear();
 }
 
 void Security::Init() {
@@ -257,7 +257,7 @@ void Security::Init() {
 
 	Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
 	File::FileSystem &filesystem = solo.GetFileSystem();
-	appletConfig.Load(filesystem);
+	applicationConfig.Load(filesystem);
 
 	Reload();
 }
@@ -271,7 +271,7 @@ void Security::Reload() {
 }
 
 void Security::intRESET() {
-	appletState.Init();  // clear `terminateExecuted` state
+	applicationState.Init();  // clear `terminateExecuted` state
 	Init();
     DoReset = true;
 }
@@ -310,7 +310,7 @@ Util::Error Security::AfterSaveFileLogic(uint16_t objectID) {
 }
 
 Util::Error Security::GetLifeCycleState(LifeCycleState &state) {
-	state = appletConfig.state;
+	state = applicationConfig.state;
 	return Util::Error::NoError;
 }
 
@@ -318,8 +318,8 @@ Util::Error Security::SetLifeCycleState(LifeCycleState state) {
 	Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
 	File::FileSystem &filesystem = solo.GetFileSystem();
 
-	appletConfig.state = state;
-	return appletConfig.Save(filesystem);
+	applicationConfig.state = state;
+	return applicationConfig.Save(filesystem);
 }
 
 Util::Error Security::SetPasswd(Password passwdId, bstr password) {
@@ -345,7 +345,7 @@ Util::Error Security::SetPasswd(Password passwdId, bstr password) {
 	case Password::PSOCDS:
 	case Password::PW1:
 	case Password::PW3:
-		err = filesystem.WriteFile(File::AppletID::OpenPGP,
+		err = filesystem.WriteFile(File::AppID::OpenPGP,
 				(passwdId == Password::PW3) ? File::SecureFileID::PW3 : File::SecureFileID::PW1,
 				File::Secure,
 				password);
@@ -353,7 +353,7 @@ Util::Error Security::SetPasswd(Password passwdId, bstr password) {
 			return err;
 		break;
 	case Password::RC:
-		err = filesystem.WriteFile(File::AppletID::OpenPGP,
+		err = filesystem.WriteFile(File::AppID::OpenPGP,
 				0xd3,
 				File::File,
 				password);
@@ -387,14 +387,14 @@ Util::Error Security::VerifyPasswd(Password passwdId, bstr data, bool passwdChec
 	bstr passwd(_passwd, 0, max_length);
 
 	if (passwdId != Password::RC) {
-		auto file_err = filesystem.ReadFile(File::AppletID::OpenPGP,
+		auto file_err = filesystem.ReadFile(File::AppID::OpenPGP,
 				(passwdId == Password::PW3) ? File::SecureFileID::PW3 : File::SecureFileID::PW1,
 				File::Secure,
 				passwd);
 		if (file_err != Util::Error::NoError)
 			return file_err;
 	} else {
-		auto file_err = filesystem.ReadFile(File::AppletID::OpenPGP,
+		auto file_err = filesystem.ReadFile(File::AppID::OpenPGP,
 				0xd3,
 				File::File,
 				passwd);
@@ -408,7 +408,7 @@ Util::Error Security::VerifyPasswd(Password passwdId, bstr data, bool passwdChec
 		// gnuk PW3 may be empty.
 		// If PW3 is null and PW1 = OK >> check with pw1
 		// If PW3 is null and PW1 = default >> check with default pw3. Here may be default KDF-DO password if set!
-		auto file_err = filesystem.ReadFile(File::AppletID::OpenPGP,
+		auto file_err = filesystem.ReadFile(File::AppID::OpenPGP,
 				File::SecureFileID::PW1,
 				File::Secure,
 				passwd);
@@ -466,7 +466,7 @@ bool Security::PWIsEmpty(Password passwdId) {
 	uint8_t _passwd[max_length] = {0};
 	bstr passwd(_passwd, 0, max_length);
 
-	auto file_err = filesystem.ReadFile(File::AppletID::OpenPGP,
+	auto file_err = filesystem.ReadFile(File::AppID::OpenPGP,
 			(passwdId == Password::PW3) ? File::SecureFileID::PW3 : File::SecureFileID::PW1,
 			File::Secure,
 			passwd);
@@ -494,20 +494,20 @@ Util::Error Security::ClearAllPasswd() {
 	Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
 	File::FileSystem &filesystem = solo.GetFileSystem();
 
-	auto file_err = filesystem.DeleteFile(File::AppletID::OpenPGP,
+	auto file_err = filesystem.DeleteFile(File::AppID::OpenPGP,
 			File::SecureFileID::PW1,
 			File::Secure);
 	if (file_err != Util::Error::NoError)
 		return file_err;
 
-	file_err = filesystem.DeleteFile(File::AppletID::OpenPGP,
+	file_err = filesystem.DeleteFile(File::AppID::OpenPGP,
 			File::SecureFileID::PW3,
 			File::Secure);
 	if (file_err != Util::Error::NoError)
 		return file_err;
 
 	// RC
-	file_err = filesystem.DeleteFile(File::AppletID::OpenPGP,
+	file_err = filesystem.DeleteFile(File::AppID::OpenPGP,
 			0xd3,
 			File::File);
 	if (file_err != Util::Error::NoError)
@@ -519,13 +519,13 @@ Util::Error Security::ClearAllPasswd() {
 void Security::ClearAuth(Password passwdId) {
 	switch (passwdId){
 	case Password::PW1:
-		appletState.pw1Authenticated = false;
+		applicationState.pw1Authenticated = false;
 		break;
 	case Password::PW3:
-		appletState.pw3Authenticated = false;
+		applicationState.pw3Authenticated = false;
 		break;
 	case Password::PSOCDS:
-		appletState.cdsAuthenticated = false;
+		applicationState.cdsAuthenticated = false;
 		break;
 	default:
 		break;
@@ -535,13 +535,13 @@ void Security::ClearAuth(Password passwdId) {
 void Security::SetAuth(Password passwdId) {
 	switch (passwdId){
 	case Password::PW1:
-		appletState.pw1Authenticated = true;
+		applicationState.pw1Authenticated = true;
 		break;
 	case Password::PW3:
-		appletState.pw3Authenticated = true;
+		applicationState.pw3Authenticated = true;
 		break;
 	case Password::PSOCDS:
-		appletState.cdsAuthenticated = true;
+		applicationState.cdsAuthenticated = true;
 		break;
 	default:
 		break;
@@ -551,11 +551,11 @@ void Security::SetAuth(Password passwdId) {
 bool Security::GetAuth(Password passwdId) {
 	switch (passwdId){
 	case Password::PW1:
-		return appletState.pw1Authenticated;
+		return applicationState.pw1Authenticated;
 	case Password::PW3:
-		return appletState.pw3Authenticated;
+		return applicationState.pw3Authenticated;
 	case Password::PSOCDS:
-		return appletState.cdsAuthenticated;
+		return applicationState.cdsAuthenticated;
 	case Password::Any:
 		return true;
 	case Password::Never:
@@ -584,11 +584,11 @@ Util::Error Security::IncDSCounter() {
 }
 
 void Security::Terminate() {
-	appletState.terminateExecuted = true;
+	applicationState.terminateExecuted = true;
 }
 
 bool Security::isTerminated() {
-	return appletState.terminateExecuted;
+	return applicationState.terminateExecuted;
 }
 
 } /* namespace OpenPGP */

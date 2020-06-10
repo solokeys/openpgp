@@ -34,7 +34,7 @@ void APDUExecutor::SetResultError(bstr& result, Util::Error error) {
 	case Error::ConditionsNotSatisfied:
     	result.setAPDURes(APDUResponse::ConditionsUseNotSatisfied);
     	break;
-	case Error::AppletNotFound:
+    case Error::ApplicationNotFound:
     	result.setAPDURes(APDUResponse::FileNotFound);
 		break;
 	case Error::WrongAPDUCLA:
@@ -80,7 +80,7 @@ Util::Error APDUExecutor::Execute(bstr apdu, bstr& result) {
 	}
 
 	Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
-	ApplicationStorage &appletStorage = solo.GetApplicationStorage();
+    ApplicationStorage &applicationStorage = solo.GetApplicationStorage();
 
 	APDUStruct decapdu;
 	auto errd = decapdu.decode(apdu);
@@ -89,7 +89,7 @@ Util::Error APDUExecutor::Execute(bstr apdu, bstr& result) {
 
 	decapdu.printEx(32);
 
-	// select applet
+    // select application
 	if (decapdu.ins == APDUcommands::Select) {
 		if (decapdu.cla != 0) {
     		result.appendAPDUres(APDUResponse::CLAnotSupported);
@@ -103,13 +103,13 @@ Util::Error APDUExecutor::Execute(bstr apdu, bstr& result) {
 		sapdu.clear();
 		sresult.clear();
 
-		auto err = appletStorage.SelectApplication(decapdu.data, result);
+        auto err = applicationStorage.SelectApplication(decapdu.data, result);
     	SetResultError(result, err);
 		return err;
 	}
 
-    Application *applet = appletStorage.GetSelectedApplication();
-    if (applet != nullptr) {
+    Application *application = applicationStorage.GetSelectedApplication();
+    if (application != nullptr) {
 
     	// output chaining (ins == 0xc0) data
     	if (decapdu.ins == 0xc0) {
@@ -152,7 +152,7 @@ Util::Error APDUExecutor::Execute(bstr apdu, bstr& result) {
     	// clear result buffer
     	sresult.clear();
 
-    	Util::Error err = applet->APDUExchange(decapdu, sresult);
+        Util::Error err = application->APDUExchange(decapdu, sresult);
     	SetResultError(sresult, err);
     	printf_device("appdu result: %s\n", Util::GetStrError(err));
 
@@ -170,7 +170,7 @@ Util::Error APDUExecutor::Execute(bstr apdu, bstr& result) {
       	}
 
     } else {
-    	printf_device("applet not selected.\n");
+        printf_device("application is not selected.\n");
     	result.setAPDURes(APDUResponse::ConditionsUseNotSatisfied);
     }
 

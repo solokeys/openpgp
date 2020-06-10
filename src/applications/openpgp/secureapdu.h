@@ -8,8 +8,8 @@
  */
 
 
-#ifndef SRC_APPLETS_OPENPGP_SECUREAPDU_H_
-#define SRC_APPLETS_OPENPGP_SECUREAPDU_H_
+#ifndef SRC_SECUREAPDU_H_
+#define SRC_SECUREAPDU_H_
 
 #include <string_view>
 #include "errors.h"
@@ -47,4 +47,4 @@ namespace OpenPGP {
 	};
 }
 
-#endif /* SRC_APPLETS_OPENPGP_SECUREAPDU_H_ */
+#endif /* SRC_SECUREAPDU_H_ */

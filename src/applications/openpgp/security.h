@@ -7,8 +7,8 @@
  copied, modified, or distributed except according to those terms.
  */
 
-#ifndef SRC_APPLETS_OPENPGP_SECURITY_H_
-#define SRC_APPLETS_OPENPGP_SECURITY_H_
+#ifndef SRC_SECURITY_H_
+#define SRC_SECURITY_H_
 
 #include <cstdint>
 
@@ -22,8 +22,8 @@ namespace OpenPGP {
 	// OpenPGP application v3.3.1 page 35
 	class Security {
 	private:
-		AppletState appletState;
-		AppletConfig appletConfig;
+        ApplicationState applicationState;
+        ApplicationConfig applicationConfig;
 		PWStatusBytes pwstatus;
 		KDFDO kdfDO;
 	public:
@@ -64,4 +64,4 @@ namespace OpenPGP {
 
 } /* namespace OpenPGP */
 
-#endif /* SRC_APPLETS_OPENPGP_SECURITY_H_ */
+#endif /* SRC_SECURITY_H_ */

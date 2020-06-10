@@ -99,9 +99,9 @@ Util::Error APDUInternalAuthenticate::Process(uint8_t cla, uint8_t ins,
 		return Util::Error::DataNotFound;
 
 	if (alg.AlgorithmID == Crypto::AlgoritmID::RSA)
-		err = crypto_e.RSASign(File::AppletID::OpenPGP, OpenPGPKeyType::Authentication, data, dataOut);
+        err = crypto_e.RSASign(File::AppID::OpenPGP, OpenPGPKeyType::Authentication, data, dataOut);
 	else
-		err = crypto_e.ECDSASign(File::AppletID::OpenPGP, OpenPGPKeyType::Authentication, data, dataOut);
+        err = crypto_e.ECDSASign(File::AppID::OpenPGP, OpenPGPKeyType::Authentication, data, dataOut);
 
 	return err;
 }
@@ -185,11 +185,11 @@ Util::Error APDUGenerateAsymmetricKeyPair::Process(uint8_t cla,
 			if (err != Util::Error::NoError)
 				return err;
 
-			err = key_storage.PutRSAFullKey(File::AppletID::OpenPGP, key_type, rsa_key);
+            err = key_storage.PutRSAFullKey(File::AppID::OpenPGP, key_type, rsa_key);
 			if (err != Util::Error::NoError)
 				return err;
 
-			err = key_storage.GetPublicKey7F49(File::AppletID::OpenPGP, key_type, alg.AlgorithmID, dataOut);
+            err = key_storage.GetPublicKey7F49(File::AppID::OpenPGP, key_type, alg.AlgorithmID, dataOut);
 			if (err != Util::Error::NoError)
 				return err;
 
@@ -200,15 +200,15 @@ Util::Error APDUGenerateAsymmetricKeyPair::Process(uint8_t cla,
             alg.AlgorithmID == Crypto::AlgoritmID::EDDSA) {
 			printf_device("ECDSA\n");
 			Crypto::ECCKey ecdsa_key;
-			err = cryptolib.ECCGenKey(key_storage.GetECDSACurveID(File::AppletID::OpenPGP, file_id), ecdsa_key);
+            err = cryptolib.ECCGenKey(key_storage.GetECDSACurveID(File::AppID::OpenPGP, file_id), ecdsa_key);
 			if (err != Util::Error::NoError)
 				return err;
 
-			err = key_storage.PutECDSAFullKey(File::AppletID::OpenPGP, key_type, ecdsa_key);
+            err = key_storage.PutECDSAFullKey(File::AppID::OpenPGP, key_type, ecdsa_key);
 			if (err != Util::Error::NoError)
 				return err;
 
-			err = key_storage.GetPublicKey7F49(File::AppletID::OpenPGP, key_type, alg.AlgorithmID, dataOut);
+            err = key_storage.GetPublicKey7F49(File::AppID::OpenPGP, key_type, alg.AlgorithmID, dataOut);
 			if (err != Util::Error::NoError)
 				return err;
 
@@ -219,7 +219,7 @@ Util::Error APDUGenerateAsymmetricKeyPair::Process(uint8_t cla,
 	} else {
 		printf_device("GetKey only\n");
 		err = key_storage.GetPublicKey7F49(
-				File::AppletID::OpenPGP,
+                File::AppID::OpenPGP,
 				key_type,
 				alg.AlgorithmID,
 				dataOut);
@@ -283,9 +283,9 @@ Util::Error APDUPSO::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 			return Util::Error::DataNotFound;
 
 		if (alg.AlgorithmID == Crypto::AlgoritmID::RSA)
-			err = crypto_e.RSASign(File::AppletID::OpenPGP, OpenPGPKeyType::DigitalSignature, data, dataOut);
+            err = crypto_e.RSASign(File::AppID::OpenPGP, OpenPGPKeyType::DigitalSignature, data, dataOut);
 		else
-			err = crypto_e.ECDSASign(File::AppletID::OpenPGP, OpenPGPKeyType::DigitalSignature, data, dataOut);
+            err = crypto_e.ECDSASign(File::AppID::OpenPGP, OpenPGPKeyType::DigitalSignature, data, dataOut);
 
 		if (!pwstatus.PW1ValidSeveralCDS)
 			security.ClearAuth(OpenPGP::Password::PSOCDS);
@@ -313,7 +313,7 @@ Util::Error APDUPSO::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 		// RSA. OpenPGP 3.3.1 page 59
 		if (data[0] == 0x00) {
 			if (alg.AlgorithmID == Crypto::AlgoritmID::RSA) {
-				err = crypto_e.RSADecipher(File::AppletID::OpenPGP, OpenPGPKeyType::Confidentiality, data.substr(1, data.length() - 1), dataOut);
+                err = crypto_e.RSADecipher(File::AppID::OpenPGP, OpenPGPKeyType::Confidentiality, data.substr(1, data.length() - 1), dataOut);
 			} else {
 				return Util::Error::ConditionsNotSatisfied;
 			}
@@ -325,7 +325,7 @@ Util::Error APDUPSO::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 			if ((data.length() - 1) % 16)
 				return Util::Error::CryptoDataError;
 
-			err = crypto_e.AESDecrypt(File::AppletID::OpenPGP, OpenPGPKeyType::AES, data.substr(1, data.length() - 1), dataOut);
+            err = crypto_e.AESDecrypt(File::AppID::OpenPGP, OpenPGPKeyType::AES, data.substr(1, data.length() - 1), dataOut);
 			if (err != Util::Error::NoError)
 				return err;
 		}
@@ -344,7 +344,7 @@ Util::Error APDUPSO::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 			if (!tlvpk || tlvpk->Length() == 0)
 				return Util::Error::CryptoDataError;
 
-			err = crypto_e.ECDHComputeShared(File::AppletID::OpenPGP, OpenPGPKeyType::Confidentiality, tlvpk->GetData(), dataOut);
+            err = crypto_e.ECDHComputeShared(File::AppID::OpenPGP, OpenPGPKeyType::Confidentiality, tlvpk->GetData(), dataOut);
 			if (err != Util::Error::NoError)
 				return err;
 
@@ -364,7 +364,7 @@ Util::Error APDUPSO::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 		dataOut.append(0x02);
 
 		bstr aesres = bstr(dataOut.uint8Data() + 1, 0, dataOut.free_space());
-		auto err = crypto_e.AESEncrypt(File::AppletID::OpenPGP, OpenPGPKeyType::AES, data, aesres);
+        auto err = crypto_e.AESEncrypt(File::AppID::OpenPGP, OpenPGPKeyType::AES, data, aesres);
 		if (err != Util::Error::NoError)
 			return err;
 

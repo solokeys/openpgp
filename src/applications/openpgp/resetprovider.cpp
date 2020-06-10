@@ -19,7 +19,7 @@ Util::Error ResetProvider::ResetCard() {
     Factory::SoloFactory &factory = Factory::SoloFactory::GetSoloFactory();
 	File::FileSystem &filesystem = factory.GetFileSystem();
 
-	return filesystem.DeleteFiles(File::AppletID::OpenPGP);
+	return filesystem.DeleteFiles(File::AppID::OpenPGP);
 }
 
 }

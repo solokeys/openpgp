@@ -8,8 +8,8 @@
  */
 
 
-#ifndef SRC_APPLETS_APDUCONST_H_
-#define SRC_APPLETS_APDUCONST_H_
+#ifndef SRC_APDUCONST_H_
+#define SRC_APDUCONST_H_
 
 #include <cstdint>
 #include <cstdlib>
@@ -217,4 +217,4 @@ namespace Application {
 
 }
 
-#endif /* SRC_APPLETS_APDUCONST_H_ */
+#endif /* SRC_APDUCONST_H_ */

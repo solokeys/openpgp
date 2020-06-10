@@ -8,8 +8,8 @@
  */
 
 
-#ifndef SRC_APPLETS_OPENPGP_RESETPROVIDER_H_
-#define SRC_APPLETS_OPENPGP_RESETPROVIDER_H_
+#ifndef SRC_RESETPROVIDER_H_
+#define SRC_RESETPROVIDER_H_
 
 #include "errors.h"
 
@@ -23,4 +23,4 @@ namespace OpenPGP {
 }
 
 
-#endif /* SRC_APPLETS_OPENPGP_RESETPROVIDER_H_ */
+#endif /* SRC_RESETPROVIDER_H_ */

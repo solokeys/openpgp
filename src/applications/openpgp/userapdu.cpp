@@ -212,7 +212,7 @@ Util::Error APDUGetData::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 	uint16_t object_id = (p1 << 8) + p2;
 	printf_device("read object id = 0x%04x\n", object_id);
 
-	filesystem.ReadFile(File::AppletID::OpenPGP, object_id, File::File, dataOut);
+	filesystem.ReadFile(File::AppID::OpenPGP, object_id, File::File, dataOut);
 
 	return Util::Error::NoError;
 }
@@ -291,7 +291,7 @@ Util::Error APDUPutData::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 			return Util::Error::WrongAPDUDataLength;
 
 		auto area = security.DataObjectInSecureArea(object_id) ? File::Secure : File::File;
-		auto err = filesystem.WriteFile(File::AppletID::OpenPGP, object_id, area, data);
+		auto err = filesystem.WriteFile(File::AppID::OpenPGP, object_id, area, data);
 		if (err != Util::Error::NoError)
 			return err;
 
@@ -301,7 +301,7 @@ Util::Error APDUPutData::Process(uint8_t cla, uint8_t ins, uint8_t p1,
 			return err;
 	} else {
 		printf_device("write KeyExtHeader\n");
-		key_storage.SetKeyExtHeader(File::AppletID::OpenPGP, data);
+		key_storage.SetKeyExtHeader(File::AppID::OpenPGP, data);
 	}
 
 	return Util::Error::NoError;

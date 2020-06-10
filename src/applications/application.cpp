@@ -45,7 +45,7 @@ Util::Error Application::APDUExchange(APDUStruct &apdu, bstr &result) {
 	result.clear();
 
 	if (!selected)
-		return Util::Error::AppletNotSelected;
+        return Util::Error::ApplicationNotSelected;
 
 	return Util::Error::NoError;
 }
