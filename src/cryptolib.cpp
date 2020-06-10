@@ -345,7 +345,7 @@ Util::Error CryptoLib::ECCGenKey(ECCaid curveID, ECCKey& keyOut) {
     uint8_t keybuf[BR_EC_KBUF_PUB_MAX_SIZE * 2 + 10];
     std::memset(keybuf, 0, sizeof(keybuf));
 
-    if (curveID == secp256k1) {
+    if (curveID == secp256k1 || curveID == ansix9p256r1) {
         ecdsa_init();
         size_t sklen = 0;
         size_t pklen = 0;
@@ -408,7 +408,7 @@ Util::Error CryptoLib::ECCSign(ECCKey key, bstr data, bstr& signature) {
 
     br_ec_private_key sk = {};
 
-    if (key.CurveId == secp256k1) {
+    if (key.CurveId == secp256k1 || key.CurveId == ansix9p256r1) {
         ecdsa_init();
         size_t len = ecdsa_sign(key.Private.uint8Data(), data.uint8Data(), data.length(),
                              signature.uint8Data(), curveIdFromAid(key.CurveId));
@@ -454,7 +454,7 @@ Util::Error CryptoLib::RSACalcPublicKey(bstr strP, bstr strQ, bstr &strN) {
 Util::Error CryptoLib::ECCCalcPublicKey(ECCaid curveID, bstr privateKey, bstr &publicKey) {
     publicKey.clear();
 
-    if (curveID == secp256k1) {
+    if (curveID == secp256k1 || curveID == ansix9p256r1) {
         ecdsa_init();
         size_t len = ecdsa_calc_public_key(privateKey.uint8Data(), publicKey.uint8Data(), curveIdFromAid(curveID));
         if (len == 0)
@@ -499,7 +499,7 @@ Util::Error CryptoLib::ECDHComputeShared(ECCKey key, bstr anotherPublicKey, bstr
 
     sharedSecret.clear();
 
-    if (key.CurveId == secp256k1) {
+    if (key.CurveId == secp256k1 || key.CurveId == ansix9p256r1) {
         ecdsa_init();
         size_t len = ecdsa_ecdh_shared_secret(key.Private.uint8Data(),
                                               anotherPublicKey.uint8Data(),
