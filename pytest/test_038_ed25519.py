@@ -17,12 +17,40 @@ from binascii import hexlify
 from cryptography.hazmat.primitives.asymmetric import ed25519
 from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PublicKey
 
+
 def Ed25519CheckPublicKey(public_key):
     assert len(public_key) == 32
 
     PublicKey = ed25519.Ed25519PublicKey.from_public_bytes(public_key)
     assert not (PublicKey is None)
     return True
+
+
+def check_signature(card, key_num, msg=b"Sign me please"):
+    digest = ecdsa_keys.compute_digestinfo_ecdsa(msg)
+
+    pk = card.cmd_get_public_key(key_num)
+    pk_info = get_pk_info(pk)
+    sig = card.cmd_pso(0x9e, 0x9a, digest)
+
+    public_key = ed25519.Ed25519PublicKey.from_public_bytes(pk_info[0])
+    # return error cryptography.exceptions.InvalidSignature
+    public_key.verify(sig, digest)
+    return True
+
+
+def check_ecdh(card, key_num=2):
+    myPublicKey, myPrivateKey = ecdsa_keys.generate_key_eddsa_ecdh()
+    myPublicKeyTLV = ecdh_public_key_encode(ecdsa_keys.ecc_to_string(myPublicKey))
+
+    pk = card.cmd_get_public_key(key_num)
+    pk_info = get_pk_info(pk)
+    sharedSecret = card.cmd_pso(0x80, 0x86, myPublicKeyTLV)
+
+    peer_pk = X25519PublicKey.from_public_bytes(pk_info[0])
+    mySharedSecret = myPrivateKey.exchange(peer_pk)
+
+    return sharedSecret == mySharedSecret
 
 
 class Test_EdDSA(object):
@@ -66,45 +94,16 @@ class Test_EdDSA(object):
         assert card.verify(1, FACTORY_PASSPHRASE_PW1)
 
     def test_signature_sigkey(self, card):
-        msg = b"Sign me please"
-        digest = ecdsa_keys.compute_digestinfo_ecdsa(msg)
-
-        pk = card.cmd_get_public_key(1)
-        pk_info = get_pk_info(pk)
-        sig = card.cmd_pso(0x9e, 0x9a, digest)
-
-        public_key = ed25519.Ed25519PublicKey.from_public_bytes(pk_info[0])
-        # return error cryptography.exceptions.InvalidSignature
-        public_key.verify(sig, digest)
+        assert check_signature(card, 1)
 
     def test_verify_pw1_82(self, card):
         assert card.verify(2, FACTORY_PASSPHRASE_PW1)
 
     def test_ecdh(self, card):
-        myPublicKey, myPrivateKey = ecdsa_keys.generate_key_eddsa_ecdh()
-        myPublicKeyTLV = ecdh_public_key_encode(ecdsa_keys.ecc_to_string(myPublicKey))
-
-        pk = card.cmd_get_public_key(2)
-        pk_info = get_pk_info(pk)
-        sharedSecret = card.cmd_pso(0x80, 0x86, myPublicKeyTLV)
-
-        peer_pk = X25519PublicKey.from_public_bytes(pk_info[0])
-        mySharedSecret = myPrivateKey.exchange(peer_pk)
-
-        assert sharedSecret == mySharedSecret
-
+        assert check_ecdh(card)
 
     def test_signature_authkey(self, card):
-        msg = b"Sign me please to authenticate"
-        digest = ecdsa_keys.compute_digestinfo_ecdsa(msg)
-
-        pk = card.cmd_get_public_key(3)
-        pk_info = get_pk_info(pk)
-        sig = card.cmd_internal_authenticate(digest)
-
-        public_key = ed25519.Ed25519PublicKey.from_public_bytes(pk_info[0])
-        # return error cryptography.exceptions.InvalidSignature
-        public_key.verify(sig, digest)
+        assert check_signature(card, 1, b"Sign me please to authenticate")
 
     def test_import_key_1(self, card):
         t = ecdsa_keys.build_privkey_template_eddsa(1)
@@ -112,16 +111,7 @@ class Test_EdDSA(object):
         assert r
 
     def test_signature_sigkey_uploaded(self, card):
-        msg = b"Sign me please"
-        digest = ecdsa_keys.compute_digestinfo_ecdsa(msg)
-
-        pk = card.cmd_get_public_key(1)
-        pk_info = get_pk_info(pk)
-        sig = card.cmd_pso(0x9e, 0x9a, digest)
-
-        public_key = ed25519.Ed25519PublicKey.from_public_bytes(pk_info[0])
-        # return error cryptography.exceptions.InvalidSignature
-        public_key.verify(sig, digest)
+        assert check_signature(card, 1)
 
     def test_import_key_1_wo0x04(self, card):
         t = ecdsa_keys.build_privkey_template_eddsa(1, True)
@@ -129,16 +119,7 @@ class Test_EdDSA(object):
         assert r
 
     def test_signature_sigkey_uploaded_wo0x04(self, card):
-        msg = b"Sign me please"
-        digest = ecdsa_keys.compute_digestinfo_ecdsa(msg)
-
-        pk = card.cmd_get_public_key(1)
-        pk_info = get_pk_info(pk)
-        sig = card.cmd_pso(0x9e, 0x9a, digest)
-
-        public_key = ed25519.Ed25519PublicKey.from_public_bytes(pk_info[0])
-        # return error cryptography.exceptions.InvalidSignature
-        public_key.verify(sig, digest)
+        assert check_signature(card, 1)
 
     def test_import_key_2(self, card):
         t = ecdsa_keys.build_privkey_template_eddsa(2)
@@ -146,17 +127,7 @@ class Test_EdDSA(object):
         assert r
 
     def test_ecdh_uploaded(self, card):
-        myPublicKey, myPrivateKey = ecdsa_keys.generate_key_eddsa_ecdh()
-        myPublicKeyTLV = ecdh_public_key_encode(ecdsa_keys.ecc_to_string(myPublicKey))
-
-        pk = card.cmd_get_public_key(2)
-        pk_info = get_pk_info(pk)
-        sharedSecret = card.cmd_pso(0x80, 0x86, myPublicKeyTLV)
-
-        peer_pk = X25519PublicKey.from_public_bytes(pk_info[0])
-        mySharedSecret = myPrivateKey.exchange(peer_pk)
-
-        assert sharedSecret == mySharedSecret
+        assert check_ecdh(card)
 
     def test_import_key_3(self, card):
         t = ecdsa_keys.build_privkey_template_eddsa(3)
@@ -164,16 +135,7 @@ class Test_EdDSA(object):
         assert r
 
     def test_signature_authkey_uploaded(self, card):
-        msg = b"Sign me please to authenticate"
-        digest = ecdsa_keys.compute_digestinfo_ecdsa(msg)
-
-        pk = card.cmd_get_public_key(3)
-        pk_info = get_pk_info(pk)
-        sig = card.cmd_internal_authenticate(digest)
-
-        public_key = ed25519.Ed25519PublicKey.from_public_bytes(pk_info[0])
-        # return error cryptography.exceptions.InvalidSignature
-        public_key.verify(sig, digest)
+        assert check_signature(card, 1, b"Sign me please to authenticate")
 
     def yubikeyfail_test_verify_reset(self, card):
         assert card.cmd_verify_reset(1)
