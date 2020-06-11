@@ -114,6 +114,7 @@ class Test_EdDSA(object):
         assert check_signature(card, 1)
 
     def test_import_key_1_wo0x04(self, card):
+        # upload key without 0x04 byte at start
         t = ecdsa_keys.build_privkey_template_eddsa(1, True)
         r = card.cmd_put_data_odd(0x3f, 0xff, t)
         assert r
