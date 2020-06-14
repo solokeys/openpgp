@@ -60,12 +60,14 @@ def ECDSACheckPublicKey(curve_oid, public_key):
 
 def check_ecdh(card, ECDSAcurve, key_num=2):
     myPublicKey, myPrivateKey = ecdsa_keys.generate_key_ecdsa(ECDSAcurve)
-    myPublicKeyTLV = ecdh_public_key_encode(b"\x04" + myPublicKey.to_string())
+    myPublicKeyTLV = ecdh_public_key_encode(
+        ecdsa_keys.ecc_to_string(myPublicKey))
 
-    pk = card.cmd_get_public_key(2)
+    pk = card.cmd_get_public_key(key_num)
     pk_info = get_pk_info(pk)
 
-    mySharedSecret = ecdsa_keys.ecdh(ECDSAcurve, myPrivateKey.to_string(),
+    mySharedSecret = ecdsa_keys.ecdh(ECDSAcurve,
+                                     ecdsa_keys.ecc_to_string(myPrivateKey),
                                      pk_info[0])
 
     sharedSecret = card.cmd_pso(0x80, 0x86, myPublicKeyTLV)

@@ -129,10 +129,11 @@ def calc_fpr_ecdsa(n):
 
 
 def generate_key_ecdsa(ecdsa_curve):
-    curve = find_curve_oid_hex(ecdsa_curve)
+    curve = ec.get_curve_for_oid(get_curve_by_hex_oid(ecdsa_curve))
     assert not(curve is None)
-    PrivateKey = ecdsa.SigningKey.generate(curve, hashfunc=sha256)
-    PublicKey = PrivateKey.get_verifying_key()
+
+    PrivateKey = ec.generate_private_key(curve(), default_backend())
+    PublicKey = PrivateKey.public_key()
     return PublicKey, PrivateKey
 
 
@@ -156,7 +157,8 @@ def build_privkey_template_ecdsa(openpgp_keyno, ecdsa_curve):
         keyspec = 0xa4
 
     PublicKey, PrivateKey = generate_key_ecdsa(ecdsa_curve)
-    return create_ecdsa_4D_key(keyspec, PrivateKey.to_string(), b"\x04" + PublicKey.to_string())
+    return create_ecdsa_4D_key(keyspec, ecc_to_string(PrivateKey),
+                               ecc_to_string(PublicKey))
 
 
 def int_to_binstr(vint, size=None):
@@ -199,10 +201,10 @@ def ecc_to_string(key):
             serialization.PublicFormat.Raw)
 
     if isinstance(key, ec.EllipticCurvePrivateKey):
-        return key.private_bytes(
-                  serialization.Encoding.Raw,
-                  serialization.PrivateFormat.Raw,
-                  serialization.NoEncryption())
+        numbers = key.private_numbers()
+        keysize = curve_keysize_bytes(numbers.public_numbers.curve)
+        print(numbers.private_value, keysize, int_to_binstr(numbers.private_value, keysize).hex())
+        return int_to_binstr(numbers.private_value, keysize)
 
     if isinstance(key, ec.EllipticCurvePublicKey):
         numbers = key.public_numbers()
