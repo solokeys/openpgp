@@ -260,7 +260,6 @@ def fill_sign(sig):
 def verify_signature_ecdsa(pk_info, digest, sig, ecdsa_curve):
     curve = ec.get_curve_for_oid(get_curve_by_hex_oid(ecdsa_curve))
     assert not(curve is None)
-    print("crv", get_curve_by_hex_oid(ecdsa_curve))
 
     pub = ec.EllipticCurvePublicKey.from_encoded_point(curve(), pk_info)
     sig = fill_sign(sig)
