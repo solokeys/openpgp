@@ -23,7 +23,7 @@ void br_i15_print_int(const char *name, const uint16_t *x) {
 }
 
 void br_print_private_key(br_rsa_private_key *sk) {
-    printf("bitlen %d\n", sk->n_bitlen);
+    printf("bitlen %ld\n", sk->n_bitlen);
     printf("p  [%d] %02x %02x %02x %02x .. %02x\n", sk->plen, sk->p[0], sk->p[1], sk->p[2], sk->p[3], sk->p[sk->plen - 1]);
     printf("q  [%d] %02x %02x %02x %02x .. %02x\n", sk->qlen, sk->q[0], sk->q[1], sk->q[2], sk->q[3], sk->q[sk->qlen - 1]);
     printf("dp [%d] %02x %02x %02x %02x .. %02x\n", sk->dplen, sk->dp[0], sk->dp[1], sk->dp[2], sk->dp[3], sk->dp[sk->dplen - 1]);
