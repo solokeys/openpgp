@@ -1,7 +1,7 @@
 """
 test_038_ed25519.py - test setup of ed25519 keys and crypto operations with them
 
-Copyright (C) 2019  SoloKeys
+Copyright (C) 2020  SoloKeys
 Author: Oleg Moiseenko (merlokk)
 
 """

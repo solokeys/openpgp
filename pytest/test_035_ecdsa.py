@@ -1,7 +1,7 @@
 """
 test_035_ecdsa.py - test setting ecdsa keys and crypto operations with them
 
-Copyright (C) 2019  SoloKeys
+Copyright (C) 2019, 2020  SoloKeys
 Author: Oleg Moiseenko (merlokk)
 
 """
@@ -14,6 +14,10 @@ from openpgp_card import *
 import ecdsa_keys
 from ecdsa.util import string_to_number
 from binascii import hexlify
+from cryptography.hazmat.primitives.asymmetric import ec
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives.asymmetric import utils
 
 
 @pytest.fixture(
@@ -52,6 +56,21 @@ def ECDSACheckPublicKey(curve_oid, public_key):
     assert len(x) == len(y)
     curve.curve.contains_point(string_to_number(x), string_to_number(y))
     return True
+
+
+def check_ecdh(card, ECDSAcurve, key_num=2):
+    myPublicKey, myPrivateKey = ecdsa_keys.generate_key_ecdsa(ECDSAcurve)
+    myPublicKeyTLV = ecdh_public_key_encode(b"\x04" + myPublicKey.to_string())
+
+    pk = card.cmd_get_public_key(2)
+    pk_info = get_pk_info(pk)
+
+    mySharedSecret = ecdsa_keys.ecdh(ECDSAcurve, myPrivateKey.to_string(),
+                                     pk_info[0])
+
+    sharedSecret = card.cmd_pso(0x80, 0x86, myPublicKeyTLV)
+
+    return sharedSecret == mySharedSecret
 
 
 class Test_ECDSA(object):
@@ -100,24 +119,13 @@ class Test_ECDSA(object):
         pk_info = get_pk_info(pk)
         digest = ecdsa_keys.compute_digestinfo_ecdsa(msg)
         sig = card.cmd_pso(0x9e, 0x9a, digest)
-        r = ecdsa_keys.verify_signature_ecdsa(pk_info[0], digest, sig, ECDSAcurve)
-        assert r
+        assert ecdsa_keys.verify_signature_ecdsa(pk_info[0], digest, sig, ECDSAcurve)
 
     def test_verify_pw1_82(self, card, ECDSAcurve):
         assert card.verify(2, FACTORY_PASSPHRASE_PW1)
 
     def test_authkey_ecdh(self, card, ECDSAcurve):
-        myPublicKey, myPrivateKey = ecdsa_keys.generate_key_ecdsa(ECDSAcurve)
-        myPublicKeyTLV = ecdh_public_key_encode(b"\x04" + myPublicKey.to_string())
-
-        pk = card.cmd_get_public_key(2)
-        pk_info = get_pk_info(pk)
-
-        mySharedSecret = ecdsa_keys.ecdh(ECDSAcurve, myPrivateKey.to_string(), pk_info[0])
-
-        sharedSecret = card.cmd_pso(0x80, 0x86, myPublicKeyTLV)
-
-        assert sharedSecret == mySharedSecret
+        assert check_ecdh(card, ECDSAcurve)
 
     def test_signature_authkey(self, card, ECDSAcurve):
         msg = b"Sign me please to authenticate"
