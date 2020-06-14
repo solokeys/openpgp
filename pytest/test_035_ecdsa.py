@@ -77,7 +77,11 @@ def check_signature(card, key_num, ECDSAcurve, msg=b"Sign me please"):
     pk = card.cmd_get_public_key(key_num)
     pk_info = get_pk_info(pk)
     digest = ecdsa_keys.compute_digestinfo_ecdsa(msg)
-    sig = card.cmd_pso(0x9e, 0x9a, digest)
+    sig = b""
+    if key_num == 1:
+        sig = card.cmd_pso(0x9e, 0x9a, digest)
+    if key_num == 3:
+        sig = card.cmd_internal_authenticate(digest)
     return ecdsa_keys.verify_signature_ecdsa(pk_info[0], digest, sig, ECDSAcurve)
 
 
@@ -131,13 +135,7 @@ class Test_ECDSA(object):
         assert check_ecdh(card, ECDSAcurve)
 
     def test_signature_authkey(self, card, ECDSAcurve):
-        msg = b"Sign me please to authenticate"
-        pk = card.cmd_get_public_key(3)
-        pk_info = get_pk_info(pk)
-        digest = ecdsa_keys.compute_digestinfo_ecdsa(msg)
-        sig = card.cmd_internal_authenticate(digest)
-        r = ecdsa_keys.verify_signature_ecdsa(pk_info[0], digest, sig, ECDSAcurve)
-        assert r
+        assert check_signature(card, 3, ECDSAcurve, b"Sign me please to authenticate")
 
     def test_ecdsa_import_key_1(self, card, ECDSAcurve):
         t = ecdsa_keys.build_privkey_template_ecdsa(1, ECDSAcurve)
@@ -161,13 +159,7 @@ class Test_ECDSA(object):
         assert r
 
     def test_signature_authkey_uploaded(self, card, ECDSAcurve):
-        msg = b"Sign me please to authenticate"
-        pk = card.cmd_get_public_key(3)
-        pk_info = get_pk_info(pk)
-        digest = ecdsa_keys.compute_digestinfo_ecdsa(msg)
-        sig = card.cmd_internal_authenticate(digest)
-        r = ecdsa_keys.verify_signature_ecdsa(pk_info[0], digest, sig, ECDSAcurve)
-        assert r
+        assert check_signature(card, 3, ECDSAcurve, b"Sign me please to authenticate")
 
     def yubikeyfail_test_verify_reset(self, card, ECDSAcurve):
         assert card.cmd_verify_reset(1)
