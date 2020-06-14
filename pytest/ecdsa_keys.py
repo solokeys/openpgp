@@ -10,7 +10,6 @@ from time import time
 from struct import pack
 from hashlib import sha1, sha256
 from util import *
-import ecdsa
 from binascii import hexlify, unhexlify
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey, Ed25519PublicKey
@@ -20,13 +19,6 @@ from cryptography.hazmat.primitives.asymmetric import utils
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives import serialization
 from cryptography.exceptions import InvalidSignature
-
-
-def find_curve_oid_hex(oid_curve_hex):
-    for c in ecdsa.curves.curves:
-        if c.encoded_oid[2:] == oid_curve_hex:
-            return c
-    return None
 
 
 def hex_oid_to_string(oid):
@@ -119,6 +111,10 @@ def int_to_binstr(vint, size=None):
     while size > len(bstr):
         bstr = b"\x00" + bstr
     return bstr
+
+
+def binstr_to_int(string):
+    return int(hexlify(string), 16)
 
 
 def curve_keysize_bytes(curve):

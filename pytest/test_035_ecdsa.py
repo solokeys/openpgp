@@ -12,12 +12,7 @@ from card_const import *
 from constants_for_test import *
 from openpgp_card import *
 import ecdsa_keys
-from ecdsa.util import string_to_number
-from binascii import hexlify
 from cryptography.hazmat.primitives.asymmetric import ec
-from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives.asymmetric import utils
 
 
 @pytest.fixture(
@@ -46,16 +41,18 @@ def ECDSACheckPublicKey(curve_oid, public_key):
     assert len(public_key) > 2
     assert public_key[0] == 0x04
 
-    curve = ecdsa_keys.find_curve_oid_hex(curve_oid)
-    assert not (curve is None)
-    assert curve.verifying_key_length + 1 == len(public_key)
+    curve = ec.get_curve_for_oid(ecdsa_keys.get_curve_by_hex_oid(curve_oid))
+    assert not(curve is None)
+    assert ecdsa_keys.curve_keysize_bytes(curve) * 2 + 1 == len(public_key)
 
     length = (len(public_key) - 1) // 2
     x = public_key[1:length + 1]
     y = public_key[length + 1:]
     assert len(x) == len(y)
-    curve.curve.contains_point(string_to_number(x), string_to_number(y))
-    return True
+
+    pub = ec.EllipticCurvePublicKey.from_encoded_point(curve(), public_key)
+
+    return not (pub is None)
 
 
 def check_ecdh(card, ECDSAcurve, key_num=2):
