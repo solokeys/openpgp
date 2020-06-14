@@ -33,6 +33,17 @@ def get_pk_info(pk):
         return tag86.data, None
 
 
+def create_ecdsa_signature(r, s):
+    ktlv = TLV(b"\x30\x00")
+    elm30 = ktlv.search(0x30)
+
+    elm30.append(0x02, r)
+    elm30.append(0x02, s)
+
+    #ktlv.show()
+    return ktlv.encode()
+
+
 def create_ecdsa_4D_key(KeyType, PrivateKey, PublicKey):
     ktlv = TLV(b"\x4d\x00")
     elm4d = ktlv.search(0x4d)
