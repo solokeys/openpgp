@@ -263,16 +263,13 @@ def verify_signature_ecdsa(pk_info, digest, sig, ecdsa_curve):
     print("crv", get_curve_by_hex_oid(ecdsa_curve))
 
     pub = ec.EllipticCurvePublicKey.from_encoded_point(curve(), pk_info)
-    print("sig-", len(sig), "|", sig.hex())
-    print("sx1", sig[:len(sig) // 2].hex())
-    print("sx2", sig[len(sig) // 2:].hex())
     sig = fill_sign(sig)
-    print("sig", len(sig), "|", sig.hex())
-    #try:
-    pub.verify(sig, digest, ec.ECDSA(utils.Prehashed(hashes.SHA256())))
-    return True
-    #except InvalidSignature:
-    #    return False
+
+    try:
+        pub.verify(sig, digest, ec.ECDSA(utils.Prehashed(hashes.SHA256())))
+        return True
+    except InvalidSignature:
+        return False
 
 
 def ecdh(ecdsa_curve, PrivateKey, PublicKey):
