@@ -118,13 +118,21 @@ size_t RSAKeyLenFromBitlen(size_t bitlen) {
 
 void br_hw_drbg_init(void *ctx,
     const void *params, const void *seed, size_t len) {
+    (void)ctx;
+    (void)params;
+    (void)seed;
+    (void)len;
 }
 
 void br_hw_drbg_generate(void *ctx, void *out, size_t len) {
+    (void)ctx;
     gen_random_device((uint8_t *)out, len);
 }
 
 void br_hw_drbg_update(void *ctx, const void *seed, size_t len) {
+    (void)ctx;
+    (void)seed;
+    (void)len;
 }
 
 const br_prng_class br_hw_drbg_vtable = {
@@ -329,6 +337,10 @@ Util::Error CryptoLib::RSADecipher(RSAKey key, bstr data, bstr &dataOut) {
 }
 
 Util::Error CryptoLib::RSAVerify(bstr publicKey, bstr data, bstr signature) {
+    (void)publicKey;
+    (void)data;
+    (void)signature;
+
 	return Util::Error::InternalError;
 }
 
@@ -537,6 +549,9 @@ Util::Error CryptoLib::ECCCalcPublicKey(ECCaid curveID, bstr privateKey, bstr &p
 
 Util::Error CryptoLib::ECCVerify(ECCKey key, bstr data,
 		bstr signature) {
+    (void)key;
+    (void)data;
+    (void)signature;
 	return Util::Error::InternalError;
 }
 
@@ -596,7 +611,7 @@ bool KeyStorage::KeyExists(AppID_t appID, KeyID_t keyID) {
 }
 
 Util::Error LoadKeyParameters(AppID_t appID, KeyID_t keyID, OpenPGP::AlgoritmAttr& keyParams) {
-
+    (void)appID;
 	keyParams.Clear();
 
 	Factory::SoloFactory &solo = Factory::SoloFactory::GetSoloFactory();
@@ -693,6 +708,11 @@ Util::Error KeyStorage::GetAESKey(AppID_t appID, KeyID_t keyID, bstr &key) {
 
 Util::Error KeyStorage::SetKey(AppID_t appID, KeyID_t keyID,
 		KeyType keyType, bstr key) {
+    (void)appID;
+    (void)keyID;
+    (void)keyType;
+    (void)key;
+
 	return Util::Error::InternalError;
 }
 
@@ -1032,7 +1052,11 @@ Util::Error CryptoEngine::RSADecipher(AppID_t appID, KeyID_t keyID,
 
 Util::Error CryptoEngine::RSAVerify(AppID_t appID, KeyID_t keyID,
 		bstr data, bstr signature) {
-	return Util::Error::InternalError;
+    (void)appID;
+    (void)keyID;
+    (void)data;
+    (void)signature;
+    return Util::Error::InternalError;
 }
 
 Util::Error CryptoEngine::ECCSign(AppID_t appID, KeyID_t keyID,
@@ -1051,7 +1075,11 @@ Util::Error CryptoEngine::ECCSign(AppID_t appID, KeyID_t keyID,
 
 Util::Error CryptoEngine::ECCVerify(AppID_t appID, KeyID_t keyID,
 		bstr data, bstr signature) {
-	return Util::Error::InternalError;
+    (void)appID;
+    (void)keyID;
+    (void)data;
+    (void)signature;
+    return Util::Error::InternalError;
 }
 
 Util::Error CryptoEngine::ECDHComputeShared(AppID_t appID, KeyID_t keyID, bstr anotherPublicKey, bstr &sharedSecret) {
