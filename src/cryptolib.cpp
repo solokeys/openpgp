@@ -332,7 +332,15 @@ Util::Error CryptoLib::RSAVerify(bstr publicKey, bstr data, bstr signature) {
 	return Util::Error::InternalError;
 }
 
-static const br_ec_impl *br_current_impl = &br_ec_all_m15;
+const br_ec_impl *brGetCurrentImpl(ECCaid curveID) {
+    switch (curveID) {
+    case ECCaid::ed25519:
+    case ECCaid::curve25519:
+        return &br_ec_c25519_m15;
+    default:
+        return &br_ec_prime_i15;
+    }
+}
 
 Util::Error CryptoLib::ECCGenKey(ECCaid curveID, ECCKey& keyOut) {
 	ClearKeyBuffer();
@@ -389,14 +397,14 @@ Util::Error CryptoLib::ECCGenKey(ECCaid curveID, ECCKey& keyOut) {
     const br_prng_class *rng = &br_hw_drbg_vtable;
 
     device_led(COLOR_MAGENTA);
-    if (br_ec_keygen(&rng, br_current_impl, &sk, keybuf, tlsCurveId) == 0){
+    if (br_ec_keygen(&rng, brGetCurrentImpl(curveID), &sk, keybuf, tlsCurveId) == 0){
         device_led(COLOR_RED);
         return Util::Error::CryptoOperationError;
     }
 
     AppendKeyPart(KeyBuffer, keyOut.Private, sk.x, sk.xlen);
 
-    if (br_ec_compute_pub(br_current_impl, &pk, keybuf + sk.xlen + 2, &sk) == 0) {
+    if (br_ec_compute_pub(brGetCurrentImpl(curveID), &pk, keybuf + sk.xlen + 2, &sk) == 0) {
         device_led(COLOR_RED);
         return Util::Error::CryptoOperationError;
     }
@@ -458,7 +466,7 @@ Util::Error CryptoLib::ECCSign(ECCKey key, bstr data, bstr& signature) {
     if (err != Util::Error::NoError)
         return err;
 
-    size_t len = br_ecdsa_i15_sign_raw(br_current_impl, &br_sha256_vtable, data.data(), &sk, signature.uint8Data());
+    size_t len = br_ecdsa_i15_sign_raw(brGetCurrentImpl(key.CurveId), &br_sha256_vtable, data.data(), &sk, signature.uint8Data());
     if (len == 0)
         return Util::Error::CryptoOperationError;
     signature.set_length(len);
@@ -514,7 +522,7 @@ Util::Error CryptoLib::ECCCalcPublicKey(ECCaid curveID, bstr privateKey, bstr &p
         if (err != Util::Error::NoError)
             return err;
 
-        if (br_ec_compute_pub(br_current_impl, &pk, keybuf, &sk) == 0)
+        if (br_ec_compute_pub(brGetCurrentImpl(curveID), &pk, keybuf, &sk) == 0)
             return Util::Error::CryptoOperationError;
 
         if (pk.qlen == 0)
@@ -564,7 +572,7 @@ Util::Error CryptoLib::ECDHComputeShared(ECCKey key, bstr anotherPublicKey, bstr
         }
 
         // sharedSecret = anotherPublicKey * key.Private
-        size_t len = ecdh_shared_secret(br_current_impl, &sk, &pk, sharedSecret.uint8Data());
+        size_t len = ecdh_shared_secret(brGetCurrentImpl(key.CurveId), &sk, &pk, sharedSecret.uint8Data());
         if (len == 0)
             return Util::Error::CryptoOperationError;
 
