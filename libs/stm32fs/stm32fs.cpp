@@ -185,7 +185,8 @@ bool Stm32fsFlash::isFlashBlockEmpty(uint8_t blockNo) {
 bool OPTIMIZATION_O0 Stm32fsFlash::WriteFlash(uint32_t address, uint8_t *data, size_t length) {
     if (!AddressInFlash(address, length, true))
         return false;
-    printf("--write flash %d %d\n", address, length); // TODO: otimization error!!!
+
+    //printf("--write flash %d %d\n", address, length);
     return FsConfig->fnWriteFlash(address, data, length);
 }
 

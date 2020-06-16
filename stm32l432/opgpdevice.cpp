@@ -34,7 +34,7 @@ void OPTIMIZATION_O2 hw_stm32fs_init() {
     cfg.SectorSize = PAGE_SIZE;
     cfg.Blocks = {{{OPENPGP_START_PAGE}, {OPENPGP_START_PAGE + 1, OPENPGP_START_PAGE + 2, OPENPGP_START_PAGE + 3}}};
     cfg.fnEraseFlashBlock = [](uint8_t blockNo){flash_erase_page(blockNo);return true;};
-    cfg.fnWriteFlash = [](uint32_t address, uint8_t *data, size_t len){flash_write_ex(address, data, len);return true;};
+    cfg.fnWriteFlash = [](uint32_t address, uint8_t *data, size_t len){printf("--write flash\n");flash_write(address, data, len);return true;};
     cfg.fnReadFlash = [](uint32_t address, uint8_t *data, size_t len){memcpy(data, (uint8_t *)address, len);return true;};
 
     static Stm32fs xfs = Stm32fs(cfg);
@@ -44,7 +44,7 @@ void OPTIMIZATION_O2 hw_stm32fs_init() {
         sprintfs();
         printf_device("stm32fs [%d] OK.\n", fs->GetCurrentFsBlockSerial());
     } else {
-        printf_device("stm32fs error\n");
+        printf_device("stm32fs error. Is not valid.\n");
     }
 
     // check if it needs to call optimize...
@@ -74,10 +74,10 @@ bool fileexist(char* name) {
 
 int OPTIMIZATION_O2 readfile(char* name, uint8_t * buf, size_t max_size, size_t *size) {
     if (!fs) {
-        printf("__error read %s %d\n", name, max_size);
+        printf_device("__error read %s %d\n", name, max_size);
         return 1;
     }
-    if (fs->GetCurrentFsBlockSerial() == 0) printf("ERROR fs!!!\n");
+    if (fs->GetCurrentFsBlockSerial() == 0) printf_device("ERROR CurrentFs!\n");
 
     return fs->ReadFile(std::string_view(name), buf, size, max_size) ? 0 : 1;
 }
@@ -85,7 +85,7 @@ int OPTIMIZATION_O2 readfile(char* name, uint8_t * buf, size_t max_size, size_t 
 int OPTIMIZATION_O2 writefile(char* name, uint8_t * buf, size_t size) {
     if (!fs)
         return 1;
-    if (fs->GetCurrentFsBlockSerial() == 0) printf("ERROR fs!!!\n");
+    if (fs->GetCurrentFsBlockSerial() == 0) printf_device("ERROR CurrentFs!\n");
 
     bool res = fs->WriteFile(std::string_view(name), buf, size);
 
