@@ -129,12 +129,11 @@ https://docs.rs/exonum/0.9.3/exonum/crypto/x25519/fn.into_x25519_keypair.html
 4. Add tests for:
   - access rights to commands and DO
   - refactor some tests and change some "magic" values in them
-  - ~~refactor ECDSA tests for using cryptography package~~
 5. Add tests and functionality for:
   - ~~ECDSA~~
   - ~~ED25519 (EdDSA), CURVE25519(ECDH)~~
   - Secure messaging????
 6. fix:
-  - ~~ansix9p384r1, ansix9p521r1 curves~~
+  - transfer kdf functionality to cryptography lib
   - remove "magic" printf in flash write function)
 
