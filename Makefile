@@ -21,17 +21,13 @@ INC = -I. -Ipc/ -Isrc/ -Ilibs/mbedtls/ -Ilibs/mbedtls/mbedtls/crypto/include/\
 CPPFLAGS = -std=c++17 -Os -Wall -g3 $(INC)
 LDFLAGS = -Wl,-Bdynamic -lpthread
 
-LIBS=libs/mbedtls/mbedtls.a
-
 TARGET=openpgp_test
 
 $(OBJ_DIR)/%.o:  
 	$(CC) $(CPPFLAGS) -c -o $@ $(filter %/$(strip $(patsubst %.o, %.cpp, $(notdir $@))), $(SRC_FILES))
 
-all:  $(OBJ_FILES) $(LIBS)
+all:  $(OBJ_FILES)
 	$(CC) -o $(TARGET) $^ $(LDFLAGS)
-
-include libs/mbedtls/mbedtls.mk
 
 clean:
 	$(RM) $(OBJ_FILES) $(DEP_FILES) $(TARGET) $(MBEDTLS_OBJ) $(MBEDTLS_A)
