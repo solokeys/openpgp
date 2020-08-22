@@ -6,7 +6,7 @@ rwildcard=$(wildcard $1$2) $(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2))
 
 OBJ_DIR := ./obj
 SRC_DIRS := ./pc \
-			./src \
+            ./src \
             ./src/applications \
             ./src/applications/openpgp \
             ./libs/stm32fs
@@ -34,8 +34,8 @@ all:  $(OBJ_FILES) $(LIBS)
 include libs/mbedtls/mbedtls.mk
 
 clean:
-    $(RM) $(OBJ_FILES) $(DEP_FILES) $(TARGET) $(MBEDTLS_OBJ) $(MBEDTLS_A)
-	
+	$(RM) $(OBJ_FILES) $(DEP_FILES) $(TARGET) $(MBEDTLS_OBJ) $(MBEDTLS_A)
+
 testpy:
 	#cd ./pytest
 	cd ~/solo/gnuk/tests; py.test-3 -x
