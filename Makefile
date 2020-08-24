@@ -6,7 +6,7 @@ rwildcard=$(wildcard $1$2) $(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2))
 
 OBJ_DIR := ./obj
 SRC_DIRS := ./pc \
-			./src \
+            ./src \
             ./src/applications \
             ./src/applications/openpgp \
             ./libs/stm32fs
@@ -21,21 +21,17 @@ INC = -I. -Ipc/ -Isrc/ -Ilibs/mbedtls/ -Ilibs/mbedtls/mbedtls/crypto/include/\
 CPPFLAGS = -std=c++17 -Os -Wall -g3 $(INC)
 LDFLAGS = -Wl,-Bdynamic -lpthread
 
-LIBS=libs/mbedtls/mbedtls.a
-
 TARGET=openpgp_test
 
 $(OBJ_DIR)/%.o:  
 	$(CC) $(CPPFLAGS) -c -o $@ $(filter %/$(strip $(patsubst %.o, %.cpp, $(notdir $@))), $(SRC_FILES))
 
-all:  $(OBJ_FILES) $(LIBS)
+all:  $(OBJ_FILES)
 	$(CC) -o $(TARGET) $^ $(LDFLAGS)
 
-include libs/mbedtls/mbedtls.mk
-
 clean:
-    $(RM) $(OBJ_FILES) $(DEP_FILES) $(TARGET) $(MBEDTLS_OBJ) $(MBEDTLS_A)
-	
+	$(RM) $(OBJ_FILES) $(DEP_FILES) $(TARGET) $(MBEDTLS_OBJ) $(MBEDTLS_A)
+
 testpy:
 	#cd ./pytest
 	cd ~/solo/gnuk/tests; py.test-3 -x
