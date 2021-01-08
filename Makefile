@@ -16,7 +16,8 @@ DEP_FILES = $(OBJ_FILES:.o=.d)
 
 
 INC = -I. -Ipc/ -Isrc/ -Ilibs/mbedtls/ -Ilibs/mbedtls/mbedtls/crypto/include/\
-    -Ilibs/stm32fs/
+    -Ilibs/stm32fs/\
+    -Ilibs/bearssl/
 
 CPPFLAGS = -std=c++17 -Os -Wall -g3 $(INC)
 LDFLAGS = -Wl,-Bdynamic -lpthread
