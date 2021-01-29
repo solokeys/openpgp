@@ -147,8 +147,8 @@ namespace std {
 			if (this->length() + delta < 0)
 				delta = -this->length();
 
-			if (begin + delta < 0)
-				begin = -delta;
+			if ((int)begin + delta < 0)
+				begin = abs(delta);
 
 			uint8_t *data = const_cast<uint8_t*>(this->data());
 			memmove(data + begin + delta, data + begin, this->length() - begin);
