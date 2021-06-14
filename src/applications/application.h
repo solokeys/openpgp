@@ -22,7 +22,7 @@ namespace Application {
 
 class Application {
 protected:
-	bool selected;
+	bool selected = false;
 	const bstr aid = "\x00"_bstr;
 
     // TODO: application config load/save
