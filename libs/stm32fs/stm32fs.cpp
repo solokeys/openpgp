@@ -197,7 +197,7 @@ bool OPTIMIZATION_O0 Stm32fsFlash::ReadFlash(uint32_t address, uint8_t *data, si
     return FsConfig->fnReadFlash(address, data, length);
 }
 
-bool Stm32fsFlash::EraseSectors(UVector &sectors) {
+bool OPTIMIZATION_O0 Stm32fsFlash::EraseSectors(UVector &sectors) {
     for (auto &sector: sectors) {
         if (!isFlashBlockEmpty(sector)) {
             if (!EraseFlashBlock(sector))
@@ -207,7 +207,7 @@ bool Stm32fsFlash::EraseSectors(UVector &sectors) {
     return true;
 }
 
-bool Stm32fsFlash::EraseFs(Stm32fsConfigBlock_t &config) {
+bool OPTIMIZATION_O0 Stm32fsFlash::EraseFs(Stm32fsConfigBlock_t &config) {
     if (!EraseSectors(config.HeaderSectors))
         return false;
 
@@ -1026,7 +1026,7 @@ bool Stm32fsFileList::Sort() {
         if (FileList[i].isEmpty())
             break;
 
-        for (size_t j = i + 1; i < FileListLength; j++) {
+        for (size_t j = i + 1; j < FileListLength; j++) {
             if (FileList[j].isEmpty())
                 break;
             

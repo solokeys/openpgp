@@ -25,6 +25,9 @@
 #ifndef OPTIMIZATION_O2
 #define OPTIMIZATION_O2 __attribute__((optimize("O2")))
 #endif
+#ifndef OPTIMIZATION_O0
+#define OPTIMIZATION_O0 __attribute__((optimize("O0")))
+#endif
 
 namespace std {
 	template<typename _CharT, typename _Traits = std::char_traits<_CharT>>
