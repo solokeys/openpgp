@@ -746,15 +746,15 @@ bool Stm32fs::FileExist(std::string_view fileName) {
 
 int Stm32fs::FileLength(std::string_view fileName) {
     if (!CheckValid())
-        return false;
+        return -1;
 
     Stm32FSFileHeader header = SearchFileHeader(fileName);
     if (header.FileState != fsFileHeader)
-        return -1;
+        return -2;
     
     Stm32FSFileVersion ver = SearchFileVersion(header.FileID);
     if (ver.FileState != fsFileVersion)
-        return -2;
+        return -3;
      
     return ver.FileSize;
 }

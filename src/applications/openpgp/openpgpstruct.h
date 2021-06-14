@@ -37,20 +37,20 @@ struct ApplicationState {
 };
 
 struct ApplicationConfig {
-	LifeCycleState state;
+    LifeCycleState state = LifeCycleState::NoInfo;
 
 	Util::Error Load(File::FileSystem &fs);
 	Util::Error Save(File::FileSystem &fs);
 };
 
 struct __attribute__ ((packed)) PWStatusBytes {
-	uint8_t PW1ValidSeveralCDS;
-	uint8_t MaxLengthAndFormatPW1;
-	uint8_t MaxLengthRCforPW1;
-	uint8_t MaxLengthAndFormatPW3;
-	uint8_t ErrorCounterPW1;
-	uint8_t ErrorCounterRC;
-	uint8_t ErrorCounterPW3;
+    uint8_t PW1ValidSeveralCDS = 0;
+    uint8_t MaxLengthAndFormatPW1 = 0;
+    uint8_t MaxLengthRCforPW1 = 0;
+    uint8_t MaxLengthAndFormatPW3 = 0;
+    uint8_t ErrorCounterPW1 = 0;
+    uint8_t ErrorCounterRC = 0;
+    uint8_t ErrorCounterPW3 = 0;
 
 	void DecErrorCounter(Password passwdId);
 	uint8_t PasswdTryRemains(Password passwdId);
@@ -67,9 +67,9 @@ struct __attribute__ ((packed)) PWStatusBytes {
 
 // Open PGP 3.3.1 page 31
 struct  RSAAlgorithmAttr {
-	uint16_t NLen;      // modulus length in bit
-	uint16_t PubExpLen; // public exponent length in bits
-	uint8_t KeyFormat;  // Crypto::RSAKeyImportFormat. Import-Format of private key
+    uint16_t NLen = 0;      // modulus length in bit
+    uint16_t PubExpLen = 0; // public exponent length in bits
+    uint8_t KeyFormat = 0;  // Crypto::RSAKeyImportFormat. Import-Format of private key
 
 	void clear() {
 		NLen = 0x0000;
@@ -97,7 +97,7 @@ struct  AlgoritmAttr {
 
 	uint8_t AlgorithmID = 0; // Crypto::AlgoritmID
 	RSAAlgorithmAttr RSAa = {0};
-	ECDSAAlgorithmAttr ECDSAa = {0};
+    ECDSAAlgorithmAttr ECDSAa = {{0}};
 
 	void Clear();
 	Util::Error DecodeData(bstr &vdata, KeyID_t key_id);

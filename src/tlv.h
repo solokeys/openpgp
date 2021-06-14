@@ -264,7 +264,7 @@ public:
 	}
 
 	constexpr bool GoChild() {
-		if (currLevel >= MaxTreeLevel - 1 || !_elm[currLevel].IsConstructed())
+		if ((currLevel >= MaxTreeLevel - 1) || !_elm[currLevel].IsConstructed())
 			return false;
 
 		bstr data = _elm[currLevel].GetData();
