@@ -80,9 +80,9 @@ struct  RSAAlgorithmAttr {
 
 // Open PGP 3.3.1 page 31
 struct  ECDSAAlgorithmAttr {
-	uint8_t bOID[PGPConst::AlgoritmAttrMaxOIDSize];
+	uint8_t bOID[PGPConst::AlgoritmAttrMaxOIDSize] = {0};
 	bstr OID{bOID, sizeof(bOID)};
-	uint8_t KeyFormat; // Import-Format of private key, optional. if Format byte is not present `FF` = standard with public key
+	uint8_t KeyFormat = 0; // Import-Format of private key, optional. if Format byte is not present `FF` = standard with public key
 
 	void clear() {
 		OID.clear();
@@ -92,12 +92,12 @@ struct  ECDSAAlgorithmAttr {
 
 // Open PGP 3.3.1 page 31
 struct  AlgoritmAttr {
-	uint8_t _data[PGPConst::AlgoritmAttrMaxFileSize];
+	uint8_t _data[PGPConst::AlgoritmAttrMaxFileSize] = {0};
 	bstr data{_data, sizeof(_data)};
 
-	uint8_t AlgorithmID; // Crypto::AlgoritmID
-	RSAAlgorithmAttr RSAa;
-	ECDSAAlgorithmAttr ECDSAa;
+	uint8_t AlgorithmID = 0; // Crypto::AlgoritmID
+	RSAAlgorithmAttr RSAa = {0};
+	ECDSAAlgorithmAttr ECDSAa = {0};
 
 	void Clear();
 	Util::Error DecodeData(bstr &vdata, KeyID_t key_id);
@@ -111,7 +111,7 @@ private:
 	uint8_t _dsdata[PGPConst::DSCounterMaxFileSize] = {0};
 	bstr dsdata{_dsdata, 0, sizeof(_dsdata)};
 public:
-	uint32_t Counter;
+	uint32_t Counter = 0;
 
 	Util::Error Load(File::FileSystem &fs);
 	Util::Error Save(File::FileSystem &fs);
@@ -136,9 +136,9 @@ private:
 	uint8_t _kdfdata[PGPConst::KDFDOMaxFileSize] = {0};
 	bstr kdfdata{_kdfdata, 0, sizeof(_kdfdata)};
 public:
-	uint8_t bKDFAlgorithm;
-	uint8_t bHashAlgorithm;
-	uint32_t IterationCount;
+	uint8_t bKDFAlgorithm = 0;
+	uint8_t bHashAlgorithm = 0;
+	uint32_t IterationCount = 0;
 
 	bstr SaltPW1;
 	bstr SaltRC;

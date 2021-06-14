@@ -52,11 +52,11 @@ void OpenpgpInit() {
     Factory::SoloFactory &factory = Factory::SoloFactory::GetSoloFactory();
     factory.Init();
 
-    Application::APDUExecutor executor = factory.GetAPDUExecutor();
+    static Application::APDUExecutor &executor = factory.GetAPDUExecutor();
     fexecutor = &executor;
 
     OpenPGP::OpenPGPFactory &opgp_factory = factory.GetOpenPGPFactory();
-    OpenPGP::Security &security = opgp_factory.GetSecurity();
+    static OpenPGP::Security &security = opgp_factory.GetSecurity();
     fsecurity = &security;    
     printf_device("OpenPGP init: ok.\n");
 
