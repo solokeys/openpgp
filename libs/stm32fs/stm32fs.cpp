@@ -237,7 +237,9 @@ void Stm32fsFlash::FillFsHeader(Stm32FSHeader_t &header, uint32_t serial) {
 }
 
 bool Stm32fsFlash::GetFsHeader(Stm32fsConfigBlock_t &config, Stm32FSHeader_t &header) {
-    ReadFlash(GetBlockAddress(config.HeaderSectors[0]), (uint8_t *)&header, sizeof(Stm32FSHeader_t));
+    if (!ReadFlash(GetBlockAddress(config.HeaderSectors[0]), (uint8_t *)&header, sizeof(Stm32FSHeader_t)))
+        return false;
+
     if (!CheckFsHeader(header)) 
         return false;
     
