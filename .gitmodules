@@ -1,0 +1,3 @@
+[submodule "libs/spiffs"]
+	path = libs/spiffs
+	url = git@github.com:pellepl/spiffs.git
